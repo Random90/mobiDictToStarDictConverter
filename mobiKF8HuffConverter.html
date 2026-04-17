@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MOBI8/KF8 to StarDict - HUFF/CDIC </title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; }
+        .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+        h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
+        .upload-section { border: 3px dashed #007bff; background: #f8fbff; padding: 30px; text-align: center; cursor: pointer; border-radius: 12px; margin-bottom: 20px; }
+        #log { background: #1c1e21; color: #a5d6a7; padding: 15px; font-family: monospace; height: 340px; overflow-y: auto; border-radius: 8px; margin-top: 20px; font-size: 12px; border: 1px solid #30363d; white-space: pre-wrap; }
+        .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
+        .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 150px; overflow: hidden; }
+        .option-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px 18px; border-radius: 10px; margin-bottom: 14px; }
+        .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .option-row label { font-weight: 600; min-width: 120px; font-size: 13px; }
+        .option-row select { padding: 5px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; }
+        .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; }
+        .style-preview { border: 1px solid #ddd; border-radius: 7px; padding: 9px 13px; margin-top: 6px; font-size: 12px; background: #fff; min-height: 32px; }
+        .badge-syn { background: #6f42c1; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>MOBI/KF8 → StarDict (HUFF/CDIC Decoder)</h2>
+    <p>Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br>
+       <small>Experimental version, not fully functional. Some records might be missing or glitched</small></p>
+
+    <div class="upload-section" id="dropZone">
+        <span id="fileNameDisplay">📁 Click or drag your .mobi file here</span>
+        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
+    </div>
+
+    <div class="option-box">
+        <div class="option-row">
+            <label>🎨 Entry Style:</label>
+            <select id="styleSelect">
+                <option value="none">None - original HTML pass-through</option>
+                <option value="clean">Clean - semantic, no inline styles</option>
+                <option value="nice" selected>Nice - headword + phonetics styled</option>
+                <option value="rich">Rich Color - full color-coded sections</option>
+            </select>
+        </div>
+        <div class="style-preview" id="stylePreview"></div>
+        <div class="check-item" style="margin-top:8px;">
+            <input type="checkbox" id="synCheck" checked>
+            <span><b>Generate .syn file</b> - for synonyms and conjugations</span>
+        </div>
+    </div>
+
+    <button id="startBtn" class="btn-main" disabled>START CONVERSION</button>
+
+    <div id="log">Status: Idle. Waiting for file...</div>
+
+    <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border:1px solid #b7eb8f;">
+        <h3>✅ Done! Download StarDict Files:</h3>
+        <div id="links"></div>
+    </div>
+
+    <div id="previewArea" style="display:none; margin-top:20px;">
+        <h3>🔍 Sample Entries</h3>
+        <div class="preview-grid" id="previewGrid"></div>
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Style engines  (applied to each extracted entry's HTML)
+// ─────────────────────────────────────────────────────────────────────────────
+const STYLES = {
+    none(word, pHtml) {
+        return pHtml;
+    },
+
+    clean(word, pHtml) {
+        // Strip width attribute and all inline styles; keep semantics
+        return pHtml
+            .replace(/ width="[^"]*"/gi, '')
+            .replace(/ style="[^"]*"/gi, '');
+    },
+
+    nice(word, pHtml) {
+        // Colour POS tags inside <i>
+        let body = pHtml
+            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+                     '<span style="color:#c0392b;font-weight:bold">$1</span>')
+            // bold sense numbers
+            .replace(/\b(<b>(\d+)\.<\/b>)/g,
+                     '<span style="color:#2980b9;font-weight:bold">$1</span>');
+        // Replace the first <span><b>word</b></span> with a styled headword
+        body = body.replace(
+            /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
+            `<span><b style="font-size:1.15em;color:#003d82">$2</b></span>`
+        );
+        return body;
+    },
+
+    rich(word, pHtml) {
+        const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
+        const ipa  = ipaM
+            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
+            : '';
+        let body = ipaM
+            ? pHtml.replace(ipaM[0], '')   // remove the matched IPA from body so it doesn't appear twice
+            : pHtml;
+        body = body
+            // POS tags red
+            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+                     '<b style="color:#e74c3c">$1</b>')
+            // Sense numbers blue — only match <b>N.</b> to avoid injecting tags inside HTML attributes
+            .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
+            // Domain labels (fin. biz. etc.) violet + small
+            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
+                     '<span style="color:#7c3aed;font-size:.83em">$1</span>')
+            // Sub-phrase bold spans (after first) → olive
+            .replace(/(<span\s*>\s*<b>)((?:[^<]{3,60})\s[^<]{1,50})(<\/b>\s*<\/span>)/g,
+                     `<span><b style="color:#5c4b00">$2</b></span>`);
+        // Style the main headword
+        body = body.replace(
+            /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
+            `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">`
+          + `<b style="font-size:1.18em;color:#1a237e">$2</b>${ipa}</span>`
+        );
+        return body;
+    }
+};
+
+// Live preview using a fake entry
+const PREVIEW_HTML = `<p width="-20"> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
+function updateStylePreview() {
+    const fn = STYLES[document.getElementById('styleSelect').value] || STYLES.nice;
+    document.getElementById('stylePreview').innerHTML = fn('download', PREVIEW_HTML);
+}
+document.getElementById('styleSelect').addEventListener('change', updateStylePreview);
+updateStylePreview();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Logging
+// ─────────────────────────────────────────────────────────────────────────────
+const logEl = document.getElementById('log');
+function addLog(msg) {
+    logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File I/O
+// ─────────────────────────────────────────────────────────────────────────────
+let globalBuffer = null;
+const fileInput = document.getElementById('fileInput');
+document.getElementById('dropZone').onclick = () => fileInput.click();
+fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('fileNameDisplay').textContent = `📁 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+    globalBuffer = await file.arrayBuffer();
+    document.getElementById('startBtn').disabled = false;
+    addLog(`File loaded: ${file.name}`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main converter class
+// ─────────────────────────────────────────────────────────────────────────────
+class KF8Converter {
+    constructor(buffer, options = {}) {
+        this.buffer      = buffer;
+        this.raw         = new Uint8Array(buffer);
+        this.options     = { style: 'nice', generateSyn: true, ...options };
+        this.dict1       = [];
+        this.mincodeArr  = [];
+        this.maxcodeArr  = [];
+        this.dict        = [];
+        this.finalMap    = new Map();   // word → styled definition HTML
+        this.synMap      = new Map();   // alternate_form → canonical_word
+    }
+
+    // ── Low-level readers ─────────────────────────────────────────────────────
+    u32(o) { const r = this.raw; return ((r[o]<<24)|(r[o+1]<<16)|(r[o+2]<<8)|r[o+3]) >>> 0; }
+    u16(o) { return ((this.raw[o]<<8)|this.raw[o+1]) >>> 0; }
+
+    // ── PDB record list ───────────────────────────────────────────────────────
+    buildRecords() {
+        const n = this.u16(76);
+        const recs = [];
+        for (let i = 0; i < n; i++) recs.push(this.u32(78 + i * 8));
+        return recs;  // array of file offsets
+    }
+
+    // ── Find the correct ExtraDataFlags for KF8 text records ─────────────────
+    //
+    // KF8 hybrid .mobi files have TWO MOBI headers:
+    //   Record 0  → MOBI7 wrapper header (type ≠ 8, often a short header whose
+    //               offset 0xF2 lands outside the header → reads garbage like 0xFFFF)
+    //   Record B+1 → KF8 MOBI header (type = 8), pointed to by EXTH tag 535
+    //
+    // Pure KF8 files have type = 8 in record 0 directly.
+    //
+    findExtraDataFlags(recs) {
+        const r0 = recs[0];
+        let mobi = r0 + 16;   // PalmDoc header is 16 bytes, MOBI follows
+        if (!(this.raw[mobi]===0x4D && this.raw[mobi+1]===0x4F &&
+              this.raw[mobi+2]===0x42 && this.raw[mobi+3]===0x49)) {
+            mobi = r0;
+        }
+
+        const hdrLen   = this.u32(mobi + 4);
+        const mobiType = this.u32(mobi + 8);
+        addLog(`Record 0: MOBI type=${mobiType}, headerLen=0x${hdrLen.toString(16)}`);
+
+        // Always try to read flags directly from the MOBI header when it's long enough.
+        // (Don't restrict to type=8 only – type 518, 257, etc. are also valid KF8 variants.)
+        let flags = 0x0001;   // safe fallback
+        if (hdrLen >= 0xF4) {
+            const raw = this.u16(mobi + 0xF2);
+            addLog(`ExtraDataFlags from MOBI header (offset 0xF2): 0x${raw.toString(16)}`);
+            // Values >> 0x1F usually mean we're reading garbage (e.g. 0xFFFF from a
+            // MOBI7 wrapper whose header is shorter than 0xF4 – see original bug).
+            flags = (raw <= 0x001F) ? raw : 0x0001;
+            if (raw > 0x001F) addLog(`⚠️ Suspicious flags (0x${raw.toString(16)}), capping to 0x0001`);
+        }
+
+        // Additionally check EXTH tag 535 which explicitly points to the KF8 section.
+        // For hybrid files this gives the real KF8 ExtraDataFlags (overrides above).
+        const exthOff = mobi + hdrLen;
+        if (this.raw[exthOff]===0x45 && this.raw[exthOff+1]===0x58 &&
+            this.raw[exthOff+2]===0x54 && this.raw[exthOff+3]===0x48) {
+
+            const exthLen = this.u32(exthOff + 4);
+            const numRec  = this.u32(exthOff + 8);
+            let   pos     = exthOff + 12;
+
+            for (let i = 0; i < numRec && pos + 8 <= exthOff + exthLen; i++) {
+                const tag = this.u32(pos);
+                const len = this.u32(pos + 4);
+
+                if (tag === 535 && len === 12) {
+                    const kf8Bound  = this.u32(pos + 8);
+                    addLog(`KF8 boundary record: ${kf8Bound}`);
+                    const kf8RecIdx = kf8Bound + 1;
+                    if (kf8RecIdx < recs.length) {
+                        const kf8Off  = recs[kf8RecIdx];
+                        let   kf8Mobi = kf8Off + 16;
+                        if (!(this.raw[kf8Mobi]===0x4D && this.raw[kf8Mobi+1]===0x4F &&
+                              this.raw[kf8Mobi+2]===0x42 && this.raw[kf8Mobi+3]===0x49))
+                            kf8Mobi = kf8Off;
+                        const kl = this.u32(kf8Mobi + 4);
+                        if (kl >= 0xF4) {
+                            flags = this.u16(kf8Mobi + 0xF2);
+                            addLog(`KF8 section flags override: 0x${flags.toString(16)}`);
+                        }
+                    }
+                }
+                pos += len;
+            }
+        }
+
+        addLog(`Final ExtraDataFlags: 0x${flags.toString(16)}`);
+        return flags;
+    }
+
+    // ── Strip trailing bytes (same algorithm as PalmDOC, works for KF8 too) ──
+    stripTrailing(data, flags) {
+        if (!flags || data.length === 0) return data;
+        let trim = 0;
+        for (let j = 0; j < 15; j++) {
+            if ((flags >> (j + 1)) & 1) {
+                let size = 0;
+                let pos  = data.length - 1 - trim;
+                let v    = data[pos], shift = 7;
+                size = v & 0x7F;
+                while ((v & 0x80) === 0 && pos > 0) {
+                    v = data[--pos];
+                    size |= (v & 0x7F) << shift;
+                    shift += 7;
+                }
+                trim += size;
+            }
+        }
+        if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
+        return (trim > 0 && trim < data.length) ? data.slice(0, data.length - trim) : data;
+    }
+
+    // ── Load HUFF record ──────────────────────────────────────────────────────
+    // Mirrors Python HuffcdicReader.loadHuff exactly.
+    loadHuff(hOff) {
+        const off1 = this.u32(hOff + 8);
+        const off2 = this.u32(hOff + 12);
+
+        // dict1: 256 processed entries {codelen, term, maxcode}
+        // maxcode = ((raw_maxcode + 1) << (32 - codelen)) - 1  (BigInt to avoid overflow)
+        this.dict1 = [];
+        for (let i = 0; i < 256; i++) {
+            const v       = this.u32(hOff + off1 + i * 4);
+            const codelen = v & 0x1F;
+            const term    = !!(v & 0x80);
+            const mxraw   = (v >>> 8) >>> 0;
+            const maxcode = Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
+            this.dict1.push({ codelen, term, maxcode });
+        }
+
+        // mincode[i] = rawMin << (32-i),  maxcode2[i] = ((rawMax+1)<<(32-i))-1
+        // dict2 layout: even indices = mincode raws, odd = maxcode raws (0-based, 32 pairs)
+        this.mincodeArr = new Array(33).fill(0);
+        this.maxcodeArr = new Array(33).fill(0);
+        for (let i = 1; i <= 32; i++) {
+            const rawMin = this.u32(hOff + off2 + (i - 1) * 8);
+            const rawMax = this.u32(hOff + off2 + (i - 1) * 8 + 4);
+            const shift  = 32 - i;
+            this.mincodeArr[i] = Number(BigInt(rawMin) << BigInt(shift)) >>> 0;
+            this.maxcodeArr[i] = Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
+        }
+
+        this.dict = [];
+        addLog(`HUFF loaded. off1=0x${off1.toString(16)} off2=0x${off2.toString(16)}`);
+    }
+
+    // ── Load one CDIC record ──────────────────────────────────────────────────
+    // Mirrors Python HuffcdicReader.loadCdic exactly.
+    // CRITICAL: offset table entries are RAW offsets (no flag bit).
+    //           The flag is bit 15 of the uint16 length at cdic[16+off].
+    loadCdic(rOff) {
+        const phrases = this.u32(rOff + 8);
+        const bits    = this.u32(rOff + 12);
+        const n       = Math.min(1 << bits, phrases - this.dict.length);
+
+        for (let j = 0; j < n; j++) {
+            const off   = this.u16(rOff + 16 + j * 2);   // raw offset, no masking
+            const blen  = this.u16(rOff + 16 + off);     // flag in bit 15, length in bits 14:0
+            const flag  = !!(blen & 0x8000);             // true = literal, false = compressed
+            const slen  = blen & 0x7FFF;
+            const slice = this.raw.slice(rOff + 18 + off, rOff + 18 + off + slen);
+            this.dict.push({ slice, flag });
+        }
+    }
+
+    loadAllCdic(recs, huffIdx) {
+        let count = 0;
+        for (let i = huffIdx + 1; i < recs.length; i++) {
+            const rOff  = recs[i];
+            const magic = String.fromCharCode(this.raw[rOff], this.raw[rOff+1], this.raw[rOff+2], this.raw[rOff+3]);
+            if (magic !== 'CDIC') break;
+            this.loadCdic(rOff);
+            count++;
+        }
+        addLog(`Loaded ${count} CDIC records → ${this.dict.length} symbols in dictionary.`);
+    }
+
+    // ── HUFF/CDIC decompression ────────────────────────────────────────────────
+    // Mirrors Python HuffcdicReader.unpack exactly.
+    // Uses 64-bit sliding window (two 32-bit halves) like Python's struct.unpack('>Q').
+    decompress(data) {
+        if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
+
+        // Pad 8 zero bytes like Python
+        const padded = new Uint8Array(data.length + 8);
+        padded.set(data);
+
+        const readU32 = (p) =>
+            ((padded[p]<<24)|(padded[p+1]<<16)|(padded[p+2]<<8)|padded[p+3]) >>> 0;
+
+        let bitsleft = data.length * 8;
+        let pos = 0;
+        let xhi = readU32(0);
+        let xlo = readU32(4);
+        let n   = 32;  // Python: n=32, code = (x >> n) & 0xFFFFFFFF
+
+        // (x >> n) & 0xFFFFFFFF where x = xhi:xlo (64-bit big-endian)
+        const getCode = () => {
+            if (n === 32) return xhi;
+            return (((xhi << (32 - n)) >>> 0) | (xlo >>> n)) >>> 0;
+        };
+
+        const advance = () => {
+            pos += 4;
+            xhi  = xlo;
+            xlo  = (pos + 4 < padded.length) ? readU32(pos + 4) : 0;
+            n   += 32;
+        };
+
+        const chunks = [];
+        let outLen = 0;
+
+        while (true) {
+            if (n <= 0) advance();
+            const code = getCode();
+
+            const e     = this.dict1[code >>> 24];
+            let codelen = e.codelen;
+            let maxcode = e.maxcode;
+
+            if (!e.term) {
+                while (code < this.mincodeArr[codelen]) codelen++;
+                maxcode = this.maxcodeArr[codelen];
+            }
+
+            n        -= codelen;
+            bitsleft -= codelen;
+            if (bitsleft < 0) break;
+            if (n <= 0) advance();
+
+            // r = (maxcode - code) >> (32 - codelen)  [Python formula]
+            const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
+
+            if (r >= this.dict.length) break;
+
+            let entry = this.dict[r];
+            if (!entry.flag) {
+                // Lazy decompress like Python
+                const expanded = this.decompress(entry.slice);
+                entry = { slice: expanded, flag: true };
+                this.dict[r] = entry;
+            }
+            chunks.push(entry.slice);
+            outLen += entry.slice.length;
+        }
+
+        const result = new Uint8Array(outLen);
+        let off = 0;
+        for (const c of chunks) { result.set(c, off); off += c.length; }
+        return result;
+    }
+
+    // ── Extract entries from a HTML chunk (both idx:entry and h2 styles) ──────
+    //
+    // isFinal=true  → accept entries even if no terminating <h2>/<hr> is visible
+    //                 (used for the very last overlap buffer)
+    // isFinal=false → only accept h2 entries whose definition is fully visible
+    //                 (bounded by the next <h2> or <hr>) so we don't store a
+    //                 truncated definition that would block the complete one later
+    //
+    extractEntriesFrom(html, isFinal = false) {
+        const styleFn = STYLES[this.options.style] || STYLES.nice;
+
+        // ── Method 1: KF8 idx:entry ────────────────────────────────────────────
+        const entryRe = /<idx:entry\b[^>]*>([\s\S]*?)<\/idx:entry>/gi;
+        let m;
+        while ((m = entryRe.exec(html)) !== null) {
+            const block  = m[0];
+            const orthM  = block.match(/<idx:orth\b[^>]*>/i);
+            if (!orthM) continue;
+            const valueM = orthM[0].match(/\bvalue="([^"]+)"/i);
+            if (!valueM) continue;
+            const word = valueM[1].trim();
+            if (!word || word.length >= 120 || this.finalMap.has(word)) continue;
+            let def = block
+                .replace(/<idx:entry[^>]*>/gi, '')
+                .replace(/<\/idx:entry>/gi, '')
+                .replace(/<idx:orth[^>]*>[\s\S]*?<\/idx:orth>/gi, '')
+                .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, '')
+                .trim();
+            def = styleFn(word, `<span><b>${word}</b></span> ${def}`);
+            this.finalMap.set(word, def);
+            this._collectSyns(word, def);
+        }
+
+        // ── Method 2: h2-based (JEM / older Mobipocket dictionary style) ──────
+        const parts = html.split(/<h2\b/i);
+        for (let k = 1; k < parts.length; k++) {
+            const seg      = parts[k];
+            const tagEnd   = seg.indexOf('>');
+            if (tagEnd === -1) continue;
+            const h2Close  = seg.indexOf('</h2>', tagEnd);
+            if (h2Close === -1) continue;
+
+            const h2Content = seg.substring(tagEnd + 1, h2Close);
+            const rawText   = h2Content.replace(/<[^>]+>/g, '');
+            const word      = rawText.split('[')[0].trim();
+            if (!word || word.length >= 100 || this.finalMap.has(word)) continue;
+
+            const after    = seg.substring(h2Close + 5);
+            const boundary = after.search(/<h2\b|<hr\b/i);
+            if (!isFinal && boundary === -1) continue;
+
+            const defContent = boundary >= 0 ? after.substring(0, boundary) : after;
+            const rawHtml    = `<h2>${h2Content}</h2>${defContent}`;
+            const def        = styleFn(word, rawHtml);
+            this.finalMap.set(word, def);
+            this._collectSyns(word, defContent);
+        }
+
+        // ── Method 3: <p width="-20"><span><b>headword</b></span>…</p> ──────────
+        const hrParts = html.split(/<hr\s*\/?>/i);
+        for (let k = 0; k < hrParts.length; k++) {
+            const seg = hrParts[k];
+            if (!/<p\b[^>]*width\s*=\s*["']?-20/i.test(seg)) continue;
+
+            const headM = seg.match(/<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i);
+            if (!headM) continue;
+            const word = headM[1].replace(/<[^>]+>/g, '').trim();
+            if (!word || word.length >= 120) continue;
+            if (this.finalMap.has(word)) continue;
+
+            const pClose = seg.indexOf('</p>');
+            if (!isFinal && pClose === -1) continue;
+
+            const pOpen    = seg.search(/<p\b[^>]*width\s*=\s*["']?-20/i);
+            const pEnd     = pClose >= 0 ? pClose + 4 : seg.length;
+            const pContent = seg.substring(pOpen, pEnd);
+
+            const def = styleFn(word, pContent);
+            this.finalMap.set(word, def);
+            this._collectSyns(word, pContent);
+        }
+    }
+
+    // ── Synonym collection helper ─────────────────────────────────────────────
+    _collectSyns(canonicalWord, html) {
+        if (!this.options.generateSyn) return;
+
+        // 1. Subscript-stripped variant: word₁ / word² → word
+        const stripped = canonicalWord.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3\u2070]$/, '').trim();
+        if (stripped !== canonicalWord && stripped.length > 1 && !this.synMap.has(stripped))
+            this.synMap.set(stripped, canonicalWord);
+
+        // 2. Sub-phrase <span><b>phrase</b></span> entries (multi-word or different from headword)
+        for (const m of html.matchAll(/<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/gi)) {
+            const phrase = m[1].replace(/<[^>]+>/g, '').trim();
+            if (!phrase || phrase.toLowerCase() === canonicalWord.toLowerCase()) continue;
+            if (phrase.length < 2 || phrase.length > 80) continue;
+            if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
+        }
+
+        // 3. "też X" / "also X" alternate forms
+        for (const m of html.matchAll(/\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi)) {
+            const alt = m[1].trim();
+            if (alt && alt !== canonicalWord && !this.synMap.has(alt))
+                this.synMap.set(alt, canonicalWord);
+        }
+
+        // 4. Plain <b>X</b> where X looks like a compound (contains space)
+        for (const m of html.matchAll(/<b>([^<]{3,70})<\/b>/g)) {
+            const phrase = m[1].trim();
+            if (!phrase.includes(' ')) continue;          // only multi-word
+            if (phrase.toLowerCase() === canonicalWord.toLowerCase()) continue;
+            if (phrase.length > 80 || /^\d/.test(phrase)) continue;
+            if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
+        }
+    }
+
+    // ── Streaming decompress + extract ────────────────────────────────────────
+    streamDecompress(recs, huffIdx, extraFlags) {
+        return new Promise(resolve => {
+            const utf8    = new TextDecoder('utf-8', { fatal: false });
+            const OVERLAP = 16384;  // 16 KB – covers even long dictionary entries
+            let   overlap = '';
+            let   i       = 1;
+            const BATCH   = 80;
+            let   firstDecodedLogged = false;
+
+            const processChunk = () => {
+                const lim = Math.min(i + BATCH, huffIdx);
+                for (; i < lim; i++) {
+                    const start = recs[i];
+                    const end   = (i + 1 < recs.length) ? recs[i + 1] : this.buffer.byteLength;
+                    let   data  = this.raw.slice(start, end);
+                    data        = this.stripTrailing(data, extraFlags);
+                    const dec   = this.decompress(data);
+                    const text  = utf8.decode(dec, { stream: true });
+
+                    // Log a snippet of the very first decoded record to diagnose format
+                    if (!firstDecodedLogged && text.length > 0) {
+                        firstDecodedLogged = true;
+                        const preview = text.substring(0, 300).replace(/[\r\n]+/g, ' ');
+                        addLog(`First record decoded (${dec.length} bytes). Preview:\n  ${preview}`);
+                    }
+
+                    const chunk = overlap + text;
+                    this.extractEntriesFrom(chunk, false);
+                    overlap = chunk.length > OVERLAP ? chunk.slice(-OVERLAP) : chunk;
+                }
+
+                if (i < huffIdx) {
+                    if ((i % 500) < BATCH)
+                        addLog(`Decompressing: ${i}/${huffIdx}… entries so far: ${this.finalMap.size}`);
+                    setTimeout(processChunk, 0);
+                } else {
+                    // Final pass: allow incomplete-boundary entries (last entry in file)
+                    this.extractEntriesFrom(overlap, true);
+                    addLog(`Extraction complete: ${this.finalMap.size} unique entries.`);
+                    resolve();
+                }
+            };
+            processChunk();
+        });
+    }
+
+    // ── Main pipeline ─────────────────────────────────────────────────────────
+    async run() {
+        const recs = this.buildRecords();
+        addLog(`PDB records: ${recs.length}`);
+
+        const extraFlags = this.findExtraDataFlags(recs);
+
+        // Find HUFF record
+        let huffIdx = -1;
+        for (let i = 0; i < recs.length; i++) {
+            const o = recs[i];
+            if (this.raw[o]===72 && this.raw[o+1]===85 && this.raw[o+2]===70 && this.raw[o+3]===70) {
+                huffIdx = i; break;
+            }
+        }
+        if (huffIdx === -1) { addLog('ERROR: No HUFF record found.'); return this.finalMap; }
+        addLog(`HUFF record: ${huffIdx}  (text records: 1–${huffIdx-1})`);
+
+        this.loadHuff(recs[huffIdx]);
+        this.loadAllCdic(recs, huffIdx);
+
+        if (this.dict.length === 0) {
+            addLog('ERROR: Symbol dictionary is empty. Cannot decompress.');
+            return this.finalMap;
+        }
+
+        await this.streamDecompress(recs, huffIdx, extraFlags);
+        addLog(`Synonyms collected: ${this.synMap.size}`);
+        return { finalMap: this.finalMap, synMap: this.synMap };
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// StarDict output
+// ─────────────────────────────────────────────────────────────────────────────
+function renderOutput(finalMap, synMap, generateSyn) {
+    document.getElementById('downloadArea').style.display = 'block';
+    const links = document.getElementById('links');
+    links.innerHTML = '';
+
+    const enc = new TextEncoder();
+
+    // StarDict .idx must be sorted alphabetically (case-insensitive)
+    const sorted = Array.from(finalMap.entries())
+        .sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+    const wordToOrdinal = new Map();
+    let dict = [], idx = [], offset = 0, count = 0;
+
+    for (const [word, def] of sorted) {
+        wordToOrdinal.set(word, count);
+        const db = enc.encode(def);
+        const wb = enc.encode(word);
+        for (const b of db) dict.push(b);
+        for (const b of wb) idx.push(b);
+        idx.push(0);
+        const dv = new DataView(new ArrayBuffer(8));
+        dv.setUint32(0, offset, false);
+        dv.setUint32(4, db.length, false);
+        for (let i = 0; i < 8; i++) idx.push(dv.getUint8(i));
+        offset += db.length;
+        count++;
+    }
+
+    // ── Build .syn ────────────────────────────────────────────────────────────
+    let synBytes = [], synCount = 0;
+    if (generateSyn && synMap.size > 0) {
+        const validSyns = [];
+        for (const [alt, canonical] of synMap.entries()) {
+            if (!wordToOrdinal.has(canonical)) continue;  // canonical must exist
+            if (wordToOrdinal.has(alt)) continue;         // already a main entry
+            validSyns.push([alt, wordToOrdinal.get(canonical)]);
+        }
+        // Sort alphabetically – required by StarDict spec
+        validSyns.sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        for (const [alt, ordinal] of validSyns) {
+            const ab = enc.encode(alt);
+            for (const b of ab) synBytes.push(b);
+            synBytes.push(0);
+            const dv = new DataView(new ArrayBuffer(4));
+            dv.setUint32(0, ordinal, false);
+            for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
+        }
+        synCount = validSyns.length;
+        addLog(`Synonym file: ${synCount} entries.`);
+    }
+
+    // ── .ifo ──────────────────────────────────────────────────────────────────
+    const ifoLines = [
+        "StarDict's dict ifo file",
+        "version=2.4.2",
+        `wordcount=${count}`,
+        `idxfilesize=${idx.length}`,
+        "bookname=Wielki_Slownik_Ang-Pol_JEM",
+        "sametypesequence=h",
+    ];
+    if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
+    const ifo = ifoLines.join('\n') + '\n';
+
+    // ── Download links ────────────────────────────────────────────────────────
+    const dl = (name, data) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([data]));
+        a.download = name;
+        a.className = 'btn-dl';
+        a.textContent = `⬇ ${name}`;
+        links.appendChild(a);
+    };
+    dl('dictionary.ifo',  enc.encode(ifo));
+    dl('dictionary.idx',  new Uint8Array(idx));
+    dl('dictionary.dict', new Uint8Array(dict));
+    if (synCount > 0) {
+        dl('dictionary.syn', new Uint8Array(synBytes));
+        const badge = document.createElement('span');
+        badge.className = 'badge-syn';
+        badge.textContent = `${synCount} synonyms`;
+        links.appendChild(badge);
+    }
+
+    // ── Preview ───────────────────────────────────────────────────────────────
+    const pArea = document.getElementById('previewArea');
+    const pGrid = document.getElementById('previewGrid');
+    pGrid.innerHTML = '';
+    pArea.style.display = 'block';
+
+    const keys  = sorted.map(([k]) => k);
+    const shown = new Set();
+    for (let i = 0; i < Math.min(12, keys.length); i++) {
+        let k;
+        do { k = keys[Math.floor(Math.random() * keys.length)]; } while (shown.has(k));
+        shown.add(k);
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        div.innerHTML = `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:4px">${k}</b>`
+                      + finalMap.get(k).substring(0, 220);
+        pGrid.appendChild(div);
+    }
+
+    addLog(`✅ Output ready. ${count} entries, idx=${idx.length} B, dict=${dict.length} B${synCount ? `, syn=${synCount}` : ''}.`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Button handler
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('startBtn').onclick = () => {
+    const btn = document.getElementById('startBtn');
+    btn.disabled = true;
+    btn.textContent = 'WORKING...';
+
+    const options = {
+        style:       document.getElementById('styleSelect').value,
+        generateSyn: document.getElementById('synCheck').checked,
+    };
+
+    const conv = new KF8Converter(globalBuffer, options);
+
+    setTimeout(async () => {
+        try {
+            const { finalMap, synMap } = await conv.run();
+            if (finalMap.size > 0) {
+                renderOutput(finalMap, synMap, options.generateSyn);
+                btn.textContent = '✅ DONE';
+            } else {
+                addLog('⚠️ No entries extracted. Check log for details.');
+                btn.disabled = false;
+                btn.textContent = 'RETRY';
+            }
+        } catch (err) {
+            addLog('FATAL ERROR: ' + err.message + '\n' + err.stack);
+            btn.disabled = false;
+            btn.textContent = 'ERROR – Retry';
+        }
+    }, 150);
+};
+</script>
+</body>
+</html>

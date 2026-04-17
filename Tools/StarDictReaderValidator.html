@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StarDict Binary Validator</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 1100px; margin: 20px auto; background: #f0f2f5; color: #1c1e21; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .file-inputs { display: grid; gap: 8px; background: #f8f9fa; padding: 14px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; }
+        .file-inputs label { display: flex; align-items: center; gap: 8px; }
+        #searchBox { width: 100%; padding: 12px; font-size: 18px; margin-top: 16px; border-radius: 6px; border: 2px solid #007bff; display: none; box-sizing: border-box; }
+        .status { font-size: 13px; color: #666; margin-top: 8px; }
+        /* ── Result panel ── */
+        #resultCard { display: none; margin-top: 8px; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+        .result-title { font-weight: 700; font-size: 15px; color: #333; }
+        .badge { background: #007bff; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: bold; }
+        .badge.syn { background: #6f42c1; }
+        .btn-copy { padding: 5px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .btn-copy:hover { background: #e0e0e0; }
+        /* ── Split view ── */
+        .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
+        .pane-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 5px; }
+        .pane-rendered { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; min-height: 80px; font-size: 13px; overflow-x: auto; }
+        .pane-raw { background: #1c1e21; color: #e8e8e8; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', monospace; font-size: 11px; white-space: pre-wrap; min-height: 80px; overflow-x: auto; max-height: 420px; overflow-y: auto; }
+        /* ── Syn info ── */
+        .syn-info { font-size: 12px; color: #6f42c1; background: #f5f0ff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>StarDict Local Validator</h2>
+    <p>Upload your converted files to test them before moving to Onyx Boox.</p>
+
+    <div class="file-inputs">
+        <label>1. <b>dictionary.ifo</b> <input type="file" id="ifoFile" accept=".ifo"></label>
+        <label>2. <b>dictionary.idx</b> <input type="file" id="idxFile" accept=".idx"></label>
+        <label>3. <b>dictionary.dict</b> <input type="file" id="dictFile" accept=".dict"></label>
+        <label>4. <b>dictionary.syn</b> <input type="file" id="synFile" accept=".syn"> <span style="color:#888;font-size:11px">(optional)</span></label>
+    </div>
+
+    <div id="status" class="status">Waiting for files (ifo + idx + dict required)…</div>
+
+    <input type="text" id="searchBox" placeholder="🔍 Type a word to search…">
+</div>
+
+<div class="card" id="resultCard">
+    <div class="result-header">
+        <span class="result-title" id="resultWord"></span>
+        <div style="display:flex;gap:6px;align-items:center">
+            <span class="badge" id="byteBadge"></span>
+            <button class="btn-copy" id="copyBtn">📋 Copy HTML</button>
+        </div>
+    </div>
+    <div class="syn-info" id="synInfo"></div>
+    <div class="split">
+        <div>
+            <div class="pane-label">Rendered</div>
+            <div class="pane-rendered" id="paneRendered"></div>
+        </div>
+        <div>
+            <div class="pane-label">Raw HTML source</div>
+            <div class="pane-raw" id="paneRaw"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let idxData = null, dictData = null;
+let wordMap = new Map();   // lowercase word → {off, sz, original}
+let synMap  = new Map();   // lowercase alt → canonical word (original case)
+let rawHtml = '';
+
+async function loadFiles() {
+    const ifoF  = document.getElementById('ifoFile').files[0];
+    const idxF  = document.getElementById('idxFile').files[0];
+    const dictF = document.getElementById('dictFile').files[0];
+    const synF  = document.getElementById('synFile').files[0];
+
+    if (!idxF || !dictF) return;
+
+    const dec = new TextDecoder('utf-8');
+    idxData  = new DataView(await idxF.arrayBuffer());
+    dictData = await dictF.arrayBuffer();
+
+    // ── Parse .idx ─────────────────────────────────────────────────────────
+    wordMap.clear();
+    let offset = 0;
+    while (offset < idxData.byteLength) {
+        const start = offset;
+        while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0) offset++;
+        const word = dec.decode(new Uint8Array(idxData.buffer, start, offset - start));
+        offset++; // skip null
+        if (offset + 8 > idxData.byteLength) break;
+        const dataOffset = idxData.getUint32(offset, false);
+        const dataSize   = idxData.getUint32(offset + 4, false);
+        wordMap.set(word.toLowerCase(), { off: dataOffset, sz: dataSize, original: word });
+        offset += 8;
+    }
+
+    // ── Parse .syn (optional) ───────────────────────────────────────────────
+    synMap.clear();
+    if (synF) {
+        const synView = new DataView(await synF.arrayBuffer());
+        let so = 0;
+        while (so < synView.byteLength) {
+            const ss = so;
+            while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
+            const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
+            so++;
+            if (so + 4 > synView.byteLength) break;
+            const ordinal = synView.getUint32(so, false);
+            so += 4;
+            // Resolve ordinal → word using wordMap (iterate by insertion order)
+            const keys = Array.from(wordMap.keys());
+            if (ordinal < keys.length) synMap.set(alt.toLowerCase(), keys[ordinal]);
+        }
+    }
+
+    // ── IFO info ────────────────────────────────────────────────────────────
+    let ifoText = '';
+    if (ifoF) ifoText = new TextDecoder().decode(await ifoF.arrayBuffer());
+    const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || '?';
+    const syncount  = (ifoText.match(/synwordcount=(\d+)/) || [])[1] || (synF ? synMap.size : 0);
+
+    document.getElementById('status').textContent =
+        `✅ Ready! ${wordMap.size} entries loaded` +
+        (synMap.size ? ` · ${synMap.size} synonyms` : '') +
+        (ifoText ? ` (ifo: wordcount=${wordcount}${syncount !== '0' ? ', synwordcount='+syncount : ''})` : '');
+    document.getElementById('searchBox').style.display = 'block';
+}
+
+['ifoFile','idxFile','dictFile','synFile'].forEach(id =>
+    document.getElementById(id).addEventListener('change', loadFiles));
+
+document.getElementById('searchBox').addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    const lower = query.toLowerCase();
+    const resultCard = document.getElementById('resultCard');
+
+    // Direct match
+    let entry  = wordMap.get(lower);
+    let synHit = null;
+
+    // Synonym fallback
+    if (!entry && synMap.has(lower)) {
+        const canonical = synMap.get(lower);
+        entry  = wordMap.get(canonical);
+        synHit = canonical;
+    }
+
+    if (!entry || !query) { resultCard.style.display = 'none'; return; }
+
+    const defBytes = new Uint8Array(dictData, entry.off, entry.sz);
+    rawHtml = new TextDecoder('utf-8').decode(defBytes);
+
+    document.getElementById('resultWord').textContent = entry.original || query;
+    document.getElementById('byteBadge').textContent  = `${entry.sz} bytes`;
+
+    // Syn info
+    const synInfoEl = document.getElementById('synInfo');
+    if (synHit) {
+        synInfoEl.style.display = 'block';
+        synInfoEl.innerHTML = `🔗 Synonym redirect: <b>${query}</b> → <b>${entry.original}</b>`;
+    } else {
+        synInfoEl.style.display = 'none';
+    }
+
+    document.getElementById('paneRendered').innerHTML = rawHtml;
+    document.getElementById('paneRaw').textContent    = rawHtml;
+
+    resultCard.style.display = 'block';
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(rawHtml).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => { btn.textContent = '📋 Copy HTML'; }, 1500);
+    });
+});
+</script>
+</body>
+</html>

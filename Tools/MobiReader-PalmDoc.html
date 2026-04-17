@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>MOBI Reader V2 - UTF-8 Professional</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 1200px; margin: 20px auto; background: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .upload-section { border: 2px dashed #007bff; padding: 30px; text-align: center; cursor: pointer; background: #f8fbff; border-radius: 8px; margin-bottom: 20px; }
+        
+        .viewer-controls { display: flex; justify-content: space-between; align-items: center; background: #e4e6eb; padding: 15px; border-radius: 8px; margin-bottom: 10px; position: sticky; top: 10px; z-index: 100; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .content-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+        .box { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; height: 600px; overflow-y: auto; }
+        .box h3 { margin-top: 0; color: #007bff; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        .raw-text { font-family: 'Consolas', monospace; font-size: 13px; white-space: pre-wrap; color: #d63384; }
+        .rendered-html { font-size: 15px; }
+        
+        #log { background: #1c1e21; color: #a5d6a7; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>MOBI Content Explorer V2</h2>
+    <div class="upload-section" id="dropZone">
+        <span id="fileName">📁 Wybierz plik słownika .mobi (UTF-8)</span>
+        <input type="file" id="fileInput" style="display:none">
+    </div>
+
+    <div class="viewer-controls" id="controls" style="display:none">
+        <div>
+            <button class="btn" id="prevBtn">« Poprzedni</button>
+            <span id="pageInfo" style="margin: 0 15px; font-weight: bold;">Rekord: 0 / 0</span>
+            <button class="btn" id="nextBtn">Następny »</button>
+        </div>
+        <div class="record-meta" id="recordMeta" style="font-size: 12px; color: #666;"></div>
+        <div>
+            <input type="number" id="jumpTo" placeholder="Nr rekordu" style="width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <button class="btn" id="jumpBtn" style="background:#28a745">Skocz</button>
+        </div>
+    </div>
+
+    <div class="content-container">
+        <div class="box">
+            <h3>KOD ŹRÓDŁOWY (Surowe tagi)</h3>
+            <div id="rawContent" class="raw-text"></div>
+        </div>
+        <div class="box">
+            <h3>PODGLĄD RENDEROWANIA</h3>
+            <div id="htmlContent" class="rendered-html"></div>
+        </div>
+    </div>
+
+    <div id="log">Status: Gotowy. Wybierz plik, aby rozpocząć debugowanie.</div>
+</div>
+
+<script>
+class MobiReader {
+    constructor(buffer) {
+        this.buffer = buffer;
+        this.view = new DataView(buffer);
+        this.records = [];
+        this.extraFlags = 0;
+    }
+
+    init() {
+        const numRecords = this.view.getUint16(76);
+        for (let i = 0; i < numRecords; i++) {
+            this.records.push({ offset: this.view.getUint32(78 + i * 8) });
+        }
+        this.extraFlags = this.view.getUint16(this.records[0].offset + 0xF2);
+        return numRecords;
+    }
+
+    getRecordText(idx) {
+        if (idx < 1 || idx >= this.records.length) return "";
+        const start = this.records[idx].offset;
+        const end = (this.records[idx + 1]) ? this.records[idx + 1].offset : this.buffer.byteLength;
+        let data = new Uint8Array(this.buffer.slice(start, end));
+
+        // Profesjonalne usuwanie trailing data (flaga 3)
+        if (data.length > 0) {
+            let trim = 0;
+            for (let j = 0; j < 15; j++) {
+                if ((this.extraFlags >> (j + 1)) & 1) {
+                    let size = 0, pos = data.length - 1 - trim;
+                    let v = data[pos], shift = 7;
+                    size = v & 0x7F;
+                    while ((v & 0x80) === 0 && pos > 0) {
+                        v = data[--pos];
+                        size |= (v & 0x7F) << shift; shift += 7;
+                    }
+                    trim += size;
+                }
+            }
+            if (this.extraFlags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
+            if (trim > 0 && trim < data.length) data = data.slice(0, data.length - trim);
+        }
+
+        // Dekompresja PalmDOC
+        let out = [];
+        for (let j = 0; j < data.length; j++) {
+            let b = data[j];
+            if (b >= 1 && b <= 8) { for (let k = 0; k < b; k++) out.push(data[++j]); }
+            else if (b <= 127) out.push(b);
+            else if (b >= 192) { out.push(32); out.push(b ^ 128); }
+            else if (b >= 128 && b <= 191) {
+                let next = data[++j];
+                let dist = (((b << 8) | next) >> 3) & 0x7FF, len = (next & 7) + 3;
+                let s = out.length - dist;
+                if (s >= 0) for (let k = 0; k < len; k++) out.push(out[s + k]);
+            } else out.push(b);
+        }
+
+        // Używamy TextDecoder UTF-8 dla poprawnych polskich znaków
+        return new TextDecoder('utf-8').decode(new Uint8Array(out));
+    }
+}
+
+let reader = null;
+let currentIdx = 1;
+
+document.getElementById('dropZone').onclick = () => document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('fileName').textContent = file.name;
+    
+    const buffer = await file.arrayBuffer();
+    reader = new MobiReader(buffer);
+    const total = reader.init();
+    
+    document.getElementById('controls').style.display = "flex";
+    document.getElementById('log').textContent = `[System] Wczytano ${total} rekordów. Flagi metadanych: ${reader.extraFlags.toString(16)}`;
+    updateView(1);
+};
+
+function updateView(idx) {
+    if (!reader) return;
+    currentIdx = idx;
+    const text = reader.getRecordText(idx);
+    
+    // Surowe tagi (bezpieczne wyświetlanie)
+    document.getElementById('rawContent').textContent = text;
+    // Renderowanie HTML
+    document.getElementById('htmlContent').innerHTML = text;
+    
+    document.getElementById('pageInfo').textContent = `Rekord: ${idx} / ${reader.records.length - 1}`;
+    document.getElementById('recordMeta').textContent = `Offset: ${reader.records[idx].offset} | Rozmiar: ${text.length} znaków`;
+    
+    document.getElementById('prevBtn').disabled = (idx <= 1);
+    document.getElementById('nextBtn').disabled = (idx >= reader.records.length - 1);
+}
+
+document.getElementById('nextBtn').onclick = () => updateView(currentIdx + 1);
+document.getElementById('prevBtn').onclick = () => updateView(currentIdx - 1);
+document.getElementById('jumpBtn').onclick = () => {
+    const val = parseInt(document.getElementById('jumpTo').value);
+    if (val > 0 && val < reader.records.length) updateView(val);
+};
+</script>
+</body>
+</html>

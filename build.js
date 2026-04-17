@@ -10,7 +10,7 @@
 //
 // Output files are written to the locations defined in OUTPUTS below.
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -38,8 +38,23 @@ const OUTPUTS = [
 
 const INCLUDE_RE = /^(\s*)\/\/\s*@@include\(([^)]+)\)\s*$/;
 
+// Injected automatically after <body> in every compiled output.
+const NOSCRIPT = `<noscript>
+<style>body>*:not(noscript){display:none!important}</style>
+<div style="font-family:'Segoe UI',sans-serif;max-width:480px;margin:80px auto;padding:28px;background:#fff3cd;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:10px;color:#1c1e21;">
+  <strong>⚠️ JavaScript is required</strong><br><br>
+  This tool processes files locally in your browser using JavaScript. Please enable JS and reload.<br>
+  <small style="color:#666">JavaScript jest wymagany do działania tej strony.</small>
+</div>
+</noscript>`;
+
 function processTemplate(templatePath) {
-    const lines = readFileSync(resolve(__dirname, templatePath), 'utf-8').split('\n');
+    let src = readFileSync(resolve(__dirname, templatePath), 'utf-8');
+
+    // Strip any manually-placed <noscript>…</noscript> blocks so build is the sole source.
+    src = src.replace(/<noscript>[\s\S]*?<\/noscript>\n?/g, '');
+
+    const lines = src.split('\n');
     const result = [];
 
     for (const line of lines) {
@@ -59,6 +74,9 @@ function processTemplate(templatePath) {
         }
     }
 
+    // Inject <noscript> right after <body>
+    const html = result.join('\n').replace(/(<body[^>]*>)/, `$1\n${NOSCRIPT}`);
+
     const banner = [
         '<!--',
         '  !! THIS FILE IS AUTO-GENERATED. DO NOT EDIT DIRECTLY !!',
@@ -68,7 +86,7 @@ function processTemplate(templatePath) {
         '-->',
     ].join('\n');
 
-    return banner + '\n' + result.join('\n');
+    return banner + '\n' + html;
 }
 
 let ok = true;
@@ -86,4 +104,28 @@ for (const { template, output } of OUTPUTS) {
 
 if (!ok) process.exit(1);
 console.log('\nBuild complete.');
+
+// ── Second pass: inject <noscript> into ALL html files in the project ─────────
+// Covers compiled outputs, standalone tools, index.html — everything.
+function injectNoscript(filePath) {
+    let html = readFileSync(filePath, 'utf-8');
+    // Strip any existing noscript block first (idempotent)
+    html = html.replace(/<noscript>[\s\S]*?<\/noscript>\n?/g, '');
+    // Inject after <body ...>
+    if (!html.includes('<body')) return; // skip non-body files
+    html = html.replace(/(<body[^>]*>)/, `$1\n${NOSCRIPT}`);
+    writeFileSync(filePath, html, 'utf-8');
+}
+
+const HTML_DIRS = [__dirname, resolve(__dirname, 'Tools')];
+let injected = 0;
+for (const dir of HTML_DIRS) {
+    for (const file of readdirSync(dir)) {
+        if (file.endsWith('.html')) {
+            injectNoscript(resolve(dir, file));
+            injected++;
+        }
+    }
+}
+console.log(`✅  Noscript injected into ${injected} HTML file(s).`);
 

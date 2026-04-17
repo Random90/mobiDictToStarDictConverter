@@ -34,43 +34,42 @@
 <body>
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 <div class="card">
-    <h2 data-i18n="title">MOBI/KF8 → StarDict (HUFF/CDIC Decoder)</h2>
-    <p data-i18n-html="desc">Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br>
-       <small>Experimental version, not fully functional. Some records might be missing or glitched</small></p>
+    <h2 data-i18n="title"></h2>
+    <p data-i18n-html="desc"></p>
 
     <div class="upload-section" id="dropZone">
-        <span id="fileNameDisplay" data-i18n="dropzone">📁 Click or drag your .mobi file here</span>
+        <span id="fileNameDisplay" data-i18n="dropzone"></span>
         <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
     </div>
 
     <div class="option-box">
         <div class="option-row">
-            <label data-i18n="styleLabel">🎨 Entry Style:</label>
+            <label data-i18n="styleLabel"></label>
             <select id="styleSelect">
-                <option value="none" data-i18n="styleNone">None - original HTML pass-through</option>
-                <option value="clean" data-i18n="styleClean">Clean - semantic, no inline styles</option>
-                <option value="nice" selected data-i18n="styleNice">Nice - headword + phonetics styled</option>
-                <option value="rich" data-i18n="styleRich">Rich Color - full color-coded sections</option>
+                <option value="none" data-i18n="styleNone"></option>
+                <option value="clean" data-i18n="styleClean"></option>
+                <option value="nice" selected data-i18n="styleNice"></option>
+                <option value="rich" data-i18n="styleRich"></option>
             </select>
         </div>
         <div class="style-preview" id="stylePreview"></div>
         <div class="check-item" style="margin-top:8px;">
             <input type="checkbox" id="synCheck" checked>
-            <span data-i18n-html="synLabel"><b>Generate .syn file</b> - for synonyms and conjugations</span>
+            <span data-i18n-html="synLabel"></span>
         </div>
     </div>
 
-    <button id="startBtn" class="btn-main" disabled data-i18n="startBtn">START CONVERSION</button>
+    <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
 
-    <div id="log" data-i18n="logIdle">Status: Idle. Waiting for file...</div>
+    <div id="log" data-i18n="logIdle"></div>
 
     <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border:1px solid #b7eb8f;">
-        <h3 data-i18n="doneTitle">✅ Done! Download StarDict Files:</h3>
+        <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
     </div>
 
     <div id="previewArea" style="display:none; margin-top:20px;">
-        <h3 data-i18n="previewTitle">🔍 Sample Entries</h3>
+        <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
     </div>
 </div>
@@ -751,6 +750,21 @@ document.getElementById('startBtn').onclick = () => {
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
+    en: {
+        title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
+        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br><small>Experimental version, not fully functional. Some records might be missing or glitched</small>',
+        dropzone:    '📁 Click or drag your .mobi file here',
+        styleLabel:  '🎨 Entry Style:',
+        styleNone:   'None - original HTML pass-through',
+        styleClean:  'Clean - semantic, no inline styles',
+        styleNice:   'Nice - headword + phonetics styled',
+        styleRich:   'Rich Color - full color-coded sections',
+        synLabel:    '<b>Generate .syn file</b> - for synonyms and conjugations',
+        startBtn:    'START CONVERSION',
+        logIdle:     'Status: Idle. Waiting for file...',
+        doneTitle:   '✅ Done! Download StarDict Files:',
+        previewTitle:'🔍 Sample Entries',
+    },
     pl: {
         title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
         desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b> i podobnych słowników w formacie KF8.<br><small>Wersja eksperymentalna, nie w pełni funkcjonalna. Niektóre rekordy mogą być pominięte lub uszkodzone</small>',
@@ -768,22 +782,8 @@ const I18N = {
     }
 };
 // ── i18n: language detection, application & toggle ───────────────────────────
-// Only non-English translations are needed in I18N - English is read directly
-// from the initial HTML, cached on first run, and restored when switching back.
-// Expects a global `const I18N = { pl: {...} }` defined before this file.
-
-var _i18nCache = {};
-(function _buildCache() {
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        _i18nCache[el.getAttribute('data-i18n')] = el.textContent;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        _i18nCache['html:' + el.getAttribute('data-i18n-html')] = el.innerHTML;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        _i18nCache['ph:' + el.getAttribute('data-i18n-ph')] = el.placeholder;
-    });
-})();
+// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+// file is included. All text lives only in I18N — HTML elements are empty shells.
 
 (function () {
     var stored = localStorage.getItem('lang');
@@ -793,18 +793,18 @@ var _i18nCache = {};
 })();
 
 function applyI18n() {
-    var t = I18N[window.LANG] || {};
+    var t = I18N[window.LANG] || I18N.en;
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n');
-        el.textContent = key in t ? t[key] : (_i18nCache[key] || '');
+        var v = t[el.getAttribute('data-i18n')];
+        if (v !== undefined) el.textContent = v;
     });
     document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-html');
-        el.innerHTML = key in t ? t[key] : (_i18nCache['html:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-html')];
+        if (v !== undefined) el.innerHTML = v;
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-ph');
-        el.placeholder = key in t ? t[key] : (_i18nCache['ph:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-ph')];
+        if (v !== undefined) el.placeholder = v;
     });
     var btn = document.getElementById('langToggle');
     if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
@@ -817,7 +817,8 @@ function toggleLang() {
     applyI18n();
 }
 
-document.addEventListener('DOMContentLoaded', applyI18n);
+// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+applyI18n();
 
 </script>
 </body>

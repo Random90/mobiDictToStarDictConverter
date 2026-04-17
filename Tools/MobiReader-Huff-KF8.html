@@ -36,29 +36,29 @@
 <body>
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 <div class="card">
-    <h2 data-i18n="title">🔬 MOBI Raw Text Inspector</h2>
+    <h2 data-i18n="title"></h2>
     <div class="upload-section" id="dropZone">
-        <span id="fileNameDisplay" data-i18n="dropzone">📁 Click or drag your .mobi file here</span>
+        <span id="fileNameDisplay" data-i18n="dropzone"></span>
         <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
     </div>
     <div id="controls">
-        <label><span data-i18n="recordLabel">Record:</span> <input type="number" id="recFrom" value="1" min="1"> <span data-i18n="toLabel">to</span> <input type="number" id="recTo" value="5" min="1"></label>
-        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn">DECODE RECORDS</button>
-        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn">◀ Prev</button>
-        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn">Next ▶</button>
+        <label><span data-i18n="recordLabel"></span> <input type="number" id="recFrom" value="1" min="1"> <span data-i18n="toLabel"></span> <input type="number" id="recTo" value="5" min="1"></label>
+        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn"></button>
+        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn"></button>
+        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn"></button>
         <span id="recInfo" style="font-size:12px;color:#666;"></span>
     </div>
-    <div id="log" data-i18n="logIdle">Status: Idle. Load a .mobi file to begin.</div>
+    <div id="log" data-i18n="logIdle"></div>
 </div>
 
 <div class="card" id="outputCard" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <b><span data-i18n="outputLabel">Decoded Output</span> <span id="bytesBadge" class="badge"></span></b>
-        <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn">📋 Copy raw text</button>
+        <b><span data-i18n="outputLabel"></span> <span id="bytesBadge" class="badge"></span></b>
+        <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn"></button>
     </div>
     <div class="tabs">
-        <div class="tab active" data-tab="raw" data-i18n="tabRaw">Raw HTML source</div>
-        <div class="tab" data-tab="rendered" data-i18n="tabRendered">Rendered HTML</div>
+        <div class="tab active" data-tab="raw" data-i18n="tabRaw"></div>
+        <div class="tab" data-tab="rendered" data-i18n="tabRendered"></div>
     </div>
     <div class="pane active" id="rawPane"><div id="rawOutput"></div></div>
     <div class="pane" id="renderedPane"><div id="renderedOutput"></div></div>
@@ -454,22 +454,8 @@ const I18N = {
     }
 };
 // ── i18n: language detection, application & toggle ───────────────────────────
-// Only non-English translations are needed in I18N - English is read directly
-// from the initial HTML, cached on first run, and restored when switching back.
-// Expects a global `const I18N = { pl: {...} }` defined before this file.
-
-var _i18nCache = {};
-(function _buildCache() {
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        _i18nCache[el.getAttribute('data-i18n')] = el.textContent;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        _i18nCache['html:' + el.getAttribute('data-i18n-html')] = el.innerHTML;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        _i18nCache['ph:' + el.getAttribute('data-i18n-ph')] = el.placeholder;
-    });
-})();
+// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+// file is included. All text lives only in I18N — HTML elements are empty shells.
 
 (function () {
     var stored = localStorage.getItem('lang');
@@ -479,18 +465,18 @@ var _i18nCache = {};
 })();
 
 function applyI18n() {
-    var t = I18N[window.LANG] || {};
+    var t = I18N[window.LANG] || I18N.en;
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n');
-        el.textContent = key in t ? t[key] : (_i18nCache[key] || '');
+        var v = t[el.getAttribute('data-i18n')];
+        if (v !== undefined) el.textContent = v;
     });
     document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-html');
-        el.innerHTML = key in t ? t[key] : (_i18nCache['html:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-html')];
+        if (v !== undefined) el.innerHTML = v;
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-ph');
-        el.placeholder = key in t ? t[key] : (_i18nCache['ph:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-ph')];
+        if (v !== undefined) el.placeholder = v;
     });
     var btn = document.getElementById('langToggle');
     if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
@@ -503,7 +489,8 @@ function toggleLang() {
     applyI18n();
 }
 
-document.addEventListener('DOMContentLoaded', applyI18n);
+// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+applyI18n();
 
 </script>
 </body>

@@ -28,43 +28,42 @@
 <body>
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 <div class="card">
-    <h2 data-i18n="title">MOBI/KF8 → StarDict (HUFF/CDIC Decoder)</h2>
-    <p data-i18n-html="desc">Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br>
-       <small>Experimental version, not fully functional. Some records might be missing or glitched</small></p>
+    <h2 data-i18n="title"></h2>
+    <p data-i18n-html="desc"></p>
 
     <div class="upload-section" id="dropZone">
-        <span id="fileNameDisplay" data-i18n="dropzone">📁 Click or drag your .mobi file here</span>
+        <span id="fileNameDisplay" data-i18n="dropzone"></span>
         <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
     </div>
 
     <div class="option-box">
         <div class="option-row">
-            <label data-i18n="styleLabel">🎨 Entry Style:</label>
+            <label data-i18n="styleLabel"></label>
             <select id="styleSelect">
-                <option value="none" data-i18n="styleNone">None - original HTML pass-through</option>
-                <option value="clean" data-i18n="styleClean">Clean - semantic, no inline styles</option>
-                <option value="nice" selected data-i18n="styleNice">Nice - headword + phonetics styled</option>
-                <option value="rich" data-i18n="styleRich">Rich Color - full color-coded sections</option>
+                <option value="none" data-i18n="styleNone"></option>
+                <option value="clean" data-i18n="styleClean"></option>
+                <option value="nice" selected data-i18n="styleNice"></option>
+                <option value="rich" data-i18n="styleRich"></option>
             </select>
         </div>
         <div class="style-preview" id="stylePreview"></div>
         <div class="check-item" style="margin-top:8px;">
             <input type="checkbox" id="synCheck" checked>
-            <span data-i18n-html="synLabel"><b>Generate .syn file</b> - for synonyms and conjugations</span>
+            <span data-i18n-html="synLabel"></span>
         </div>
     </div>
 
-    <button id="startBtn" class="btn-main" disabled data-i18n="startBtn">START CONVERSION</button>
+    <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
 
-    <div id="log" data-i18n="logIdle">Status: Idle. Waiting for file...</div>
+    <div id="log" data-i18n="logIdle"></div>
 
     <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border:1px solid #b7eb8f;">
-        <h3 data-i18n="doneTitle">✅ Done! Download StarDict Files:</h3>
+        <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
     </div>
 
     <div id="previewArea" style="display:none; margin-top:20px;">
-        <h3 data-i18n="previewTitle">🔍 Sample Entries</h3>
+        <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
     </div>
 </div>
@@ -510,6 +509,21 @@ document.getElementById('startBtn').onclick = () => {
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
+    en: {
+        title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
+        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br><small>Experimental version, not fully functional. Some records might be missing or glitched</small>',
+        dropzone:    '📁 Click or drag your .mobi file here',
+        styleLabel:  '🎨 Entry Style:',
+        styleNone:   'None - original HTML pass-through',
+        styleClean:  'Clean - semantic, no inline styles',
+        styleNice:   'Nice - headword + phonetics styled',
+        styleRich:   'Rich Color - full color-coded sections',
+        synLabel:    '<b>Generate .syn file</b> - for synonyms and conjugations',
+        startBtn:    'START CONVERSION',
+        logIdle:     'Status: Idle. Waiting for file...',
+        doneTitle:   '✅ Done! Download StarDict Files:',
+        previewTitle:'🔍 Sample Entries',
+    },
     pl: {
         title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
         desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b> i podobnych słowników w formacie KF8.<br><small>Wersja eksperymentalna, nie w pełni funkcjonalna. Niektóre rekordy mogą być pominięte lub uszkodzone</small>',

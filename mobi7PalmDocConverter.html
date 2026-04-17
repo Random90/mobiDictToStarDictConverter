@@ -41,25 +41,25 @@
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 
 <div class="card">
-    <h2 data-i18n="title">MOBI to StarDict</h2>
+    <h2 data-i18n="title"></h2>
     <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
 
     <div class="controls">
-        <label data-i18n="step1">Step 1: Select Dictionary File</label>
+        <label data-i18n="step1"></label>
         <div class="upload-section" id="dropZone">
-            <span id="fileNameDisplay" data-i18n="dropzone">📁 Select .mobi file or drag it here</span>
+            <span id="fileNameDisplay" data-i18n="dropzone"></span>
             <input type="file" id="fileInput" style="display:none">
         </div>
 
-        <label data-i18n="step2">Step 2: Options</label>
+        <label data-i18n="step2"></label>
         <div class="option-box">
             <div class="option-row">
-                <label data-i18n="styleLabel">🎨 Entry Style:</label>
+                <label data-i18n="styleLabel"></label>
                 <select id="styleSelect">
-                    <option value="none" data-i18n="styleNone">None – raw HTML passthrough</option>
-                    <option value="clean" data-i18n="styleClean">Clean – semantic, no inline styles</option>
-                    <option value="nice" selected data-i18n="styleNice">Nice Theme – headword + phonetics styled</option>
-                    <option value="rich" data-i18n="styleRich">Rich Color – full color-coded sections</option>
+                    <option value="none" data-i18n="styleNone"></option>
+                    <option value="clean" data-i18n="styleClean"></option>
+                    <option value="nice" selected data-i18n="styleNice"></option>
+                    <option value="rich" data-i18n="styleRich"></option>
                 </select>
             </div>
             <div class="style-preview" id="stylePreview"></div>
@@ -67,29 +67,29 @@
             <div class="check-item" style="margin-top:10px;">
                 <label class="check-item">
                     <input type="checkbox" id="synCheck" checked>
-                    <span data-i18n-html="synLabel"><b>Generate .syn file</b> - extracts sub-phrases &amp; alternate forms as synonyms</span>
+                    <span data-i18n-html="synLabel"></span>
                 </label>
             </div>
             <div class="check-item">
                 <label class="check-item">
                     <input type="checkbox" id="mergeCheck" checked>
-                    <span data-i18n-html="mergeLabel"><b>Smart Merging</b> - combine duplicate headwords into one entry</span>
+                    <span data-i18n-html="mergeLabel"></span>
                 </label>
             </div>
         </div>
 
-        <button id="startBtn" class="btn-main" disabled data-i18n="startBtn">START CONVERSION</button>
+        <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
     </div>
 
-    <div id="log" data-i18n="logIdle">Status: Idle. Waiting for file...</div>
+    <div id="log" data-i18n="logIdle"></div>
 
     <div id="previewArea" class="preview-area">
-        <h3 data-i18n="previewTitle">🔍 Processed Entries Preview</h3>
+        <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
     </div>
 
     <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border: 1px solid #b7eb8f;">
-        <h3 data-i18n="doneTitle">✅ Done! Download Files:</h3>
+        <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
     </div>
 </div>
@@ -514,6 +514,24 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
+    en: {
+        title:       'MOBI to StarDict',
+        subtitle:    'For older Mobi7/PalmDoc',
+        step1:       'Step 1: Select Dictionary File',
+        dropzone:    '📁 Select .mobi file or drag it here',
+        step2:       'Step 2: Options',
+        styleLabel:  '🎨 Entry Style:',
+        styleNone:   'None – raw HTML passthrough',
+        styleClean:  'Clean – semantic, no inline styles',
+        styleNice:   'Nice Theme – headword + phonetics styled',
+        styleRich:   'Rich Color – full color-coded sections',
+        synLabel:    '<b>Generate .syn file</b> — extracts sub-phrases &amp; alternate forms as synonyms',
+        mergeLabel:  '<b>Smart Merging</b> — combine duplicate headwords into one entry',
+        startBtn:    'START CONVERSION',
+        logIdle:     'Status: Idle. Waiting for file...',
+        previewTitle:'🔍 Processed Entries Preview',
+        doneTitle:   '✅ Done! Download Files:',
+    },
     pl: {
         title:       'MOBI do StarDict',
         subtitle:    'Dla starszych Mobi7/PalmDoc',
@@ -534,22 +552,8 @@ const I18N = {
     }
 };
 // ── i18n: language detection, application & toggle ───────────────────────────
-// Only non-English translations are needed in I18N - English is read directly
-// from the initial HTML, cached on first run, and restored when switching back.
-// Expects a global `const I18N = { pl: {...} }` defined before this file.
-
-var _i18nCache = {};
-(function _buildCache() {
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        _i18nCache[el.getAttribute('data-i18n')] = el.textContent;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        _i18nCache['html:' + el.getAttribute('data-i18n-html')] = el.innerHTML;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        _i18nCache['ph:' + el.getAttribute('data-i18n-ph')] = el.placeholder;
-    });
-})();
+// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+// file is included. All text lives only in I18N — HTML elements are empty shells.
 
 (function () {
     var stored = localStorage.getItem('lang');
@@ -559,18 +563,18 @@ var _i18nCache = {};
 })();
 
 function applyI18n() {
-    var t = I18N[window.LANG] || {};
+    var t = I18N[window.LANG] || I18N.en;
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n');
-        el.textContent = key in t ? t[key] : (_i18nCache[key] || '');
+        var v = t[el.getAttribute('data-i18n')];
+        if (v !== undefined) el.textContent = v;
     });
     document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-html');
-        el.innerHTML = key in t ? t[key] : (_i18nCache['html:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-html')];
+        if (v !== undefined) el.innerHTML = v;
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-ph');
-        el.placeholder = key in t ? t[key] : (_i18nCache['ph:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-ph')];
+        if (v !== undefined) el.placeholder = v;
     });
     var btn = document.getElementById('langToggle');
     if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
@@ -583,7 +587,8 @@ function toggleLang() {
     applyI18n();
 }
 
-document.addEventListener('DOMContentLoaded', applyI18n);
+// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+applyI18n();
 
 </script>
 </body>

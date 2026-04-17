@@ -30,29 +30,29 @@
 <body>
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 <div class="card">
-    <h2 data-i18n="title">🔬 MOBI Raw Text Inspector</h2>
+    <h2 data-i18n="title"></h2>
     <div class="upload-section" id="dropZone">
-        <span id="fileNameDisplay" data-i18n="dropzone">📁 Click or drag your .mobi file here</span>
+        <span id="fileNameDisplay" data-i18n="dropzone"></span>
         <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
     </div>
     <div id="controls">
-        <label><span data-i18n="recordLabel">Record:</span> <input type="number" id="recFrom" value="1" min="1"> <span data-i18n="toLabel">to</span> <input type="number" id="recTo" value="5" min="1"></label>
-        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn">DECODE RECORDS</button>
-        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn">◀ Prev</button>
-        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn">Next ▶</button>
+        <label><span data-i18n="recordLabel"></span> <input type="number" id="recFrom" value="1" min="1"> <span data-i18n="toLabel"></span> <input type="number" id="recTo" value="5" min="1"></label>
+        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn"></button>
+        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn"></button>
+        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn"></button>
         <span id="recInfo" style="font-size:12px;color:#666;"></span>
     </div>
-    <div id="log" data-i18n="logIdle">Status: Idle. Load a .mobi file to begin.</div>
+    <div id="log" data-i18n="logIdle"></div>
 </div>
 
 <div class="card" id="outputCard" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <b><span data-i18n="outputLabel">Decoded Output</span> <span id="bytesBadge" class="badge"></span></b>
-        <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn">📋 Copy raw text</button>
+        <b><span data-i18n="outputLabel"></span> <span id="bytesBadge" class="badge"></span></b>
+        <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn"></button>
     </div>
     <div class="tabs">
-        <div class="tab active" data-tab="raw" data-i18n="tabRaw">Raw HTML source</div>
-        <div class="tab" data-tab="rendered" data-i18n="tabRendered">Rendered HTML</div>
+        <div class="tab active" data-tab="raw" data-i18n="tabRaw"></div>
+        <div class="tab" data-tab="rendered" data-i18n="tabRendered"></div>
     </div>
     <div class="pane active" id="rawPane"><div id="rawOutput"></div></div>
     <div class="pane" id="renderedPane"><div id="renderedOutput"></div></div>

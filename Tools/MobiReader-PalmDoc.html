@@ -34,37 +34,37 @@
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 
 <div class="card">
-    <h2 data-i18n="title">MOBI Content Explorer V2</h2>
+    <h2 data-i18n="title"></h2>
     <div class="upload-section" id="dropZone">
-        <span id="fileName" data-i18n="dropzone">📁 Select .mobi dictionary file (UTF-8)</span>
+        <span id="fileName" data-i18n="dropzone"></span>
         <input type="file" id="fileInput" style="display:none">
     </div>
 
     <div class="viewer-controls" id="controls" style="display:none">
         <div>
-            <button class="btn" id="prevBtn" data-i18n="prevBtn">« Previous</button>
-            <span id="pageInfo" style="margin: 0 15px; font-weight: bold;"><span data-i18n="recordLabel">Record:</span> 0 / 0</span>
-            <button class="btn" id="nextBtn" data-i18n="nextBtn">Next »</button>
+            <button class="btn" id="prevBtn" data-i18n="prevBtn"></button>
+            <span id="pageInfo" style="margin: 0 15px; font-weight: bold;"><span data-i18n="recordLabel"></span> 0 / 0</span>
+            <button class="btn" id="nextBtn" data-i18n="nextBtn"></button>
         </div>
         <div class="record-meta" id="recordMeta" style="font-size: 12px; color: #666;"></div>
         <div>
             <input type="number" id="jumpTo" data-i18n-ph="jumpPh" placeholder="Record no." style="width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-            <button class="btn" id="jumpBtn" style="background:#28a745" data-i18n="jumpBtn">Go</button>
+            <button class="btn" id="jumpBtn" style="background:#28a745" data-i18n="jumpBtn"></button>
         </div>
     </div>
 
     <div class="content-container">
         <div class="box">
-            <h3 data-i18n="rawTitle">SOURCE CODE (Raw tags)</h3>
+            <h3 data-i18n="rawTitle"></h3>
             <div id="rawContent" class="raw-text"></div>
         </div>
         <div class="box">
-            <h3 data-i18n="renderedTitle">RENDERED PREVIEW</h3>
+            <h3 data-i18n="renderedTitle"></h3>
             <div id="htmlContent" class="rendered-html"></div>
         </div>
     </div>
 
-    <div id="log" data-i18n="logIdle">Status: Ready. Select a file to start debugging.</div>
+    <div id="log" data-i18n="logIdle"></div>
 </div>
 
 <script>
@@ -194,7 +194,7 @@ function updateView(idx) {
     document.getElementById('rawContent').textContent = text;
     document.getElementById('htmlContent').innerHTML = text;
 
-    document.getElementById('pageInfo').innerHTML = `<span data-i18n="recordLabel">${t.recordLabel}</span> ${idx} / ${reader.records.length - 1}`;
+    document.getElementById('pageInfo').innerHTML = `<span data-i18n="recordLabel"></span> ${idx} / ${reader.records.length - 1}`;
     document.getElementById('recordMeta').textContent = `Offset: ${reader.records[idx].offset} | ${t.sizeLabel}: ${text.length}`;
 
     document.getElementById('prevBtn').disabled = (idx <= 1);
@@ -210,6 +210,20 @@ document.getElementById('jumpBtn').onclick = () => {
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const I18N = {
+    en: {
+        title:       'MOBI Content Explorer V2',
+        dropzone:    '📁 Select .mobi dictionary file (UTF-8)',
+        prevBtn:     '« Previous',
+        recordLabel: 'Record:',
+        nextBtn:     'Next »',
+        jumpPh:      'Record no.',
+        jumpBtn:     'Go',
+        rawTitle:    'SOURCE CODE (Raw tags)',
+        renderedTitle:'RENDERED PREVIEW',
+        logIdle:     'Status: Ready. Select a file to start debugging.',
+        loadedMsg:   'Loaded {n} records. Meta flags:',
+        sizeLabel:   'Size (chars)',
+    },
     pl: {
         title:       'Eksplorator zawartości MOBI V2',
         dropzone:    '📁 Wybierz plik słownika .mobi (UTF-8)',
@@ -226,22 +240,8 @@ const I18N = {
     }
 };
 // ── i18n: language detection, application & toggle ───────────────────────────
-// Only non-English translations are needed in I18N - English is read directly
-// from the initial HTML, cached on first run, and restored when switching back.
-// Expects a global `const I18N = { pl: {...} }` defined before this file.
-
-var _i18nCache = {};
-(function _buildCache() {
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        _i18nCache[el.getAttribute('data-i18n')] = el.textContent;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        _i18nCache['html:' + el.getAttribute('data-i18n-html')] = el.innerHTML;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        _i18nCache['ph:' + el.getAttribute('data-i18n-ph')] = el.placeholder;
-    });
-})();
+// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+// file is included. All text lives only in I18N — HTML elements are empty shells.
 
 (function () {
     var stored = localStorage.getItem('lang');
@@ -251,18 +251,18 @@ var _i18nCache = {};
 })();
 
 function applyI18n() {
-    var t = I18N[window.LANG] || {};
+    var t = I18N[window.LANG] || I18N.en;
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n');
-        el.textContent = key in t ? t[key] : (_i18nCache[key] || '');
+        var v = t[el.getAttribute('data-i18n')];
+        if (v !== undefined) el.textContent = v;
     });
     document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-html');
-        el.innerHTML = key in t ? t[key] : (_i18nCache['html:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-html')];
+        if (v !== undefined) el.innerHTML = v;
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-ph');
-        el.placeholder = key in t ? t[key] : (_i18nCache['ph:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-ph')];
+        if (v !== undefined) el.placeholder = v;
     });
     var btn = document.getElementById('langToggle');
     if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
@@ -275,7 +275,8 @@ function toggleLang() {
     applyI18n();
 }
 
-document.addEventListener('DOMContentLoaded', applyI18n);
+// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+applyI18n();
 
 </script>
 </body>

@@ -1,20 +1,6 @@
 // ── i18n: language detection, application & toggle ───────────────────────────
-// Only non-English translations are needed in I18N - English is read directly
-// from the initial HTML, cached on first run, and restored when switching back.
-// Expects a global `const I18N = { pl: {...} }` defined before this file.
-
-var _i18nCache = {};
-(function _buildCache() {
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        _i18nCache[el.getAttribute('data-i18n')] = el.textContent;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        _i18nCache['html:' + el.getAttribute('data-i18n-html')] = el.innerHTML;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        _i18nCache['ph:' + el.getAttribute('data-i18n-ph')] = el.placeholder;
-    });
-})();
+// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+// file is included. All text lives only in I18N — HTML elements are empty shells.
 
 (function () {
     var stored = localStorage.getItem('lang');
@@ -24,18 +10,18 @@ var _i18nCache = {};
 })();
 
 function applyI18n() {
-    var t = I18N[window.LANG] || {};
+    var t = I18N[window.LANG] || I18N.en;
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n');
-        el.textContent = key in t ? t[key] : (_i18nCache[key] || '');
+        var v = t[el.getAttribute('data-i18n')];
+        if (v !== undefined) el.textContent = v;
     });
     document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-html');
-        el.innerHTML = key in t ? t[key] : (_i18nCache['html:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-html')];
+        if (v !== undefined) el.innerHTML = v;
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var key = el.getAttribute('data-i18n-ph');
-        el.placeholder = key in t ? t[key] : (_i18nCache['ph:' + key] || '');
+        var v = t[el.getAttribute('data-i18n-ph')];
+        if (v !== undefined) el.placeholder = v;
     });
     var btn = document.getElementById('langToggle');
     if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
@@ -48,4 +34,5 @@ function toggleLang() {
     applyI18n();
 }
 
-document.addEventListener('DOMContentLoaded', applyI18n);
+// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+applyI18n();

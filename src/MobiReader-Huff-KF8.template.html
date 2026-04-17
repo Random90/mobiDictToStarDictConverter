@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>MOBI Raw Text Inspector</title>
     <style>
+        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+        #langToggle:hover { border-color:#007bff; color:#007bff; }
         body { font-family: 'Segoe UI', sans-serif; max-width: 1100px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; }
         .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); margin-bottom: 20px; }
         h2 { color: #007bff; margin-top: 0; }
@@ -26,30 +28,31 @@
     </style>
 </head>
 <body>
+<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 <div class="card">
-    <h2>🔬 MOBI Raw Text Inspector</h2>
+    <h2 data-i18n="title">🔬 MOBI Raw Text Inspector</h2>
     <div class="upload-section" id="dropZone">
-        <span id="fileNameDisplay">📁 Click or drag your .mobi file here</span>
+        <span id="fileNameDisplay" data-i18n="dropzone">📁 Click or drag your .mobi file here</span>
         <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
     </div>
     <div id="controls">
-        <label>Record: <input type="number" id="recFrom" value="1" min="1"> to <input type="number" id="recTo" value="5" min="1"></label>
-        <button class="btn" id="decodeBtn" disabled>DECODE RECORDS</button>
-        <button class="btn btn-sm" id="prevBtn" disabled>◀ Prev</button>
-        <button class="btn btn-sm" id="nextBtn" disabled>Next ▶</button>
+        <label><span data-i18n="recordLabel">Record:</span> <input type="number" id="recFrom" value="1" min="1"> <span data-i18n="toLabel">to</span> <input type="number" id="recTo" value="5" min="1"></label>
+        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn">DECODE RECORDS</button>
+        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn">◀ Prev</button>
+        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn">Next ▶</button>
         <span id="recInfo" style="font-size:12px;color:#666;"></span>
     </div>
-    <div id="log">Status: Idle. Load a .mobi file to begin.</div>
+    <div id="log" data-i18n="logIdle">Status: Idle. Load a .mobi file to begin.</div>
 </div>
 
 <div class="card" id="outputCard" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <b>Decoded Output <span id="bytesBadge" class="badge"></span></b>
-        <button class="btn btn-sm" id="copyBtn">📋 Copy raw text</button>
+        <b><span data-i18n="outputLabel">Decoded Output</span> <span id="bytesBadge" class="badge"></span></b>
+        <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn">📋 Copy raw text</button>
     </div>
     <div class="tabs">
-        <div class="tab active" data-tab="raw">Raw HTML source</div>
-        <div class="tab" data-tab="rendered">Rendered HTML</div>
+        <div class="tab active" data-tab="raw" data-i18n="tabRaw">Raw HTML source</div>
+        <div class="tab" data-tab="rendered" data-i18n="tabRendered">Rendered HTML</div>
     </div>
     <div class="pane active" id="rawPane"><div id="rawOutput"></div></div>
     <div class="pane" id="renderedPane"><div id="renderedOutput"></div></div>
@@ -191,6 +194,25 @@ function decodeSelected() {
     document.getElementById('outputCard').style.display = 'block';
     addLog(`Decoded records ${from}–${to}: ${totalComp} → ${totalDecomp} bytes`);
 }
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const I18N = {
+    pl: {
+        title:       '🔬 Inspektor tekstu MOBI',
+        dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
+        recordLabel: 'Rekord:',
+        toLabel:     'do',
+        decodeBtn:   'DEKODUJ REKORDY',
+        prevBtn:     '◀ Poprz.',
+        nextBtn:     'Nast. ▶',
+        logIdle:     'Status: Bezczynny. Wczytaj plik .mobi, aby rozpocząć.',
+        outputLabel: 'Zdekodowane dane',
+        copyBtn:     '📋 Kopiuj tekst',
+        tabRaw:      'Źródło HTML',
+        tabRendered: 'Podgląd HTML',
+    }
+};
+// @@include(src/i18n-core.js)
 </script>
 </body>
 </html>

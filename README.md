@@ -96,3 +96,16 @@ node build.js
 | Add a new output file | Add an entry to the `OUTPUTS` array in `build.js` |
 
 After editing any template or shared source file, run `node build.js` and commit both the changed source files and the regenerated HTML files.
+
+### 🪝 Git hooks
+
+A pre-commit hook is included in `.githooks/pre-commit`. It automatically runs `node build.js` before every commit so compiled outputs are always up to date.
+
+After cloning the repository, activate it once with:
+
+```bash
+./setup.sh
+```
+
+This runs `git config core.hooksPath .githooks` locally (git does not share hook configuration automatically).
+

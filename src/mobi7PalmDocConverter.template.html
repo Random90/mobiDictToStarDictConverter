@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>MOBI to StarDict</title>
     <style>
+        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+        #langToggle:hover { border-color:#007bff; color:#007bff; }
         body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; line-height: 1.6; }
         .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
         h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
@@ -30,27 +32,28 @@
     </style>
 </head>
 <body>
+<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 
 <div class="card">
-    <h2>MOBI to StarDict</h2>
-    <small>For older Mobi7/PalmDoc</small>
+    <h2 data-i18n="title">MOBI to StarDict</h2>
+    <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
 
     <div class="controls">
-        <label>Step 1: Select Dictionary File</label>
+        <label data-i18n="step1">Step 1: Select Dictionary File</label>
         <div class="upload-section" id="dropZone">
-            <span id="fileNameDisplay">📁 Select .mobi file or drag it here</span>
+            <span id="fileNameDisplay" data-i18n="dropzone">📁 Select .mobi file or drag it here</span>
             <input type="file" id="fileInput" style="display:none">
         </div>
 
-        <label>Step 2: Options</label>
+        <label data-i18n="step2">Step 2: Options</label>
         <div class="option-box">
             <div class="option-row">
-                <label>🎨 Entry Style:</label>
+                <label data-i18n="styleLabel">🎨 Entry Style:</label>
                 <select id="styleSelect">
-                    <option value="none">None – raw HTML passthrough</option>
-                    <option value="clean">Clean – semantic, no inline styles</option>
-                    <option value="nice" selected>Nice Theme – headword + phonetics styled</option>
-                    <option value="rich">Rich Color – full color-coded sections</option>
+                    <option value="none" data-i18n="styleNone">None – raw HTML passthrough</option>
+                    <option value="clean" data-i18n="styleClean">Clean – semantic, no inline styles</option>
+                    <option value="nice" selected data-i18n="styleNice">Nice Theme – headword + phonetics styled</option>
+                    <option value="rich" data-i18n="styleRich">Rich Color – full color-coded sections</option>
                 </select>
             </div>
             <div class="style-preview" id="stylePreview"></div>
@@ -58,29 +61,29 @@
             <div class="check-item" style="margin-top:10px;">
                 <label class="check-item">
                     <input type="checkbox" id="synCheck" checked>
-                    <span><b>Generate .syn file</b> — extracts sub-phrases &amp; alternate forms as synonyms</span>
+                    <span data-i18n-html="synLabel"><b>Generate .syn file</b> - extracts sub-phrases &amp; alternate forms as synonyms</span>
                 </label>
             </div>
             <div class="check-item">
                 <label class="check-item">
                     <input type="checkbox" id="mergeCheck" checked>
-                    <span><b>Smart Merging</b> — combine duplicate headwords into one entry</span>
+                    <span data-i18n-html="mergeLabel"><b>Smart Merging</b> - combine duplicate headwords into one entry</span>
                 </label>
             </div>
         </div>
 
-        <button id="startBtn" class="btn-main" disabled>START CONVERSION</button>
+        <button id="startBtn" class="btn-main" disabled data-i18n="startBtn">START CONVERSION</button>
     </div>
 
-    <div id="log">Status: Idle. Waiting for file...</div>
+    <div id="log" data-i18n="logIdle">Status: Idle. Waiting for file...</div>
 
     <div id="previewArea" class="preview-area">
-        <h3>🔍 Processed Entries Preview</h3>
+        <h3 data-i18n="previewTitle">🔍 Processed Entries Preview</h3>
         <div class="preview-grid" id="previewGrid"></div>
     </div>
 
     <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border: 1px solid #b7eb8f;">
-        <h3>✅ Done! Download Files:</h3>
+        <h3 data-i18n="doneTitle">✅ Done! Download Files:</h3>
         <div id="links"></div>
     </div>
 </div>
@@ -420,6 +423,29 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
         pGrid.appendChild(div);
     }
 }
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const I18N = {
+    pl: {
+        title:       'MOBI do StarDict',
+        subtitle:    'Dla starszych Mobi7/PalmDoc',
+        step1:       'Krok 1: Wybierz plik słownika',
+        dropzone:    '📁 Wybierz plik .mobi lub przeciągnij go tutaj',
+        step2:       'Krok 2: Opcje',
+        styleLabel:  '🎨 Styl wpisów:',
+        styleNone:   'Brak – oryginalny HTML bez zmian',
+        styleClean:  'Czysty – semantyczny, bez stylów inline',
+        styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
+        styleRich:   'Kolorowy – pełne kolorowanie sekcji',
+        synLabel:    '<b>Generuj plik .syn</b> - wyodrębnia pod-frazy i formy alternatywne jako synonimy',
+        mergeLabel:  '<b>Inteligentne scalanie</b> - łączy zduplikowane nagłówki w jeden wpis',
+        startBtn:    'ROZPOCZNIJ KONWERSJĘ',
+        logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
+        previewTitle:'🔍 Podgląd przetworzonych wpisów',
+        doneTitle:   '✅ Gotowe! Pobierz pliki:',
+    }
+};
+// @@include(src/i18n-core.js)
 </script>
 </body>
 </html>

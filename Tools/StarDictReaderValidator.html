@@ -26,23 +26,26 @@
         .pane-raw { background: #1c1e21; color: #e8e8e8; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', monospace; font-size: 11px; white-space: pre-wrap; min-height: 80px; overflow-x: auto; max-height: 420px; overflow-y: auto; }
         /* ── Syn info ── */
         .syn-info { font-size: 12px; color: #6f42c1; background: #f5f0ff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
+        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+        #langToggle:hover { border-color:#007bff; color:#007bff; }
     </style>
 </head>
 <body>
+<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
 <div class="card">
-    <h2>StarDict Local Validator</h2>
-    <p>Upload your converted files to test them before moving to Onyx Boox.</p>
+    <h2 data-i18n="title">StarDict Local Validator</h2>
+    <p data-i18n="desc">Upload your converted files to test them before moving to Onyx Boox.</p>
 
     <div class="file-inputs">
         <label>1. <b>dictionary.ifo</b> <input type="file" id="ifoFile" accept=".ifo"></label>
         <label>2. <b>dictionary.idx</b> <input type="file" id="idxFile" accept=".idx"></label>
         <label>3. <b>dictionary.dict</b> <input type="file" id="dictFile" accept=".dict"></label>
-        <label>4. <b>dictionary.syn</b> <input type="file" id="synFile" accept=".syn"> <span style="color:#888;font-size:11px">(optional)</span></label>
+        <label>4. <b>dictionary.syn</b> <input type="file" id="synFile" accept=".syn"> <span style="color:#888;font-size:11px" data-i18n="optional">(optional)</span></label>
     </div>
 
-    <div id="status" class="status">Waiting for files (ifo + idx + dict required)…</div>
+    <div id="status" class="status" data-i18n="waiting">Waiting for files (ifo + idx + dict required)…</div>
 
-    <input type="text" id="searchBox" placeholder="🔍 Type a word to search…">
+    <input type="text" id="searchBox" data-i18n-ph="searchPh" placeholder="🔍 Type a word to search…">
 </div>
 
 <div class="card" id="resultCard">
@@ -50,17 +53,17 @@
         <span class="result-title" id="resultWord"></span>
         <div style="display:flex;gap:6px;align-items:center">
             <span class="badge" id="byteBadge"></span>
-            <button class="btn-copy" id="copyBtn">📋 Copy HTML</button>
+            <button class="btn-copy" id="copyBtn" data-i18n="copyBtn">📋 Copy HTML</button>
         </div>
     </div>
     <div class="syn-info" id="synInfo"></div>
     <div class="split">
         <div>
-            <div class="pane-label">Rendered</div>
+            <div class="pane-label" data-i18n="rendered">Rendered</div>
             <div class="pane-rendered" id="paneRendered"></div>
         </div>
         <div>
-            <div class="pane-label">Raw HTML source</div>
+            <div class="pane-label" data-i18n="rawSource">Raw HTML source</div>
             <div class="pane-raw" id="paneRaw"></div>
         </div>
     </div>
@@ -176,10 +179,67 @@ document.getElementById('searchBox').addEventListener('input', (e) => {
 document.getElementById('copyBtn').addEventListener('click', () => {
     navigator.clipboard.writeText(rawHtml).then(() => {
         const btn = document.getElementById('copyBtn');
-        btn.textContent = '✅ Copied!';
-        setTimeout(() => { btn.textContent = '📋 Copy HTML'; }, 1500);
+        const t = I18N[window.LANG] || I18N.en;
+        btn.textContent = t.copied;
+        setTimeout(() => { btn.textContent = t.copyBtn; }, 1500);
     });
 });
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const I18N = {
+    pl: {
+        title:    'Lokalny walidator StarDict',
+        desc:     'Wczytaj skonwertowane pliki, aby sprawdzić je przed przeniesieniem na Onyx Boox.',
+        optional: '(opcjonalny)',
+        waiting:  'Oczekiwanie na pliki (wymagane: ifo + idx + dict)…',
+        searchPh: '🔍 Wpisz szukane słowo…',
+        copyBtn:  '📋 Kopiuj HTML',
+        copied:   '✅ Skopiowano!',
+        rendered: 'Podgląd',
+        rawSource:'Źródło HTML',
+        synRedir: '🔗 Przekierowanie synonimu:',
+    }
+};
+
+var _i18nCache = {};
+(function _buildCache() {
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        _i18nCache[el.getAttribute('data-i18n')] = el.textContent;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+        _i18nCache['ph:' + el.getAttribute('data-i18n-ph')] = el.placeholder;
+    });
+})();
+
+(function () {
+    var stored = localStorage.getItem('lang');
+    var auto   = navigator.language && navigator.language.startsWith('pl') ? 'pl' : 'en';
+    window.LANG = stored || auto;
+    document.documentElement.lang = window.LANG;
+})();
+
+function applyI18n() {
+    var t = I18N[window.LANG] || {};
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n');
+        el.textContent = key in t ? t[key] : (_i18nCache[key] || '');
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+        var key = el.getAttribute('data-i18n-ph');
+        el.placeholder = key in t ? t[key] : (_i18nCache['ph:' + key] || '');
+    });
+    var btn = document.getElementById('langToggle');
+    if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
+}
+
+function toggleLang() {
+    window.LANG = window.LANG === 'pl' ? 'en' : 'pl';
+    localStorage.setItem('lang', window.LANG);
+    document.documentElement.lang = window.LANG;
+    applyI18n();
+}
+
+document.addEventListener('DOMContentLoaded', applyI18n);
 </script>
 </body>
 </html>

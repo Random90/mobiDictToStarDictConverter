@@ -6,8 +6,8 @@
 Najlepszy słownik angielsko-polski na czytniki, [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e), jest dostępny wyłącznie w formatach dla Kindle i Pocketbook. Celem tego projektu jest umożliwienie korzystania z tego słownika na innych czytnikach, takich jak np. Onyx Boox, które obsługują format StarDict. Repozytorium zawiera tylko skrypt do konwersji, słownik należy zakupić samodzielnie. Nie gwarantuję pełnej kompatybilności, projekt jest eksperymentalny. 
 
 Istnieją dwa konwertery w zależności od wersji słownika:
- - mobiKF8HuffConverter.html - dla słownika w formacie KF8 (nowsze wydania), działa z wersją 2026
- - mobi7PalmDocConverter.html - dla słownika w formacie PalmDoc (starsze wydania), działa z wersją 2014 (i prawdopodobnie częcią aktualizcji)
+ - [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - dla słownika w formacie KF8 (nowsze wydania), działa z wersją 2026
+ - [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - dla słownika w formacie PalmDoc (starsze wydania), działa z wersją 2014 (i prawdopodobnie częcią aktualizcji)
 
 Plik konwertera wysarczy otworzyć w nowym oknie przeglądarki, wybrać plik słownika i kliknąć Convert/Begin. Potem należy pobrać wygenerowane pliki osobno i umieścić w osobnym folderze w katalogu /dict (na Onyx Boox).
 
@@ -19,8 +19,8 @@ Decompress algorithm is based on [KindleUnpack](https://github.com/kevinhendrick
 
 ## Usage
 Use one of the two converters depending on the version of your dictionary:
- - mobiKF8HuffConverter.html - for KF8 format (newer editions)
- - mobi7PalmDocConverter.html - for PalmDoc format (older editions)
+ - [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - for KF8 format (newer editions)
+ - [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - for PalmDoc format (older editions)
 
 Pick a mobi file, select StarDict entry style and click Convert/Begin. Then download the generated files separately and place them in a separate folder in the /dict directory of your reader (on Onyx Boox, might differ on others).
 

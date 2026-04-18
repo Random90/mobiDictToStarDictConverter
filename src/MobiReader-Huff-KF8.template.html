@@ -114,6 +114,7 @@ class KF8Decoder extends HuffCdicBase {
     constructor(buffer) {
         super(buffer);
         this.huffIdx    = -1;
+        this.textRecordMax = 0;
         this.extraFlags = 1;
         this.decodedCache = new Map();
         this.lowerCache   = new Map();
@@ -131,7 +132,8 @@ class KF8Decoder extends HuffCdicBase {
             }
         }
         if (this.huffIdx === -1) { addLog('ERROR: No HUFF record found.'); return false; }
-        addLog(`HUFF record index: ${this.huffIdx}  (text records: 1–${this.huffIdx-1})`);
+        this.textRecordMax = this.getTextRecordMax(this.huffIdx);
+        addLog(`HUFF record index: ${this.huffIdx}  (text records: 1–${this.textRecordMax})`);
 
         this.loadHuff(this.recs[this.huffIdx]);
         this.loadAllCdic(this.huffIdx);
@@ -167,7 +169,7 @@ function initConverter() {
     searchCache = new Map();
     const ok = decoder.init();
     if (!ok) return;
-    const maxRec = decoder.huffIdx - 1;
+    const maxRec = decoder.textRecordMax;
     document.getElementById('recFrom').max = maxRec;
     document.getElementById('recTo').max   = maxRec;
     document.getElementById('recTo').value = Math.min(5, maxRec);
@@ -188,7 +190,7 @@ let searchCursor  = 0;
 let searchCache   = new Map();
 
 function showSearchResult(idx) {
-    const max = decoder.huffIdx - 1;
+    const max = decoder.textRecordMax;
     const rec = searchResults[idx];
     document.getElementById('recFrom').value = Math.max(1, rec - 1);
     document.getElementById('recTo').value   = Math.min(max, rec + 1);
@@ -225,7 +227,7 @@ function searchWord() {
     document.getElementById('searchPrev').disabled = true;
     document.getElementById('searchNext').disabled = true;
 
-    const max = decoder.huffIdx - 1;
+    const max = decoder.textRecordMax;
     const scanHits = () => {
         const hits = [];
         for (let i = 1; i <= max; i++) {
@@ -261,7 +263,7 @@ function shiftRange(dir) {
     const from = parseInt(document.getElementById('recFrom').value);
     const to   = parseInt(document.getElementById('recTo').value);
     const span = to - from;
-    const max  = decoder ? decoder.huffIdx - 1 : 9999;
+    const max  = decoder ? decoder.textRecordMax : 9999;
     const newFrom = Math.max(1, Math.min(max - span, from + dir * (span + 1)));
     document.getElementById('recFrom').value = newFrom;
     document.getElementById('recTo').value   = Math.min(max, newFrom + span);
@@ -271,8 +273,8 @@ function shiftRange(dir) {
 function decodeSelected() {
     if (!decoder) return;
     const from = parseInt(document.getElementById('recFrom').value);
-    const to   = Math.min(parseInt(document.getElementById('recTo').value), decoder.huffIdx - 1);
-    const max  = decoder.huffIdx - 1;
+    const to   = Math.min(parseInt(document.getElementById('recTo').value), decoder.textRecordMax);
+    const max  = decoder.textRecordMax;
     document.getElementById('recInfo').textContent = `(max text record: ${max})`;
 
     let markers = '';

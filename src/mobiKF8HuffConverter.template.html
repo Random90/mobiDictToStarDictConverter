@@ -333,7 +333,7 @@ class KF8Converter extends HuffCdicBase {
     }
 
     // ── Streaming decompress + extract ────────────────────────────────────────
-    streamDecompress(huffIdx, extraFlags) {
+    streamDecompress(textRecordMax, extraFlags) {
         return new Promise(resolve => {
             const utf8    = new TextDecoder('utf-8', { fatal: false });
             const OVERLAP = 16384;
@@ -341,9 +341,10 @@ class KF8Converter extends HuffCdicBase {
             let   i       = 1;
             const BATCH   = 80;
             let   firstDecodedLogged = false;
+            const endExclusive = textRecordMax + 1;
 
             const processChunk = () => {
-                const lim = Math.min(i + BATCH, huffIdx);
+                const lim = Math.min(i + BATCH, endExclusive);
                 for (; i < lim; i++) {
                     const start = this.recs[i];
                     const end   = (i + 1 < this.recs.length) ? this.recs[i + 1] : this.buffer.byteLength;
@@ -363,9 +364,9 @@ class KF8Converter extends HuffCdicBase {
                     overlap = chunk.length > OVERLAP ? chunk.slice(-OVERLAP) : chunk;
                 }
 
-                if (i < huffIdx) {
+                if (i < endExclusive) {
                     if ((i % 500) < BATCH)
-                        addLog(`Decompressing: ${i}/${huffIdx}… entries so far: ${this.finalMap.size}`);
+                        addLog(`Decompressing: ${i}/${textRecordMax}… entries so far: ${this.finalMap.size}`);
                     setTimeout(processChunk, 0);
                 } else {
                     this.extractEntriesFrom(overlap, true);
@@ -393,7 +394,8 @@ class KF8Converter extends HuffCdicBase {
             }
         }
         if (huffIdx === -1) { addLog('ERROR: No HUFF record found.'); return this.finalMap; }
-        addLog(`HUFF record: ${huffIdx}  (text records: 1–${huffIdx-1})`);
+        const textRecordMax = this.getTextRecordMax(huffIdx);
+        addLog(`HUFF record: ${huffIdx}  (text records: 1–${textRecordMax})`);
 
         this.loadHuff(this.recs[huffIdx]);
         this.loadAllCdic(huffIdx);
@@ -403,7 +405,7 @@ class KF8Converter extends HuffCdicBase {
             return this.finalMap;
         }
 
-        await this.streamDecompress(huffIdx, extraFlags);
+        await this.streamDecompress(textRecordMax, extraFlags);
         addLog(`Synonyms collected: ${this.synMap.size}`);
         return { finalMap: this.finalMap, synMap: this.synMap };
     }

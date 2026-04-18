@@ -72,6 +72,30 @@ class HuffCdicBase {
     u32(o) { const r = this.raw; return ((r[o]<<24)|(r[o+1]<<16)|(r[o+2]<<8)|r[o+3]) >>> 0; }
     u16(o) { return ((this.raw[o]<<8)|this.raw[o+1]) >>> 0; }
 
+    _getRecord0Base() {
+        const r0 = this.recs[0];
+        let mobi = r0 + 16;
+        if (!(this.raw[mobi]===0x4D && this.raw[mobi+1]===0x4F &&
+              this.raw[mobi+2]===0x42 && this.raw[mobi+3]===0x49)) {
+            mobi = r0;
+        }
+        return (mobi === r0 + 16) ? r0 : mobi;
+    }
+
+    // PalmDOC text_records is the authoritative end of text payload.
+    getTextRecordMax(huffIdx) {
+        const recBase = this._getRecord0Base();
+        const headerCount = this.u16(recBase + 0x08);
+        const huffBound = Math.max(0, huffIdx - 1);
+
+        if (!headerCount) return huffBound;
+        if (headerCount > huffBound) {
+            addLog(`⚠️ text_records (${headerCount}) exceeds HUFF bound (${huffBound}); clamping.`);
+            return huffBound;
+        }
+        return headerCount;
+    }
+
     // ── PDB record list ───────────────────────────────────────────────────────
     // Populates this.recs with file offsets and returns the array.
     buildRecords() {
@@ -85,13 +109,7 @@ class HuffCdicBase {
     // KindleUnpack-parity lookup for pure and hybrid KF8 files (EXTH tag 121 boundary override).
     findExtraDataFlags() {
         const recs = this.recs;
-        const r0 = recs[0];
-        let mobi = r0 + 16;
-        if (!(this.raw[mobi]===0x4D && this.raw[mobi+1]===0x4F &&
-              this.raw[mobi+2]===0x42 && this.raw[mobi+3]===0x49)) {
-            mobi = r0;
-        }
-        const recBase = (mobi === r0 + 16) ? r0 : mobi;
+        const recBase = this._getRecord0Base();
 
         // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
         const hdrLen   = this.u32(recBase + 0x14);

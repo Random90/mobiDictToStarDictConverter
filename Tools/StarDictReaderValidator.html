@@ -24,6 +24,10 @@
         .pane-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 5px; }
         .pane-rendered { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; min-height: 80px; font-size: 13px; overflow-x: auto; }
         .pane-raw { background: #1c1e21; color: #e8e8e8; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', monospace; font-size: 11px; white-space: pre-wrap; min-height: 80px; overflow-x: auto; max-height: 420px; overflow-y: auto; }
+        /* ── Related entries ── */
+        .related-bar { font-size: 12px; color: #555; background: #f0f4ff; border: 1px solid #c8d8ff; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
+        .related-bar span { display: inline-block; margin: 2px 4px; background: #dce8ff; border-radius: 4px; padding: 1px 8px; cursor: pointer; border: 1px solid #b0c8ff; }
+        .related-bar span:hover, .related-bar span.active { background: #007bff; color: #fff; border-color: #007bff; }
         /* ── Syn info ── */
         .syn-info { font-size: 12px; color: #6f42c1; background: #f5f0ff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
         #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
@@ -65,6 +69,7 @@
         </div>
     </div>
     <div class="syn-info" id="synInfo"></div>
+    <div class="related-bar" id="relatedBar"></div>
     <div class="split">
         <div>
             <div class="pane-label" data-i18n="rendered">Rendered</div>
@@ -79,9 +84,42 @@
 
 <script>
 let idxData = null, dictData = null;
-let wordMap = new Map();   // lowercase word → {off, sz, original}
-let synMap  = new Map();   // lowercase alt → canonical word (original case)
+let wordMap = new Map();   // lowercase word → [{off, sz, original}, …]  (may have multiple idx entries)
+let synMap  = new Map();   // lowercase alt → canonical lowercase key
 let rawHtml = '';
+let currentRelatedKeys = [];  // keys shown in the related bar
+
+function showEntry(lowerKey, synHit) {
+    const entries = wordMap.get(lowerKey);
+    if (!entries) return;
+    const dec = new TextDecoder('utf-8');
+    rawHtml = entries.map(e => dec.decode(new Uint8Array(dictData, e.off, e.sz))).join('');
+
+    const firstEntry = entries[0];
+    document.getElementById('resultWord').textContent = firstEntry.original;
+    document.getElementById('byteBadge').textContent =
+        entries.length > 1
+            ? `${entries.length} idx entries · ${entries.reduce((s,e)=>s+e.sz,0)} bytes`
+            : `${firstEntry.sz} bytes`;
+
+    const synInfoEl = document.getElementById('synInfo');
+    if (synHit) {
+        synInfoEl.style.display = 'block';
+        synInfoEl.innerHTML = `🔗 Synonym redirect: <b>${synHit}</b> → <b>${firstEntry.original}</b>`;
+    } else {
+        synInfoEl.style.display = 'none';
+    }
+
+    document.getElementById('paneRendered').innerHTML = rawHtml;
+    document.getElementById('paneRaw').textContent    = rawHtml;
+
+    // Highlight active tab in related bar
+    document.querySelectorAll('.related-bar span').forEach(el => {
+        el.classList.toggle('active', el.dataset.key === lowerKey);
+    });
+
+    document.getElementById('resultCard').style.display = 'block';
+}
 
 async function loadFiles() {
     const ifoF  = document.getElementById('ifoFile').files[0];
@@ -106,7 +144,10 @@ async function loadFiles() {
         if (offset + 8 > idxData.byteLength) break;
         const dataOffset = idxData.getUint32(offset, false);
         const dataSize   = idxData.getUint32(offset + 4, false);
-        wordMap.set(word.toLowerCase(), { off: dataOffset, sz: dataSize, original: word });
+        const lc = word.toLowerCase();
+        const entry = { off: dataOffset, sz: dataSize, original: word };
+        if (wordMap.has(lc)) wordMap.get(lc).push(entry);
+        else wordMap.set(lc, [entry]);
         offset += 8;
     }
 
@@ -150,39 +191,54 @@ document.getElementById('searchBox').addEventListener('input', (e) => {
     const query = e.target.value.trim();
     const lower = query.toLowerCase();
     const resultCard = document.getElementById('resultCard');
+    const relatedBar = document.getElementById('relatedBar');
 
-    // Direct match
-    let entry  = wordMap.get(lower);
-    let synHit = null;
+    if (!query) { resultCard.style.display = 'none'; relatedBar.style.display = 'none'; return; }
 
-    // Synonym fallback
-    if (!entry && synMap.has(lower)) {
-        const canonical = synMap.get(lower);
-        entry  = wordMap.get(canonical);
-        synHit = canonical;
+    // Direct match or synonym fallback
+    let matchKey = wordMap.has(lower) ? lower : null;
+    let synHit   = null;
+    if (!matchKey && synMap.has(lower)) {
+        matchKey = synMap.get(lower);
+        synHit   = query;
     }
 
-    if (!entry || !query) { resultCard.style.display = 'none'; return; }
+    // Collect related keys: exact match first, then keys that start with lower + non-alpha char or digit
+    const related = [];
+    if (matchKey) related.push(matchKey);
+    for (const k of wordMap.keys()) {
+        if (k === matchKey) continue;
+        // include keys like "yearly1", "yearly 2", "yearly_adv" etc.
+        if (k.startsWith(lower) && (k.length === lower.length || !/[a-z]/i.test(k[lower.length]))) {
+            related.push(k);
+        }
+    }
 
-    const defBytes = new Uint8Array(dictData, entry.off, entry.sz);
-    rawHtml = new TextDecoder('utf-8').decode(defBytes);
+    if (related.length === 0) { resultCard.style.display = 'none'; relatedBar.style.display = 'none'; return; }
 
-    document.getElementById('resultWord').textContent = entry.original || query;
-    document.getElementById('byteBadge').textContent  = `${entry.sz} bytes`;
-
-    // Syn info
-    const synInfoEl = document.getElementById('synInfo');
-    if (synHit) {
-        synInfoEl.style.display = 'block';
-        synInfoEl.innerHTML = `🔗 Synonym redirect: <b>${query}</b> → <b>${entry.original}</b>`;
+    // Build related bar
+    if (related.length > 1) {
+        relatedBar.style.display = 'block';
+        // Sort: exact match first, then by key length, then alphabetically
+        related.sort((a, b) => {
+            if (a === (matchKey || related[0])) return -1;
+            if (b === (matchKey || related[0])) return  1;
+            return a.length - b.length || a.localeCompare(b);
+        });
+        relatedBar.innerHTML = related.map(k => {
+            const label = wordMap.get(k)[0].original;
+            return `<span data-key="${k}" title="${label}">${label}</span>`;
+        }).join('');
+        relatedBar.querySelectorAll('span').forEach(el => {
+            el.addEventListener('click', () => showEntry(el.dataset.key, null));
+        });
     } else {
-        synInfoEl.style.display = 'none';
+        relatedBar.style.display = 'none';
     }
 
-    document.getElementById('paneRendered').innerHTML = rawHtml;
-    document.getElementById('paneRaw').textContent    = rawHtml;
-
-    resultCard.style.display = 'block';
+    // Show first/best match (exact match, sorted to front)
+    const bestKey = matchKey || related[0];
+    showEntry(bestKey, synHit);
 });
 
 document.getElementById('copyBtn').addEventListener('click', () => {

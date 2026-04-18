@@ -31,6 +31,10 @@
         label { font-size: 13px; }
         input[type=number] { width: 70px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px; }
         .badge { background: #28a745; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; }
+        #searchRow { display:none; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+        #searchRow input[type=text] { flex:1; min-width:160px; padding:6px 10px; border-radius:6px; border:2px solid #007bff; font-size:14px; }
+        #searchHits { font-size:12px; color:#555; }
+        mark { background:#ffe066; border-radius:2px; }
     </style>
 </head>
 <body>
@@ -55,6 +59,13 @@
         <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn"></button>
         <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn"></button>
         <span id="recInfo" style="font-size:12px;color:#666;"></span>
+    </div>
+    <div id="searchRow">
+        <input type="text" id="wordSearch" placeholder="🔍 Search word in all records…">
+        <button class="btn btn-sm" id="searchBtn">Find</button>
+        <button class="btn btn-sm" id="searchPrev" disabled>◀</button>
+        <button class="btn btn-sm" id="searchNext" disabled>▶</button>
+        <span id="searchHits"></span>
     </div>
     <div id="log" data-i18n="logIdle"></div>
 </div>
@@ -400,7 +411,73 @@ function initConverter() {
     document.getElementById('decodeBtn').disabled = false;
     document.getElementById('prevBtn').disabled = false;
     document.getElementById('nextBtn').disabled = false;
+    document.getElementById('searchRow').style.display = 'flex';
     addLog(`Ready. Text records: 1–${maxRec}. Use controls above to inspect.`);
+}
+
+document.getElementById('searchBtn').onclick = searchWord;
+document.getElementById('wordSearch').addEventListener('keydown', e => { if (e.key === 'Enter') searchWord(); });
+document.getElementById('searchPrev').onclick = () => navigateSearch(-1);
+document.getElementById('searchNext').onclick = () => navigateSearch(+1);
+
+let searchResults = [];
+let searchCursor  = 0;
+
+function showSearchResult(idx) {
+    const max = decoder.huffIdx - 1;
+    const rec = searchResults[idx];
+    document.getElementById('recFrom').value = Math.max(1, rec - 1);
+    document.getElementById('recTo').value   = Math.min(max, rec + 1);
+    decodeSelected();
+
+    const q   = document.getElementById('wordSearch').value.trim();
+    const raw = document.getElementById('rawOutput');
+    const re  = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    raw.innerHTML = raw.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(re, m => `<mark>${m}</mark>`);
+    // Scroll first highlight into view
+    const first = raw.querySelector('mark');
+    if (first) first.scrollIntoView({ block: 'center' });
+
+    document.getElementById('searchHits').textContent =
+        `Result ${idx + 1} / ${searchResults.length}  (record #${rec})`;
+    document.getElementById('searchPrev').disabled = idx === 0;
+    document.getElementById('searchNext').disabled = idx === searchResults.length - 1;
+}
+
+function navigateSearch(dir) {
+    const next = searchCursor + dir;
+    if (next < 0 || next >= searchResults.length) return;
+    searchCursor = next;
+    showSearchResult(searchCursor);
+}
+
+function searchWord() {
+    if (!decoder) return;
+    const q = document.getElementById('wordSearch').value.trim().toLowerCase();
+    if (!q) return;
+    const hitsEl = document.getElementById('searchHits');
+    hitsEl.textContent = 'Scanning…';
+    document.getElementById('searchPrev').disabled = true;
+    document.getElementById('searchNext').disabled = true;
+
+    const max = decoder.huffIdx - 1;
+    searchResults = [];
+    for (let i = 1; i <= max; i++) {
+        try {
+            const { text } = decoder.decodeRecord(i);
+            if (text.toLowerCase().includes(q)) searchResults.push(i);
+        } catch(e) { /* skip */ }
+    }
+
+    if (searchResults.length === 0) {
+        hitsEl.textContent = `No records found for "${q}".`;
+        return;
+    }
+
+    searchCursor = 0;
+    addLog(`Search "${q}": ${searchResults.length} hit(s) in records [${searchResults.join(', ')}]`);
+    showSearchResult(0);
 }
 
 document.getElementById('decodeBtn').onclick = decodeSelected;

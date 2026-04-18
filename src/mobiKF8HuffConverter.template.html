@@ -176,6 +176,33 @@ class KF8Converter extends HuffCdicBase {
         this.options  = { style: 'nice', generateSyn: true, ...options };
         this.finalMap = new Map();   // word → styled definition HTML
         this.synMap   = new Map();   // alternate_form → canonical_word
+        this.entrySeen = new Map();  // word → Set(fingerprint) for overlap dedupe
+    }
+
+    _ingestEntry(word, def, synHtml = '') {
+        if (!word || !def) return;
+        const key = word.trim();
+        if (!key) return;
+
+        const fp = def.replace(/\s+/g, ' ').trim();
+        if (!fp) return;
+
+        let seen = this.entrySeen.get(key);
+        if (!seen) {
+            seen = new Set();
+            this.entrySeen.set(key, seen);
+        }
+        if (seen.has(fp)) return;
+        seen.add(fp);
+
+        if (!this.finalMap.has(key)) {
+            this.finalMap.set(key, def);
+        } else {
+            const merged = this.finalMap.get(key) + '<hr/>' + def;
+            this.finalMap.set(key, merged);
+        }
+
+        this._collectSyns(key, synHtml || def);
     }
 
     // ── Extract entries from a HTML chunk (both idx:entry and h2 styles) ──────
@@ -192,7 +219,7 @@ class KF8Converter extends HuffCdicBase {
             const valueM = orthM[0].match(/\bvalue="([^"]+)"/i);
             if (!valueM) continue;
             const word = valueM[1].trim();
-            if (!word || word.length >= 120 || this.finalMap.has(word)) continue;
+            if (!word || word.length >= 120) continue;
             let def = block
                 .replace(/<idx:entry[^>]*>/gi, '')
                 .replace(/<\/idx:entry>/gi, '')
@@ -200,8 +227,7 @@ class KF8Converter extends HuffCdicBase {
                 .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, '')
                 .trim();
             def = styleFn(word, `<span><b>${word}</b></span> ${def}`);
-            this.finalMap.set(word, def);
-            this._collectSyns(word, def);
+            this._ingestEntry(word, def, def);
         }
 
         // ── Method 2: h2-based (JEM / older Mobipocket dictionary style) ──────
@@ -216,7 +242,7 @@ class KF8Converter extends HuffCdicBase {
             const h2Content = seg.substring(tagEnd + 1, h2Close);
             const rawText   = h2Content.replace(/<[^>]+>/g, '');
             const word      = rawText.split('[')[0].trim();
-            if (!word || word.length >= 100 || this.finalMap.has(word)) continue;
+            if (!word || word.length >= 100) continue;
 
             const after    = seg.substring(h2Close + 5);
             const boundary = after.search(/<h2\b|<hr\b/i);
@@ -225,8 +251,7 @@ class KF8Converter extends HuffCdicBase {
             const defContent = boundary >= 0 ? after.substring(0, boundary) : after;
             const rawHtml    = `<h2>${h2Content}</h2>${defContent}`;
             const def        = styleFn(word, rawHtml);
-            this.finalMap.set(word, def);
-            this._collectSyns(word, defContent);
+            this._ingestEntry(word, def, defContent);
         }
 
         // ── Method 3: <p width="-20"><span><b>headword</b></span>…</p> ──────────
@@ -267,11 +292,9 @@ class KF8Converter extends HuffCdicBase {
             }
 
             if (!word || word.length >= 120) continue;
-            if (this.finalMap.has(word)) continue;
 
             const def = styleFn(word, pContent);
-            this.finalMap.set(word, def);
-            this._collectSyns(word, pContent);
+            this._ingestEntry(word, def, pContent);
         }
     }
 

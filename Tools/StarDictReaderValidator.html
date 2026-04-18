@@ -15,7 +15,6 @@
         .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
         .result-title { font-weight: 700; font-size: 15px; color: #333; }
         .badge { background: #007bff; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: bold; }
-        .badge.syn { background: #6f42c1; }
         .btn-copy { padding: 5px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 12px; }
         .btn-copy:hover { background: #e0e0e0; }
         /* ── Split view ── */
@@ -24,10 +23,6 @@
         .pane-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 5px; }
         .pane-rendered { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; min-height: 80px; font-size: 13px; overflow-x: auto; }
         .pane-raw { background: #1c1e21; color: #e8e8e8; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', monospace; font-size: 11px; white-space: pre-wrap; min-height: 80px; overflow-x: auto; max-height: 420px; overflow-y: auto; }
-        /* ── Related entries ── */
-        .related-bar { font-size: 12px; color: #555; background: #f0f4ff; border: 1px solid #c8d8ff; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
-        .related-bar span { display: inline-block; margin: 2px 4px; background: #dce8ff; border-radius: 4px; padding: 1px 8px; cursor: pointer; border: 1px solid #b0c8ff; }
-        .related-bar span:hover, .related-bar span.active { background: #007bff; color: #fff; border-color: #007bff; }
         /* ── Syn info ── */
         .syn-info { font-size: 12px; color: #6f42c1; background: #f5f0ff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
         #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
@@ -69,7 +64,6 @@
         </div>
     </div>
     <div class="syn-info" id="synInfo"></div>
-    <div class="related-bar" id="relatedBar"></div>
     <div class="split">
         <div>
             <div class="pane-label" data-i18n="rendered">Rendered</div>
@@ -87,7 +81,6 @@ let idxData = null, dictData = null;
 let wordMap = new Map();   // lowercase word → [{off, sz, original}, …]  (may have multiple idx entries)
 let synMap  = new Map();   // lowercase alt → canonical lowercase key
 let rawHtml = '';
-let currentRelatedKeys = [];  // keys shown in the related bar
 
 function showEntry(lowerKey, synHit) {
     const entries = wordMap.get(lowerKey);
@@ -112,11 +105,6 @@ function showEntry(lowerKey, synHit) {
 
     document.getElementById('paneRendered').innerHTML = rawHtml;
     document.getElementById('paneRaw').textContent    = rawHtml;
-
-    // Highlight active tab in related bar
-    document.querySelectorAll('.related-bar span').forEach(el => {
-        el.classList.toggle('active', el.dataset.key === lowerKey);
-    });
 
     document.getElementById('resultCard').style.display = 'block';
 }
@@ -191,9 +179,8 @@ document.getElementById('searchBox').addEventListener('input', (e) => {
     const query = e.target.value.trim();
     const lower = query.toLowerCase();
     const resultCard = document.getElementById('resultCard');
-    const relatedBar = document.getElementById('relatedBar');
 
-    if (!query) { resultCard.style.display = 'none'; relatedBar.style.display = 'none'; return; }
+    if (!query) { resultCard.style.display = 'none'; return; }
 
     // Direct match or synonym fallback
     let matchKey = wordMap.has(lower) ? lower : null;
@@ -203,42 +190,8 @@ document.getElementById('searchBox').addEventListener('input', (e) => {
         synHit   = query;
     }
 
-    // Collect related keys: exact match first, then keys that start with lower + non-alpha char or digit
-    const related = [];
-    if (matchKey) related.push(matchKey);
-    for (const k of wordMap.keys()) {
-        if (k === matchKey) continue;
-        // include keys like "yearly1", "yearly 2", "yearly_adv" etc.
-        if (k.startsWith(lower) && (k.length === lower.length || !/[a-z]/i.test(k[lower.length]))) {
-            related.push(k);
-        }
-    }
-
-    if (related.length === 0) { resultCard.style.display = 'none'; relatedBar.style.display = 'none'; return; }
-
-    // Build related bar
-    if (related.length > 1) {
-        relatedBar.style.display = 'block';
-        // Sort: exact match first, then by key length, then alphabetically
-        related.sort((a, b) => {
-            if (a === (matchKey || related[0])) return -1;
-            if (b === (matchKey || related[0])) return  1;
-            return a.length - b.length || a.localeCompare(b);
-        });
-        relatedBar.innerHTML = related.map(k => {
-            const label = wordMap.get(k)[0].original;
-            return `<span data-key="${k}" title="${label}">${label}</span>`;
-        }).join('');
-        relatedBar.querySelectorAll('span').forEach(el => {
-            el.addEventListener('click', () => showEntry(el.dataset.key, null));
-        });
-    } else {
-        relatedBar.style.display = 'none';
-    }
-
-    // Show first/best match (exact match, sorted to front)
-    const bestKey = matchKey || related[0];
-    showEntry(bestKey, synHit);
+    if (!matchKey) { resultCard.style.display = 'none'; return; }
+    showEntry(matchKey, synHit);
 });
 
 document.getElementById('copyBtn').addEventListener('click', () => {

@@ -838,7 +838,8 @@ function renderOutput(finalMap, synMap, generateSyn) {
         const div = document.createElement('div');
         div.className = 'preview-item';
         div.innerHTML = `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:4px">${k}</b>`
-                      + finalMap.get(k).substring(0, 220);
+                      // Do not truncate raw HTML; rich style markup breaks when sliced mid-tag.
+                      + finalMap.get(k);
         pGrid.appendChild(div);
     }
 

@@ -15,6 +15,59 @@ class HuffCdicBase {
         this.dict        = [];
     }
 
+    _stripTrailingWithFlags(data, flags) {
+        // KindleUnpack parity: count trailer entries from set bits > 0 and trim one entry per count.
+        const multibyte = flags & 1;
+        let trailers = 0;
+        let tmp = flags >>> 1;
+        while (tmp > 0) {
+            if (tmp & 1) trailers++;
+            tmp >>>= 1;
+        }
+
+        const getSizeOfTrailingDataEntry = (buf) => {
+            if (buf.length === 0) return 0;
+            let num = 0;
+            const start = Math.max(0, buf.length - 4);
+            for (let i = start; i < buf.length; i++) {
+                const v = buf[i];
+                if (v & 0x80) num = 0;
+                num = ((num << 7) | (v & 0x7F)) >>> 0;
+            }
+            return num;
+        };
+
+        let out = data;
+        for (let i = 0; i < trailers; i++) {
+            const num = getSizeOfTrailingDataEntry(out);
+            const keep = Math.max(0, out.length - num);
+            out = out.slice(0, keep);
+        }
+
+        if (multibyte) {
+            const tail = out.length ? out[out.length - 1] : 0;
+            const num = (tail & 3) + 1;
+            const keep = Math.max(0, out.length - num);
+            out = out.slice(0, keep);
+        }
+
+        return out;
+    }
+
+    _normalizeExtraDataFlags(raw, sourceLabel) {
+        if (raw === 0xFFFF) {
+            // For sentinel/noisy values, start in conservative mode immediately.
+            addLog(`⚠️ ${sourceLabel}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.`);
+            return 0x0001;
+        }
+        // MOBI ExtraDataFlags trailer layout uses low bits; high bits are often noisy/vendor-specific.
+        const masked = raw & 0x001F;
+        if (masked !== raw) {
+            addLog(`⚠️ ${sourceLabel}: masking ExtraDataFlags 0x${raw.toString(16)} -> 0x${masked.toString(16)}`);
+        }
+        return masked || 0x0001;
+    }
+
     // ── Low-level readers ─────────────────────────────────────────────────────
     u32(o) { const r = this.raw; return ((r[o]<<24)|(r[o+1]<<16)|(r[o+2]<<8)|r[o+3]) >>> 0; }
     u16(o) { return ((this.raw[o]<<8)|this.raw[o+1]) >>> 0; }
@@ -29,7 +82,7 @@ class HuffCdicBase {
     }
 
     // ── Find ExtraDataFlags ───────────────────────────────────────────────────
-    // Works for both hybrid KF8 (EXTH tag 535 override) and pure KF8 files.
+    // KindleUnpack-parity lookup for pure and hybrid KF8 files (EXTH tag 121 boundary override).
     findExtraDataFlags() {
         const recs = this.recs;
         const r0 = recs[0];
@@ -38,21 +91,23 @@ class HuffCdicBase {
               this.raw[mobi+2]===0x42 && this.raw[mobi+3]===0x49)) {
             mobi = r0;
         }
+        const recBase = (mobi === r0 + 16) ? r0 : mobi;
 
-        const hdrLen   = this.u32(mobi + 4);
-        const mobiType = this.u32(mobi + 8);
+        // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
+        const hdrLen   = this.u32(recBase + 0x14);
+        const mobiType = this.u32(recBase + 0x18);
+        const mobiVer  = this.u32(recBase + 0x68);
         addLog(`Record 0: MOBI type=${mobiType}, headerLen=0x${hdrLen.toString(16)}`);
 
         let flags = 0x0001;
-        if (hdrLen >= 0xF4) {
-            const raw = this.u16(mobi + 0xF2);
+        if (hdrLen >= 0xE4 && mobiVer >= 5) {
+            const raw = this.u16(recBase + 0xF2);
             addLog(`ExtraDataFlags from MOBI header (offset 0xF2): 0x${raw.toString(16)}`);
-            flags = (raw <= 0x001F) ? raw : 0x0001;
-            if (raw > 0x001F) addLog(`⚠️ Suspicious flags (0x${raw.toString(16)}), capping to 0x0001`);
+            flags = this._normalizeExtraDataFlags(raw, 'MOBI header');
         }
 
-        // Check EXTH tag 535 – overrides for hybrid files
-        const exthOff = mobi + hdrLen;
+        // EXTH tag 121 points to the KF8 boundary; when present, use KF8 section flags.
+        const exthOff = recBase + 16 + hdrLen;
         if (this.raw[exthOff]===0x45 && this.raw[exthOff+1]===0x58 &&
             this.raw[exthOff+2]===0x54 && this.raw[exthOff+3]===0x48) {
 
@@ -63,7 +118,7 @@ class HuffCdicBase {
             for (let i = 0; i < numRec && pos + 8 <= exthOff + exthLen; i++) {
                 const tag = this.u32(pos);
                 const len = this.u32(pos + 4);
-                if (tag === 535 && len === 12) {
+                if (tag === 121 && len === 12) {
                     const kf8Bound  = this.u32(pos + 8);
                     addLog(`KF8 boundary record: ${kf8Bound}`);
                     const kf8RecIdx = kf8Bound + 1;
@@ -73,9 +128,12 @@ class HuffCdicBase {
                         if (!(this.raw[kf8Mobi]===0x4D && this.raw[kf8Mobi+1]===0x4F &&
                               this.raw[kf8Mobi+2]===0x42 && this.raw[kf8Mobi+3]===0x49))
                             kf8Mobi = kf8Off;
-                        const kl = this.u32(kf8Mobi + 4);
-                        if (kl >= 0xF4) {
-                            flags = this.u16(kf8Mobi + 0xF2);
+                        const kf8Base = (kf8Mobi === kf8Off + 16) ? kf8Off : kf8Mobi;
+                        const kl = this.u32(kf8Base + 0x14);
+                        const kv = this.u32(kf8Base + 0x68);
+                        if (kl >= 0xE4 && kv >= 5) {
+                            const raw = this.u16(kf8Base + 0xF2);
+                            flags = this._normalizeExtraDataFlags(raw, 'KF8 override');
                             addLog(`KF8 section flags override: 0x${flags.toString(16)}`);
                         }
                     }
@@ -91,27 +149,20 @@ class HuffCdicBase {
     // ── Strip trailing bytes ───────────────────────────────────────────────────
     stripTrailing(data, flags) {
         if (!flags || data.length === 0) return data;
-        let trim = 0;
-        for (let j = 0; j < 15; j++) {
-            if ((flags >> (j + 1)) & 1) {
-                let size = 0;
-                let pos  = data.length - 1 - trim;
-                let v    = data[pos], shift = 7;
-                size = v & 0x7F;
-                while ((v & 0x80) === 0 && pos > 0) {
-                    v = data[--pos];
-                    size |= (v & 0x7F) << shift;
-                    shift += 7;
-                }
-                trim += size;
-            }
-        }
-        if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
-        return (trim > 0 && trim < data.length) ? data.slice(0, data.length - trim) : data;
+        return this._stripTrailingWithFlags(data, flags);
     }
 
     // ── Load HUFF record ──────────────────────────────────────────────────────
     loadHuff(hOff) {
+        if (
+            this.raw[hOff] !== 0x48 || this.raw[hOff + 1] !== 0x55 ||
+            this.raw[hOff + 2] !== 0x46 || this.raw[hOff + 3] !== 0x46 ||
+            this.raw[hOff + 4] !== 0x00 || this.raw[hOff + 5] !== 0x00 ||
+            this.raw[hOff + 6] !== 0x00 || this.raw[hOff + 7] !== 0x18
+        ) {
+            throw new Error('invalid huff header');
+        }
+
         const off1 = this.u32(hOff + 8);
         const off2 = this.u32(hOff + 12);
         this.dict1 = [];
@@ -119,6 +170,8 @@ class HuffCdicBase {
             const v       = this.u32(hOff + off1 + i * 4);
             const codelen = v & 0x1F;
             const term    = !!(v & 0x80);
+            if (codelen === 0) throw new Error('invalid huff table: zero codelen');
+            if (codelen <= 8 && !term) throw new Error('invalid huff table: short non-terminal code');
             const mxraw   = (v >>> 8) >>> 0;
             const maxcode = Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
             this.dict1.push({ codelen, term, maxcode });
@@ -137,6 +190,15 @@ class HuffCdicBase {
 
     // ── Load one CDIC record ──────────────────────────────────────────────────
     loadCdic(rOff) {
+        if (
+            this.raw[rOff] !== 0x43 || this.raw[rOff + 1] !== 0x44 ||
+            this.raw[rOff + 2] !== 0x49 || this.raw[rOff + 3] !== 0x43 ||
+            this.raw[rOff + 4] !== 0x00 || this.raw[rOff + 5] !== 0x00 ||
+            this.raw[rOff + 6] !== 0x00 || this.raw[rOff + 7] !== 0x10
+        ) {
+            throw new Error('invalid cdic header');
+        }
+
         const phrases = this.u32(rOff + 8);
         const bits    = this.u32(rOff + 12);
         const n       = Math.min(1 << bits, phrases - this.dict.length);
@@ -171,33 +233,28 @@ class HuffCdicBase {
         const padded = new Uint8Array(data.length + 8);
         padded.set(data);
 
-        const readU32 = (p) =>
-            ((padded[p]<<24)|(padded[p+1]<<16)|(padded[p+2]<<8)|padded[p+3]) >>> 0;
+        const readU64 = (p) => {
+            let x = 0n;
+            for (let i = 0; i < 8; i++) x = (x << 8n) | BigInt(padded[p + i]);
+            return x;
+        };
 
         let bitsleft = data.length * 8;
         let pos = 0;
-        let xhi = readU32(0);
-        let xlo = readU32(4);
+        let x = readU64(0);
         let n   = 32;
-
-        const getCode = () => {
-            if (n === 32) return xhi;
-            return (((xhi << (32 - n)) >>> 0) | (xlo >>> n)) >>> 0;
-        };
-
-        const advance = () => {
-            pos += 4;
-            xhi  = xlo;
-            xlo  = (pos + 4 < padded.length) ? readU32(pos + 4) : 0;
-            n   += 32;
-        };
 
         const chunks = [];
         let outLen = 0;
 
         while (true) {
-            if (n <= 0) advance();
-            const code = getCode();
+            if (n <= 0) {
+                pos += 4;
+                x = readU64(pos);
+                n += 32;
+            }
+
+            const code = Number((x >> BigInt(n)) & 0xFFFFFFFFn) >>> 0;
 
             const e     = this.dict1[code >>> 24];
             let codelen = e.codelen;
@@ -211,13 +268,15 @@ class HuffCdicBase {
             n        -= codelen;
             bitsleft -= codelen;
             if (bitsleft < 0) break;
-            if (n <= 0) advance();
 
             const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
             if (r >= this.dict.length) break;
 
             let entry = this.dict[r];
+            if (!entry) break;
             if (!entry.flag) {
+                // KindleUnpack sets temporary None sentinel before recursive expansion.
+                this.dict[r] = null;
                 const expanded = this.decompress(entry.slice);
                 entry = { slice: expanded, flag: true };
                 this.dict[r] = entry;

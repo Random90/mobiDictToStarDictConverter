@@ -115,6 +115,8 @@ class KF8Decoder extends HuffCdicBase {
         super(buffer);
         this.huffIdx    = -1;
         this.extraFlags = 1;
+        this.decodedCache = new Map();
+        this.lowerCache   = new Map();
     }
 
     init() {
@@ -138,13 +140,22 @@ class KF8Decoder extends HuffCdicBase {
     }
 
     decodeRecord(idx) {
+        if (this.decodedCache.has(idx)) return this.decodedCache.get(idx);
         const start = this.recs[idx];
         const end   = (idx + 1 < this.recs.length) ? this.recs[idx + 1] : this.buffer.byteLength;
         let data = this.raw.slice(start, end);
         data = this.stripTrailing(data, this.extraFlags);
         const dec = this.decompress(data);
-        const text = new TextDecoder('utf-8', { fatal: false }).decode(dec);
-        return { text, compressedBytes: data.length, decompressedBytes: dec.length };
+        const out = { text: new TextDecoder('utf-8', { fatal: false }).decode(dec), compressedBytes: data.length, decompressedBytes: dec.length };
+        this.decodedCache.set(idx, out);
+        return out;
+    }
+
+    getRecordLowerText(idx) {
+        if (this.lowerCache.has(idx)) return this.lowerCache.get(idx);
+        const lower = this.decodeRecord(idx).text.toLowerCase();
+        this.lowerCache.set(idx, lower);
+        return lower;
     }
 }
 
@@ -153,6 +164,7 @@ let decoder = null;
 
 function initConverter() {
     decoder = new KF8Decoder(globalBuffer);
+    searchCache = new Map();
     const ok = decoder.init();
     if (!ok) return;
     const maxRec = decoder.huffIdx - 1;
@@ -173,6 +185,7 @@ document.getElementById('searchNext').onclick = () => navigateSearch(+1);
 
 let searchResults = [];
 let searchCursor  = 0;
+let searchCache   = new Map();
 
 function showSearchResult(idx) {
     const max = decoder.huffIdx - 1;
@@ -213,12 +226,21 @@ function searchWord() {
     document.getElementById('searchNext').disabled = true;
 
     const max = decoder.huffIdx - 1;
-    searchResults = [];
-    for (let i = 1; i <= max; i++) {
-        try {
-            const { text } = decoder.decodeRecord(i);
-            if (text.toLowerCase().includes(q)) searchResults.push(i);
-        } catch(e) { /* skip */ }
+    const scanHits = () => {
+        const hits = [];
+        for (let i = 1; i <= max; i++) {
+            try {
+                if (decoder.getRecordLowerText(i).includes(q)) hits.push(i);
+            } catch(e) { /* skip */ }
+        }
+        return hits;
+    };
+
+    if (searchCache.has(q)) {
+        searchResults = searchCache.get(q).slice();
+    } else {
+        searchResults = scanHits();
+        searchCache.set(q, searchResults.slice());
     }
 
     if (searchResults.length === 0) {
@@ -253,21 +275,25 @@ function decodeSelected() {
     const max  = decoder.huffIdx - 1;
     document.getElementById('recInfo').textContent = `(max text record: ${max})`;
 
+    let markers = '';
     let combined = '';
+    let renderedCombined = '';
     let totalComp = 0, totalDecomp = 0;
     for (let i = from; i <= to; i++) {
         try {
             const { text, compressedBytes, decompressedBytes } = decoder.decodeRecord(i);
-            combined += `\n\n<!-- ═══ RECORD ${i} | ${compressedBytes}b → ${decompressedBytes}b ═══ -->\n` + text;
+            markers += `<!-- ═══ RECORD ${i} | ${compressedBytes}b → ${decompressedBytes}b ═══ -->\n`;
+            combined += text;
+            renderedCombined += text;
             totalComp += compressedBytes; totalDecomp += decompressedBytes;
         } catch(e) {
-            combined += `\n\n<!-- RECORD ${i}: ERROR: ${e.message} -->\n`;
+            markers += `<!-- RECORD ${i}: ERROR: ${e.message} -->\n`;
         }
     }
 
     document.getElementById('bytesBadge').textContent = `${totalComp}b → ${totalDecomp}b`;
-    document.getElementById('rawOutput').textContent = combined;
-    document.getElementById('renderedOutput').innerHTML = combined;
+    document.getElementById('rawOutput').textContent = `${markers}\n${combined}`;
+    document.getElementById('renderedOutput').innerHTML = renderedCombined;
     document.getElementById('outputCard').style.display = 'block';
     addLog(`Decoded records ${from}–${to}: ${totalComp} → ${totalDecomp} bytes`);
 }

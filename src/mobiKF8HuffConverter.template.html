@@ -235,18 +235,39 @@ class KF8Converter extends HuffCdicBase {
             const seg = hrParts[k];
             if (!/<p\b[^>]*width\s*=\s*["']?-20/i.test(seg)) continue;
 
-            const headM = seg.match(/<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i);
-            if (!headM) continue;
-            const word = headM[1].replace(/<[^>]+>/g, '').trim();
-            if (!word || word.length >= 120) continue;
-            if (this.finalMap.has(word)) continue;
-
             const pClose = seg.indexOf('</p>');
             if (!isFinal && pClose === -1) continue;
 
             const pOpen    = seg.search(/<p\b[^>]*width\s*=\s*["']?-20/i);
             const pEnd     = pClose >= 0 ? pClose + 4 : seg.length;
-            const pContent = seg.substring(pOpen, pEnd);
+            if (pOpen < 0) continue;
+            let pContent = seg.substring(pOpen, pEnd);
+
+            // Defensive guard: reject overlap/boundary fragments unless headword starts the paragraph.
+            // remove if keys aren't properly detected
+            const headAtStart = pContent.match(/^\s*<p\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i);
+            if (!headAtStart) continue;
+
+            const headInner = headAtStart[1].trim();
+            let word = '';
+            if (headInner.includes('<')) {
+                // Boundary-fragment paragraphs sometimes leak POS markup into the headword field.
+                const plain = headInner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                const candidate = plain.split('/')[0].trim();
+                if (!candidate || candidate.length >= 120) continue;
+                if (/\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(plain)) continue;
+                word = candidate;
+                pContent = pContent.replace(
+                    /(^\s*<p\b[^>]*>\s*<span\s*>\s*<b>)[\s\S]*?(<\/b>\s*<\/span>)/i,
+                    `$1${word}$2`
+                );
+            } else {
+                word = headInner.replace(/\s+/g, ' ').trim();
+                if (/\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(word)) continue;
+            }
+
+            if (!word || word.length >= 120) continue;
+            if (this.finalMap.has(word)) continue;
 
             const def = styleFn(word, pContent);
             this.finalMap.set(word, def);

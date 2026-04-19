@@ -80,6 +80,7 @@
 let idxData = null, dictData = null;
 let wordMap = new Map();   // lowercase word → [{off, sz, original}, …]  (may have multiple idx entries)
 let synMap  = new Map();   // lowercase alt → canonical lowercase key
+let ordinalToKey = [];     // exact idx ordinal → canonical lowercase key
 let rawHtml = '';
 
 function showEntry(lowerKey, synHit) {
@@ -123,6 +124,7 @@ async function loadFiles() {
 
     // ── Parse .idx ─────────────────────────────────────────────────────────
     wordMap.clear();
+    ordinalToKey = [];
     let offset = 0;
     while (offset < idxData.byteLength) {
         const start = offset;
@@ -133,6 +135,8 @@ async function loadFiles() {
         const dataOffset = idxData.getUint32(offset, false);
         const dataSize   = idxData.getUint32(offset + 4, false);
         const lc = word.toLowerCase();
+        // Keep exact ordinal mapping as it appears in .idx (StarDict .syn references this order).
+        ordinalToKey.push(lc);
         const entry = { off: dataOffset, sz: dataSize, original: word };
         if (wordMap.has(lc)) wordMap.get(lc).push(entry);
         else wordMap.set(lc, [entry]);
@@ -143,8 +147,6 @@ async function loadFiles() {
     synMap.clear();
     if (synF) {
         const synView = new DataView(await synF.arrayBuffer());
-        // Build keys array once outside the loop to avoid O(n²) cost
-        const wordKeys = Array.from(wordMap.keys());
         let so = 0;
         while (so < synView.byteLength) {
             const ss = so;
@@ -154,8 +156,8 @@ async function loadFiles() {
             if (so + 4 > synView.byteLength) break;
             const ordinal = synView.getUint32(so, false);
             so += 4;
-            // Resolve ordinal → word using wordMap (iterate by insertion order)
-            if (ordinal < wordKeys.length) synMap.set(alt.toLowerCase(), wordKeys[ordinal]);
+            // Resolve ordinal from exact .idx order (not unique-key map order).
+            if (ordinal < ordinalToKey.length) synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
         }
     }
 

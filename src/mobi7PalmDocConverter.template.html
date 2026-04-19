@@ -53,6 +53,7 @@
                     <option value="none" data-i18n="styleNone"></option>
                     <option value="clean" data-i18n="styleClean"></option>
                     <option value="nice" selected data-i18n="styleNice"></option>
+                    <option value="eink" data-i18n="styleEink"></option>
                     <option value="rich" data-i18n="styleRich"></option>
                 </select>
             </div>
@@ -130,6 +131,21 @@ const STYLES = {
                      '<b style="color:#5c4b00">$2</b>');
         return `<div style="margin-bottom:6px;padding:4px 0;border-left:3px solid #2980b9;padding-left:8px">`
              + `<b style="font-size:1.2em;color:#1a237e">${word}</b>${ph}`
+             + `</div>${content}`;
+    },
+
+    eink(word, phonetics, rawH2Html, contentHtml) {
+        const ph = phonetics
+            ? ` <span style="font-size:.9em;font-style:italic">${phonetics}</span>` : '';
+        let content = contentHtml
+            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+                     '<b>$1</b>')
+            .replace(/\b(\d+)\./g, '<b>$1.</b>')
+            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, '<small>$1</small>')
+            .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+                     '<b style="text-decoration:underline">$2</b>');
+        return `<div style="margin-bottom:6px;padding:4px 0;border-left:2px solid #000;padding-left:8px">`
+             + `<b style="font-size:1.2em">${word}</b>${ph}`
              + `</div>${content}`;
     }
 };
@@ -428,7 +444,7 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
 const I18N = {
     en: {
         title:       'MOBI to StarDict',
-        subtitle:    'For older Mobi7/PalmDoc',
+        subtitle:    'Designed for Wielki Słownik Ang-Pol 2026 and similar older Mobi7/PalmDoc dictionaries',
         step1:       'Step 1: Select Dictionary File',
         dropzone:    '📁 Select .mobi file or drag it here',
         step2:       'Step 2: Options',
@@ -436,6 +452,7 @@ const I18N = {
         styleNone:   'None – raw HTML passthrough',
         styleClean:  'Clean – semantic, no inline styles',
         styleNice:   'Nice Theme – headword + phonetics styled',
+        styleEink:   'E-ink mono – high contrast, no color styling',
         styleRich:   'Rich Color – full color-coded sections',
         synLabel:    '<b>Generate .syn file</b> — extracts sub-phrases &amp; alternate forms as synonyms',
         mergeLabel:  '<b>Smart Merging</b> — combine duplicate headwords into one entry',
@@ -446,7 +463,7 @@ const I18N = {
     },
     pl: {
         title:       'MOBI do StarDict',
-        subtitle:    'Dla starszych Mobi7/PalmDoc',
+        subtitle:    'Zaprojektowany dla Wielki Słownik Ang-Pol 2014 i innych starszych słowników Mobi7/PalmDoc',
         step1:       'Krok 1: Wybierz plik słownika',
         dropzone:    '📁 Wybierz plik .mobi lub przeciągnij go tutaj',
         step2:       'Krok 2: Opcje',
@@ -454,6 +471,7 @@ const I18N = {
         styleNone:   'Brak – oryginalny HTML bez zmian',
         styleClean:  'Czysty – semantyczny, bez stylów inline',
         styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
+        styleEink:   'E-ink mono – wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy – pełne kolorowanie sekcji',
         synLabel:    '<b>Generuj plik .syn</b> - wyodrębnia pod-frazy i formy alternatywne jako synonimy',
         mergeLabel:  '<b>Inteligentne scalanie</b> - łączy zduplikowane nagłówki w jeden wpis',

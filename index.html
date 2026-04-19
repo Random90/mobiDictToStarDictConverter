@@ -322,6 +322,7 @@
         <select id="themeStyleSelect">
           <option value="clean" data-i18n="theme.clean"></option>
           <option value="nice" data-i18n="theme.nice"></option>
+          <option value="eink" data-i18n="theme.eink"></option>
           <option value="rich" data-i18n="theme.rich"></option>
         </select>
       </div>
@@ -500,6 +501,27 @@ const THEME_STYLES = {
       return `<span><b style="color:#5c4b00">${inner}</b></span>`;
     });
     return body;
+  },
+  eink(word, html) {
+    const ipaM = html.match(/(?<!<)\/([^/<]{2,60})\//);
+    const ipa = ipaM
+      ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>`
+      : '';
+    let body = ipaM ? html.replace(ipaM[0], '') : html;
+    body = body
+      .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>')
+      .replace(/<b>(\d+)\.<\/b>/g, '<b>$1.</b>')
+      .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, '<small>$1</small>');
+
+    let seenHead = false;
+    body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
+      if (!seenHead) {
+        seenHead = true;
+        return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px"><b style="font-size:1.15em">${inner}</b>${ipa}</span>`;
+      }
+      return `<span><b style="text-decoration:underline">${inner}</b></span>`;
+    });
+    return body;
   }
 };
 
@@ -539,6 +561,7 @@ const I18N = {
     'theme.label':   'Preview style:',
     'theme.clean':   'Original - original HTML',
     'theme.nice':    'Nice - headword + phonetics styled',
+    'theme.eink':    'E-ink mono - high contrast, no color styling',
     'theme.rich':    'Rich Color - full color-coded sections',
     'how.heading':   '🚀 How to use',
     's1.title':      'Pick the right converter',
@@ -589,6 +612,7 @@ const I18N = {
     'theme.label':   'Styl podglądu:',
     'theme.clean':   'Oryginalny - oryginalny HTML',
     'theme.nice':    'Ładny - nagłówek + fonetyka ze stylem',
+    'theme.eink':    'E-ink mono - wysoki kontrast, bez kolorowania',
     'theme.rich':    'Kolorowy - pełne kolorowanie sekcji',
     'how.heading':   '🚀 Jak używać',
     's1.title':      'Wybierz odpowiedni konwerter',

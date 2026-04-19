@@ -57,6 +57,7 @@
                 <option value="none" data-i18n="styleNone"></option>
                 <option value="clean" data-i18n="styleClean"></option>
                 <option value="nice" selected data-i18n="styleNice"></option>
+                <option value="eink" data-i18n="styleEink"></option>
                 <option value="rich" data-i18n="styleRich"></option>
             </select>
         </div>
@@ -142,6 +143,33 @@ const STYLES = {
             /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
             `<span><b style="font-size:1.15em;color:#003d82">$2</b></span>`
         );
+        return body;
+    },
+
+    eink(word, pHtml) {
+        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+        const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
+        const ipa  = ipaM ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>` : '';
+        let body = ipaM ? pHtml.replace(ipaM[0], '') : pHtml;
+
+        body = body
+            .replace(/<b>(\d+)\.<\/b>/g, '<b>$1.</b>')
+            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, '<small>$1</small>')
+            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>');
+
+        let seenHeadword = false;
+        body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
+            if (!seenHeadword) {
+                seenHeadword = true;
+                return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px">`
+                     + `<b style="font-size:1.18em">${inner}</b>${ipa}</span>`;
+            }
+            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' ')) {
+                return `<span><b style="text-decoration:underline">${inner}</b></span>`;
+            }
+            return m;
+        });
         return body;
     },
 
@@ -936,6 +964,7 @@ const I18N = {
         styleNone:   'None - original HTML pass-through',
         styleClean:  'Clean - semantic, no inline styles',
         styleNice:   'Nice - headword + phonetics styled',
+        styleEink:   'E-ink mono - high contrast, no color styling',
         styleRich:   'Rich Color - full color-coded sections',
         synLabel:    '<b>Generate .syn file</b> - for synonyms and conjugations',
         startBtn:    'START CONVERSION',
@@ -951,6 +980,7 @@ const I18N = {
         styleNone:   'Brak - oryginalny HTML bez zmian',
         styleClean:  'Czysty - semantyczny, bez stylów inline',
         styleNice:   'Ładny - nagłówek + fonetyka ze stylem',
+        styleEink:   'E-ink mono - wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy - pełne kolorowanie sekcji',
         synLabel:    '<b>Generuj plik .syn</b> - dla synonimów i odmian',
         startBtn:    'ROZPOCZNIJ KONWERSJĘ',

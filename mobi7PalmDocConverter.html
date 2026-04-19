@@ -78,12 +78,6 @@
             </div>
             <div class="style-preview" id="stylePreview"></div>
 
-            <div class="check-item">
-                <label class="check-item">
-                    <input type="checkbox" id="mergeCheck" checked>
-                    <span data-i18n-html="mergeLabel"></span>
-                </label>
-            </div>
         </div>
 
         <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
@@ -426,15 +420,15 @@ startBtn.onclick = () => {
 
     const options = {
         style:       document.getElementById('styleSelect').value,
-        merge:       document.getElementById('mergeCheck').checked,
+        merge:       true,
         generateSyn: true,
     };
 
     const converter = new Converter(globalBuffer, options, addLog);
     setTimeout(async () => {
         try {
-            const { finalMap, synMap } = await converter.run();
-            renderOutput(finalMap, synMap, converter.encoder, true);
+            const { finalMap } = await converter.run();
+            renderOutput(finalMap, converter.encoder, true);
             startBtn.classList.remove('processing');
             startBtn.textContent = "✅ DONE";
         } catch (err) {
@@ -515,7 +509,7 @@ startBtn.onclick = () => {
             }
         }
 
-        function showEntry(lowerKey, synHit) {
+        function showEntry(lowerKey, matchInfo) {
             const entries = wordMap.get(lowerKey);
             if (!entries) return;
 
@@ -530,9 +524,15 @@ startBtn.onclick = () => {
             }
 
             if (el.synInfo) {
-                if (synHit) {
+                if (matchInfo && matchInfo.mode === 'synonym') {
                     el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Synonym redirect: <b>${synHit}</b> -> <b>${first.original}</b>`;
+                    el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                } else if (matchInfo && matchInfo.mode === 'fallback-word') {
+                    el.synInfo.style.display = 'block';
+                    el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                } else if (matchInfo && matchInfo.mode === 'fallback-synonym') {
+                    el.synInfo.style.display = 'block';
+                    el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
                 } else {
                     el.synInfo.style.display = 'none';
                 }
@@ -545,6 +545,46 @@ startBtn.onclick = () => {
 
         function bindSearch() {
             if (!el.search) return;
+
+            const candidateBases = (q) => {
+                const out = new Set();
+                const w = (q || '').toLowerCase();
+                if (!w) return out;
+                out.add(w);
+                if (w.endsWith('ies') && w.length > 4) out.add(w.slice(0, -3) + 'y');
+                if (w.endsWith('es') && w.length > 3) out.add(w.slice(0, -2));
+                if (w.endsWith('s') && w.length > 2) out.add(w.slice(0, -1));
+                if (w.endsWith('ing') && w.length > 5) {
+                    out.add(w.slice(0, -3));
+                    out.add(w.slice(0, -3) + 'e');
+                }
+                if (w.endsWith('ed') && w.length > 4) {
+                    out.add(w.slice(0, -2));
+                    out.add(w.slice(0, -1));
+                }
+                return out;
+            };
+
+            const resolveKey = (queryLower) => {
+                if (wordMap.has(queryLower)) {
+                    return { key: queryLower, mode: 'exact' };
+                }
+                if (synMap.has(queryLower)) {
+                    return { key: synMap.get(queryLower), mode: 'synonym' };
+                }
+
+                for (const base of candidateBases(queryLower)) {
+                    if (base === queryLower) continue;
+                    if (wordMap.has(base)) {
+                        return { key: base, mode: 'fallback-word' };
+                    }
+                    if (synMap.has(base)) {
+                        return { key: synMap.get(base), mode: 'fallback-synonym' };
+                    }
+                }
+                return null;
+            };
+
             el.search.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
                 const lower = query.toLowerCase();
@@ -553,18 +593,16 @@ startBtn.onclick = () => {
                     return;
                 }
 
-                let matchKey = wordMap.has(lower) ? lower : null;
-                let synHit = null;
-                if (!matchKey && synMap.has(lower)) {
-                    matchKey = synMap.get(lower);
-                    synHit = query;
-                }
+                const resolved = resolveKey(lower);
+                const matchKey = resolved ? resolved.key : null;
 
                 if (!matchKey) {
                     if (el.resultCard) el.resultCard.style.display = 'none';
                     return;
                 }
-                showEntry(matchKey, synHit);
+                showEntry(matchKey, resolved && resolved.mode !== 'exact'
+                    ? { mode: resolved.mode, query }
+                    : null);
             });
         }
 
@@ -652,7 +690,7 @@ startBtn.onclick = () => {
 
 
 // StarDict output renderer for PalmDoc converter.
-function renderOutput(finalMap, synMap, encoder, generateSyn = true) {
+function renderOutput(finalMap, encoder, generateSyn) {
     document.getElementById('downloadArea').style.display = 'block';
     const links = document.getElementById('links');
     links.innerHTML = '';
@@ -680,29 +718,20 @@ function renderOutput(finalMap, synMap, encoder, generateSyn = true) {
         count++;
     }
 
-    // Build .syn
+    // Build .syn (legacy-compatible): one .syn record per headword mapped to its own ordinal.
     let synCount = 0;
     let synBytes = [];
 
     if (generateSyn) {
-        const validSyns = [];
-        for (const [alt, canonical] of synMap.entries()) {
-            if (!wordToOrdinal.has(canonical)) continue;
-            if (wordToOrdinal.has(alt)) continue;
-            validSyns.push([alt, wordToOrdinal.get(canonical)]);
-        }
-
-        validSyns.sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-        for (const [alt, ordinal] of validSyns) {
-            const ab = encoder.encode(alt);
+        for (const [word] of sortedEntries) {
+            const ab = encoder.encode(word);
             for (const b of ab) synBytes.push(b);
             synBytes.push(0);
             const dv = new DataView(new ArrayBuffer(4));
-            dv.setUint32(0, ordinal, false);
+            dv.setUint32(0, wordToOrdinal.get(word), false);
             for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
         }
-        synCount = validSyns.length;
+        synCount = sortedEntries.length;
         addLog(`Synonym file: ${synCount} entries written.`);
     }
 
@@ -737,12 +766,10 @@ function renderOutput(finalMap, synMap, encoder, generateSyn = true) {
     dl('dictionary.dict', dictBytes);
     if (generateSyn) {
         dl('dictionary.syn', synBytesArr);
-        if (synCount > 0) {
-            const badge = document.createElement('span');
-            badge.className = 'badge-syn';
-            badge.textContent = `${synCount} synonyms`;
-            links.appendChild(badge);
-        }
+        const badge = document.createElement('span');
+        badge.className = 'badge-syn';
+        badge.textContent = `${synCount} synonyms`;
+        links.appendChild(badge);
     }
 
     addLog(`✅ Done. Entries: ${count}, idx: ${idx.length} B, dict: ${dict.length} B${synCount ? `, syn: ${synCount}` : ''}.`);
@@ -806,7 +833,7 @@ function renderOutput(finalMap, synMap, encoder, generateSyn = true) {
 const I18N = {
     en: {
         title:       'MOBI to StarDict',
-        subtitle:    'Designed for Wielki Słownik Ang-Pol 2026 and similar older Mobi7/PalmDoc dictionaries',
+        subtitle:    'Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries',
         step1:       'Step 1: Select Dictionary File',
         dropzone:    '📁 Select .mobi file or drag it here',
         step2:       'Step 2: Options',
@@ -816,7 +843,6 @@ const I18N = {
         styleNice:   'Nice Theme – headword + phonetics styled',
         styleEink:   'E-ink mono – high contrast, no color styling',
         styleRich:   'Rich Color – full color-coded sections',
-        mergeLabel:  '<b>Smart Merging</b> — combine duplicate headwords into one entry',
         startBtn:    'START CONVERSION',
         logIdle:     'Status: Idle. Waiting for file...',
         previewTitle:'🧩 Processed Entries Preview',
@@ -836,7 +862,6 @@ const I18N = {
         styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
         styleEink:   'E-ink mono – wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy – pełne kolorowanie sekcji',
-        mergeLabel:  '<b>Inteligentne scalanie</b> - łączy zduplikowane nagłówki w jeden wpis',
         startBtn:    'ROZPOCZNIJ KONWERSJĘ',
         logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
         previewTitle:'🧩 Podgląd przetworzonych wpisów',

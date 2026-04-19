@@ -66,7 +66,7 @@
             }
         }
 
-        function showEntry(lowerKey, synHit) {
+        function showEntry(lowerKey, matchInfo) {
             const entries = wordMap.get(lowerKey);
             if (!entries) return;
 
@@ -81,9 +81,15 @@
             }
 
             if (el.synInfo) {
-                if (synHit) {
+                if (matchInfo && matchInfo.mode === 'synonym') {
                     el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Synonym redirect: <b>${synHit}</b> -> <b>${first.original}</b>`;
+                    el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                } else if (matchInfo && matchInfo.mode === 'fallback-word') {
+                    el.synInfo.style.display = 'block';
+                    el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                } else if (matchInfo && matchInfo.mode === 'fallback-synonym') {
+                    el.synInfo.style.display = 'block';
+                    el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
                 } else {
                     el.synInfo.style.display = 'none';
                 }
@@ -96,6 +102,46 @@
 
         function bindSearch() {
             if (!el.search) return;
+
+            const candidateBases = (q) => {
+                const out = new Set();
+                const w = (q || '').toLowerCase();
+                if (!w) return out;
+                out.add(w);
+                if (w.endsWith('ies') && w.length > 4) out.add(w.slice(0, -3) + 'y');
+                if (w.endsWith('es') && w.length > 3) out.add(w.slice(0, -2));
+                if (w.endsWith('s') && w.length > 2) out.add(w.slice(0, -1));
+                if (w.endsWith('ing') && w.length > 5) {
+                    out.add(w.slice(0, -3));
+                    out.add(w.slice(0, -3) + 'e');
+                }
+                if (w.endsWith('ed') && w.length > 4) {
+                    out.add(w.slice(0, -2));
+                    out.add(w.slice(0, -1));
+                }
+                return out;
+            };
+
+            const resolveKey = (queryLower) => {
+                if (wordMap.has(queryLower)) {
+                    return { key: queryLower, mode: 'exact' };
+                }
+                if (synMap.has(queryLower)) {
+                    return { key: synMap.get(queryLower), mode: 'synonym' };
+                }
+
+                for (const base of candidateBases(queryLower)) {
+                    if (base === queryLower) continue;
+                    if (wordMap.has(base)) {
+                        return { key: base, mode: 'fallback-word' };
+                    }
+                    if (synMap.has(base)) {
+                        return { key: synMap.get(base), mode: 'fallback-synonym' };
+                    }
+                }
+                return null;
+            };
+
             el.search.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
                 const lower = query.toLowerCase();
@@ -104,18 +150,16 @@
                     return;
                 }
 
-                let matchKey = wordMap.has(lower) ? lower : null;
-                let synHit = null;
-                if (!matchKey && synMap.has(lower)) {
-                    matchKey = synMap.get(lower);
-                    synHit = query;
-                }
+                const resolved = resolveKey(lower);
+                const matchKey = resolved ? resolved.key : null;
 
                 if (!matchKey) {
                     if (el.resultCard) el.resultCard.style.display = 'none';
                     return;
                 }
-                showEntry(matchKey, synHit);
+                showEntry(matchKey, resolved && resolved.mode !== 'exact'
+                    ? { mode: resolved.mode, query }
+                    : null);
             });
         }
 

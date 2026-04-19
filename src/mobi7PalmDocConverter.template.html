@@ -64,12 +64,6 @@
             </div>
             <div class="style-preview" id="stylePreview"></div>
 
-            <div class="check-item">
-                <label class="check-item">
-                    <input type="checkbox" id="mergeCheck" checked>
-                    <span data-i18n-html="mergeLabel"></span>
-                </label>
-            </div>
         </div>
 
         <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
@@ -219,15 +213,15 @@ startBtn.onclick = () => {
 
     const options = {
         style:       document.getElementById('styleSelect').value,
-        merge:       document.getElementById('mergeCheck').checked,
+        merge:       true,
         generateSyn: true,
     };
 
     const converter = new Converter(globalBuffer, options, addLog);
     setTimeout(async () => {
         try {
-            const { finalMap, synMap } = await converter.run();
-            renderOutput(finalMap, synMap, converter.encoder, true);
+            const { finalMap } = await converter.run();
+            renderOutput(finalMap, converter.encoder, true);
             startBtn.classList.remove('processing');
             startBtn.textContent = "✅ DONE";
         } catch (err) {
@@ -247,7 +241,7 @@ startBtn.onclick = () => {
 const I18N = {
     en: {
         title:       'MOBI to StarDict',
-        subtitle:    'Designed for Wielki Słownik Ang-Pol 2026 and similar older Mobi7/PalmDoc dictionaries',
+        subtitle:    'Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries',
         step1:       'Step 1: Select Dictionary File',
         dropzone:    '📁 Select .mobi file or drag it here',
         step2:       'Step 2: Options',
@@ -257,7 +251,6 @@ const I18N = {
         styleNice:   'Nice Theme – headword + phonetics styled',
         styleEink:   'E-ink mono – high contrast, no color styling',
         styleRich:   'Rich Color – full color-coded sections',
-        mergeLabel:  '<b>Smart Merging</b> — combine duplicate headwords into one entry',
         startBtn:    'START CONVERSION',
         logIdle:     'Status: Idle. Waiting for file...',
         previewTitle:'🧩 Processed Entries Preview',
@@ -277,7 +270,6 @@ const I18N = {
         styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
         styleEink:   'E-ink mono – wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy – pełne kolorowanie sekcji',
-        mergeLabel:  '<b>Inteligentne scalanie</b> - łączy zduplikowane nagłówki w jeden wpis',
         startBtn:    'ROZPOCZNIJ KONWERSJĘ',
         logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
         previewTitle:'🧩 Podgląd przetworzonych wpisów',

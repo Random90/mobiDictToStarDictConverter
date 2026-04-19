@@ -1,5 +1,5 @@
 // StarDict output renderer for PalmDoc converter.
-function renderOutput(finalMap, synMap, encoder, generateSyn) {
+function renderOutput(finalMap, encoder, generateSyn) {
     document.getElementById('downloadArea').style.display = 'block';
     const links = document.getElementById('links');
     links.innerHTML = '';
@@ -27,29 +27,20 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
         count++;
     }
 
-    // Build .syn
+    // Build .syn (legacy-compatible): one .syn record per headword mapped to its own ordinal.
     let synCount = 0;
     let synBytes = [];
 
-    if (generateSyn && synMap.size > 0) {
-        const validSyns = [];
-        for (const [alt, canonical] of synMap.entries()) {
-            if (!wordToOrdinal.has(canonical)) continue;
-            if (wordToOrdinal.has(alt)) continue;
-            validSyns.push([alt, wordToOrdinal.get(canonical)]);
-        }
-
-        validSyns.sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-        for (const [alt, ordinal] of validSyns) {
-            const ab = encoder.encode(alt);
+    if (generateSyn) {
+        for (const [word] of sortedEntries) {
+            const ab = encoder.encode(word);
             for (const b of ab) synBytes.push(b);
             synBytes.push(0);
             const dv = new DataView(new ArrayBuffer(4));
-            dv.setUint32(0, ordinal, false);
+            dv.setUint32(0, wordToOrdinal.get(word), false);
             for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
         }
-        synCount = validSyns.length;
+        synCount = sortedEntries.length;
         addLog(`Synonym file: ${synCount} entries written.`);
     }
 
@@ -62,13 +53,13 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
         'bookname=Wielki_Slownik_Ang-Pol',
         'sametypesequence=h',
     ];
-    if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
+    if (generateSyn) ifoLines.push(`synwordcount=${synCount}`);
     const ifo = ifoLines.join('\n') + '\n';
 
     const ifoBytes = new TextEncoder().encode(ifo);
     const idxBytes = new Uint8Array(idx);
     const dictBytes = new Uint8Array(dict);
-    const synBytesArr = synCount > 0 ? new Uint8Array(synBytes) : null;
+    const synBytesArr = generateSyn ? new Uint8Array(synBytes) : null;
 
     // Download links
     const dl = (name, data) => {
@@ -82,7 +73,7 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
     dl('dictionary.ifo', ifoBytes);
     dl('dictionary.idx', idxBytes);
     dl('dictionary.dict', dictBytes);
-    if (synCount > 0) {
+    if (generateSyn) {
         dl('dictionary.syn', synBytesArr);
         const badge = document.createElement('span');
         badge.className = 'badge-syn';

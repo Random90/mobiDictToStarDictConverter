@@ -2,13 +2,13 @@
 
 🌐 **[Project website & live tools → random90.github.io/mobiDictToStarDictConverter](https://random90.github.io/mobiDictToStarDictConverter)**
 
-## 🇵🇱 Informacja o projekcie - Konwerter Mobi do StarDict [Polish note]
+## 🇵🇱 Informacja o projekcie [Polish note]
 
 
 Najlepszy słownik angielsko-polski na czytniki, [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e), jest dostępny wyłącznie w formatach dla Kindle i Pocketbook. Celem tego projektu jest umożliwienie korzystania z tego słownika na innych czytnikach, takich jak np. Onyx Boox, które obsługują format StarDict. Repozytorium zawiera tylko skrypt do konwersji, **słownik należy zakupić samodzielnie**. Nie gwarantuję pełnej kompatybilności, projekt jest eksperymentalny. 
 
 Istnieją dwa konwertery w zależności od wersji słownika:
- - [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - dla słownika w formacie KF8 (**nowsze wydania**), działa z wersją 2026
+ - [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - dla słownika w formacie KF8 (**nowsze wydania**), działa z wersją 2023-2026
  - [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - dla słownika w formacie PalmDoc (**starsze wydania**), działa z wersją 2014 (i prawdopodobnie częcią aktualizcji)
 
 Plik konwertera wysarczy otworzyć w nowym oknie przeglądarki, wybrać plik słownika i kliknąć Convert/Begin. Potem należy pobrać wygenerowane pliki osobno i umieścić w osobnym folderze w katalogu /dict (na Onyx Boox).
@@ -16,8 +16,11 @@ Plik konwertera wysarczy otworzyć w nowym oknie przeglądarki, wybrać plik sł
 Oprócz samej konwersji, narzędzie oferuje **możliwość ulepszenia wyglądu słownika** poprzez wybór stylu wpisów, które oferują lepszą czytelność i estetykę na ekranach e-ink czarno-białych jak i kolorowych.
 
 ## 📋 Project description
-One click offline web converter for .mobi kindle dictionaries to StarDict format. Just grab html file, select you dict and covert.
-Main focus is to convert [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e) to use on other e-readers like Onyx Boox, which support StarDict format. 
+
+One click offline web converter for .mobi kindle dictionaries to StarDict format. Just grab html file, select you dict and convert.
+Main focus is to convert [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e) to use on other e-readers like Onyx Boox, Kobo or KOReader app which support StarDict format. It might work with other dictionaries in .mobi format, but I've only tested it with that one.
+
+The main motivation for this project was to build a simple tool I would use once for myself, then delete and forget. But I decided to have some fun, quickly build a page, and share it on GitHub.
 
 Apart from the conversion itself, the tool offers **the ability to enhance the appearance of the dictionary** by choosing entry styles that provide better readability and aesthetics on both black-and-white and color e-ink screens.
 

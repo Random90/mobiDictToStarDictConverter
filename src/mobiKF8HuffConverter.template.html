@@ -47,7 +47,7 @@
             <label data-i18n="styleLabel"></label>
             <select id="styleSelect">
                 <option value="none" data-i18n="styleNone"></option>
-                <option value="clean" data-i18n="styleClean"></option>
+<!--                <option value="clean" data-i18n="styleClean"></option>-->
                 <option value="nice" selected data-i18n="styleNice"></option>
                 <option value="eink" data-i18n="styleEink"></option>
                 <option value="rich" data-i18n="styleRich"></option>
@@ -300,10 +300,10 @@ document.getElementById('startBtn').onclick = () => {
 const I18N = {
     en: {
         title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
-        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>',
+        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>',
         dropzone:    '📁 Click or drag your .mobi file here',
         styleLabel:  '🎨 Entry Style:',
-        styleNone:   'None - original HTML pass-through',
+        styleNone:   'Original - original HTML pass-through',
         styleClean:  'Clean - semantic, no inline styles',
         styleNice:   'Nice - headword + phonetics styled',
         styleEink:   'E-ink mono - high contrast, no color styling',
@@ -317,10 +317,10 @@ const I18N = {
     },
     pl: {
         title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
-        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>',
+        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>',
         dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
         styleLabel:  '🎨 Styl wpisów:',
-        styleNone:   'Brak - oryginalny HTML bez zmian',
+        styleNone:   'Oryginalny - oryginalny HTML bez stylowania',
         styleClean:  'Czysty - semantyczny, bez stylów inline',
         styleNice:   'Ładny - nagłówek + fonetyka ze stylem',
         styleEink:   'E-ink mono - wysoki kontrast, bez kolorowania',

@@ -8,7 +8,6 @@
         .report { background: #1e1e1e; padding: 20px; border: 1px solid #333; border-radius: 8px; }
         .prop { color: #ffca28; }
         .val { color: #81c784; }
-        .warn { color: #ff5252; font-weight: bold; }
         #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#1e1e1e; border:1px solid #555; color:#00ff00; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; }
         #langToggle:hover { border-color:#00ff00; }
     </style>
@@ -44,7 +43,6 @@ const I18N = {
         drmFound:    'DRM DETECTED (Protected)!',
         kf8Ver:      'KF8 (Modern)',
         mobi7Ver:    'Mobi7 (Legacy)',
-        huffWarn:    'NOTE: This file uses HUFF/CDIC compression. A standard browser JS script cannot decode it correctly without a specialised library (KindleUnpack).',
         analysis:    'File analysis',
     },
     pl: {
@@ -61,7 +59,6 @@ const I18N = {
         drmFound:    'WYKRYTO DRM (Zabezpieczony)!',
         kf8Ver:      'KF8 (Nowoczesny)',
         mobi7Ver:    'Mobi7 (Stary)',
-        huffWarn:    'UWAGA: Ten plik używa kompresji HUFF/CDIC. Standardowy skrypt JS w przeglądarce nie odczyta go poprawnie bez zewnętrznych bibliotek (KindleUnpack).',
         analysis:    'Analiza pliku',
     }
 };
@@ -126,10 +123,6 @@ document.getElementById('f').onchange = async (e) => {
     report += `<p><span class="prop">${t.drm}:</span> <span class="val">${drmText}</span></p>`;
 
     report += `<p><span class="prop">${t.mobiVer}:</span> <span class="val">${mobiType === 8 ? t.kf8Ver : t.mobi7Ver}</span></p>`;
-
-    if (compression === 17480) {
-        report += `<p class="warn">${t.huffWarn}</p>`;
-    }
 
     out.innerHTML = report;
 };

@@ -31,10 +31,16 @@
     }
 
     /* ── LANG TOGGLE ── */
-    #langToggle {
+    .floating-controls {
       position: fixed;
-      top: 14px; right: 18px;
+      top: 14px;
+      right: 18px;
       z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .floating-btn {
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
@@ -42,11 +48,23 @@
       padding: 5px 14px;
       font-size: 0.82rem;
       font-weight: 700;
-      cursor: pointer;
       transition: border-color 0.2s, color 0.2s;
       box-shadow: var(--shadow);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    #langToggle:hover { border-color: var(--accent); color: var(--accent); }
+    .floating-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    #langToggle {
+      cursor: pointer;
+    }
+
+    #githubFloat svg {
+      width: 14px;
+      height: 14px;
+    }
 
     /* ── HERO ── */
     .hero {
@@ -77,7 +95,7 @@
     .hero p {
       font-size: clamp(1rem, 2.5vw, 1.2rem);
       color: var(--muted);
-      max-width: 640px;
+      max-width: 60%;
       margin: 0 auto 12px;
     }
     .badge {
@@ -300,7 +318,21 @@
 </div>
 </noscript>
 
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
+<div class="floating-controls">
+  <a
+    id="githubFloat"
+    class="floating-btn"
+    href="https://github.com/random90/mobiDictToStarDictConverter"
+    target="_blank"
+    rel="noopener"
+    title="Open GitHub repository"
+    aria-label="Open GitHub repository"
+  >
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    <span>GitHub</span>
+  </a>
+  <button id="langToggle" class="floating-btn" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
+</div>
 
 <!-- HERO -->
 <header class="hero">
@@ -544,17 +576,17 @@ function initThemeShowcase() {
 const I18N = {
   en: {
     'hero.title':    'Mobi Dictionary → StarDict Converter',
-    'hero.desc':     'Convert Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> dictionaries to <strong>StarDict</strong> format - entirely offline, right in your browser. No installation, no uploads.',
-    'hero.badge':    '✨ 100 % client-side · No data leaves your device',
+    'hero.desc':     'Converter for Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> dictionaries to <strong>StarDict</strong> format I\'ve designed with converting the "Wielki Slownik Angielsko Polski" dictionary to the StarDict format used on other e-readers in mind, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app. Just download the .html file (or use the link below), choose your dictionary, and convert it.',
+    'hero.badge':    '✨ 100% client-side code',
     'conv.heading':  '🔄 Converters',
-    'conv.desc':     'Two converters are available depending on the format of your .mobi file. If you are unsure which one to use, try the KF8 converter first - built with "Wielki Słownik Ang-Pol" in mind, but might work with different Kindle dictionaries.',
+    'conv.desc':     'Two converters are available depending on the .mobi file format. If you are not sure which one to choose, start with the KF8 converter or use the version tester below. The converters may work with other dictionaries, but I tested them only with "Wielki Slownik Angielsko Polski".',
     'kf8.tag':       'KF8 · Newer editions',
     'kf8.title':     'KF8 / Huff Converter',
-    'kf8.desc':      'For dictionaries in the modern KF8 format using HUFF/CDIC compression. Works with 2026 and recent editions.',
+    'kf8.desc':      'For dictionaries in the modern KF8 format with HUFF/CDIC compression. Works with the 2023 edition and newer ones (including the April 2026 update), released outside the Amazon store.',
     'kf8.btn':       'Open Converter →',
     'palm.tag':      'Mobi 7 · Older editions',
     'palm.title':    'PalmDoc Converter',
-    'palm.desc':     'For older Mobi 7 dictionaries that use PalmDoc compression. Works with the 2014 edition and some earlier updates.',
+    'palm.desc':     'For older Mobi 7 dictionaries with PalmDoc compression. Works with the 2014 edition and newer updates that were available in the Amazon store.',
     'palm.btn':      'Open Converter →',
     'theme.heading': '🎨 Style Showcase',
     'theme.desc':    'You can choose additional entry styles beyond the original dictionary formatting to improve readability on e-ink devices.',
@@ -565,47 +597,47 @@ const I18N = {
     'theme.rich':    'Rich Color - full color-coded sections',
     'how.heading':   '🚀 How to use',
     's1.title':      'Pick the right converter',
-    's1.desc':       'Choose KF8 for newer editions or PalmDoc for older ones. When in doubt, start with KF8.',
+    's1.desc':       'Choose KF8 for newer editions or PalmDoc for older ones. If you are unsure, start with KF8 or use the version tester below.',
     's2.title':      'Open the converter & select your file',
-    's2.desc':       'Click <em>Open Converter</em>, then pick your purchased <code>.mobi</code> dictionary file from your device.',
+    's2.desc':       'Click <em>Open Converter</em>, then choose your purchased <code>.mobi</code> dictionary file from your device.',
     's3.title':      'Choose entry style & convert',
-    's3.desc':       'Select the StarDict entry style that you like and click <strong>Convert / Begin</strong>.',
+    's3.desc':       'Choose the StarDict entry style you prefer and click <strong>Start conversion</strong>.',
     's4.title':      'Download & install',
-    's4.desc':       'Download each generated file, place them together in a new folder inside <code>/dict</code> on your e-reader (on Onyx Boox, might differ on other readers).',
+    's4.desc':       'Download the generated files and place them together in a new folder inside <code>/dict</code> on your e-reader (on Onyx Boox; it may differ on other readers).',
     'tools.heading': '🧰 Additional tools',
-    'tools.desc':    'Helper tools for inspecting and validating <code>.mobi</code> and converted StarDict files. Useful for debugging or just understanding the file structures.',
+    'tools.desc':    'Helper tools for inspecting and validating <code>.mobi</code> files and converted StarDict dictionaries. Useful for debugging and understanding file structure.',
     'vt.title':      'Version Tester',
-    'vt.desc':       'Detect the format and version of a .mobi file and view its internal metadata.',
+    'vt.desc':       'Detect the format and version of a .mobi file and display its internal metadata.',
     'tool.link':     'Open tool →',
     'mr.kf8.title':  'Mobi Reader - KF8',
     'mr.kf8.desc':   'Browse the contents of a KF8 .mobi file. Shows raw HTML and rendered view side by side.',
     'mr.palm.title': 'Mobi Reader - PalmDoc',
-    'mr.palm.desc':  'Same reader for older PalmDoc .mobi files. Inspect entries and internal structure.',
+    'mr.palm.desc':  'The same reader for older PalmDoc .mobi files. Inspect entries and internal structure.',
     'sd.title':      'StarDict Validator',
-    'sd.desc':       'Load converted StarDict files, search entries and validate the conversion result with a side-by-side view.',
+    'sd.desc':       'Load converted StarDict files, search entries, and verify the conversion result.',
     'about.heading': '💡 About the project',
-    'about.p1':      'The main motivation behind this project is to make the excellent <strong>Wielki Słownik Angielsko-Polski</strong> - a Kindle-only Polish–English dictionary - available on other e-readers like <strong>Onyx Boox</strong> that support the StarDict format.',
-    'about.p2':      'The decompression algorithm is inspired by <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> and ported to JavaScript to run entirely in the browser - no server, no Python, no dependencies.',
-    'about.p3':      'The repository contains only the conversion tool. The dictionary itself must be <strong>purchased separately</strong>. This project does not distribute or circumvent any DRM - it only reads the content you already own.',
+    'about.p1':      'The main motivation for this project was to build a simple tool I would use once for myself, then delete and forget. But I decided to have some fun, quickly build a page, and share it on GitHub. The goal is to make the excellent <strong>Wielki Slownik Angielsko-Polski</strong>, available only on Kindle and PocketBook, usable on other e-readers as well, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app, all of which support the StarDict format.',
+    'about.p2':      'The decompression algorithm is inspired by <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> and ported to JavaScript so it can run in a browser, including when opening the HTML file offline.',
+    'about.p3':      'The repository contains only conversion tools. The dictionary must be <strong>purchased separately</strong>. This project does not distribute or bypass any DRM protections - it only reads content you legally own.',
     'about.btn':     'View on GitHub',
     'disc.heading':  '⚠️ Disclaimer',
-    'disc.p1':       '⚠️ <strong>No DRM removal is involved.</strong> This tool only reads and converts content from files you legally own.',
-    'disc.p2':       'This project is provided "as is" without any warranties. The conversion may not be perfect and may result in some loss of formatting. It is not intended for commercial use. Use at your own risk.',
-    'footer.text':   'Made with 🥤 &amp; LLMs · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">GitHub Repository</a>',
+    'disc.p1':       '⚠️ <strong>No DRM removal.</strong> The tool reads and converts only content from files you legally own.',
+    'disc.p2':       'This project is provided "as is" without any warranties. Conversion may not be perfect and may result in some loss of formatting. It is not intended for commercial use. You use it at your own risk.',
+    'footer.text':   'Made with 🥤 · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">GitHub Repository</a>',
   },
   pl: {
     'hero.title':    'Konwerter słowników Mobi → StarDict',
-    'hero.desc':     'Konwertuj słowniki Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> do formatu <strong>StarDict</strong> - w całości offline, bezpośrednio w przeglądarce. Bez instalacji, bez wysyłania plików.',
-    'hero.badge':    '✨ 100% po stronie klienta · Żadne dane nie opuszczają Twojego urządzenia',
+    'hero.desc':     'Konwerter dla słowników Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> do formatu <strong>StarDict</strong>, który zaprojektowałem z myślą o przekonwertowaniu „Wielkiego Słownika Angielsko Polskiego” do formatu StarDict używanego na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>.  Wystarczy pobrać plik .html (lub użyć linka poniżej), wybrać swój słownik i przekonwertować. ',
+    'hero.badge':    '✨ Kod 100% działający po stronie użytkownika',
     'conv.heading':  '🔄 Konwertery',
-    'conv.desc':     'Dostępne są dwa konwertery w zależności od formatu pliku .mobi. Jeśli nie wiesz, który wybrać, zacznij od konwertera KF8 - zbudowany z myślą o Wielkim Słowniku Ang-Pol, ale może zadziałać z innymi słownikami Kindle.',
+    'conv.desc':     'Dostępne są dwa konwertery w zależności od formatu pliku .mobi. Jeśli nie wiesz, który wybrać, zacznij od konwertera KF8 lub użyj testera wersji poniżej. Konwertery mogą zadziałać z innymi słownikami, ale testowałem je tylko z „Wielkim Słownikiem Angielsko Polskim”.',
     'kf8.tag':       'KF8 · Nowsze wydania',
     'kf8.title':     'Konwerter KF8 / Huff',
-    'kf8.desc':      'Dla słowników w nowoczesnym formacie KF8 z kompresją HUFF/CDIC. Działa z wydaniem 2026 i nowszymi.',
+    'kf8.desc':      'Dla słowników w nowoczesnym formacie KF8 z kompresją HUFF/CDIC. Działa z wydaniem 2023 i nowszymi (również ta z kwietnia 2026), które były wydane już poza sklepem Amazon.',
     'kf8.btn':       'Otwórz konwerter →',
     'palm.tag':      'Mobi 7 · Starsze wydania',
     'palm.title':    'Konwerter PalmDoc',
-    'palm.desc':     'Dla starszych słowników Mobi 7 z kompresją PalmDoc. Działa z wydaniem 2014 i wcześniejszymi aktualizacjami.',
+    'palm.desc':     'Dla starszych słowników Mobi 7 z kompresją PalmDoc. Działa z wydaniem 2014 i nowszymi aktualizacjami, które były dostępne w sklepie Amazon.',
     'palm.btn':      'Otwórz konwerter →',
     'theme.heading': '🎨 Podgląd stylów',
     'theme.desc':    'Możesz wybrać dodatkowe style wpisów poza oryginalnym formatowaniem słownika, aby poprawić czytelność na urządzeniach e-ink.',
@@ -616,11 +648,11 @@ const I18N = {
     'theme.rich':    'Kolorowy - pełne kolorowanie sekcji',
     'how.heading':   '🚀 Jak używać',
     's1.title':      'Wybierz odpowiedni konwerter',
-    's1.desc':       'Wybierz KF8 dla nowszych wydań lub PalmDoc dla starszych. W razie wątpliwości zacznij od KF8.',
+    's1.desc':       'Wybierz KF8 dla nowszych wydań lub PalmDoc dla starszych. W razie wątpliwości zacznij od KF8 lub użyj testera wersji poniżej.',
     's2.title':      'Otwórz konwerter i wybierz plik',
     's2.desc':       'Kliknij <em>Otwórz konwerter</em>, następnie wybierz zakupiony plik słownika <code>.mobi</code> ze swojego urządzenia.',
     's3.title':      'Wybierz styl wpisów i konwertuj',
-    's3.desc':       'Wybierz styl wpisów StarDict który ci odpowiada i kliknij <strong>Konwertuj / Rozpocznij</strong>.',
+    's3.desc':       'Wybierz styl wpisów StarDict który ci odpowiada i kliknij <strong>Rozpocznij konwersję</strong>.',
     's4.title':      'Pobierz i zainstaluj',
     's4.desc':       'Pobierz wygenerowane pliki, umieść je razem w nowym folderze wewnątrz <code>/dict</code> na czytniku (na Onyx Boox, na innych czytnikach może być inaczej).',
     'tools.heading': '🧰 Dodatkowe narzędzia',
@@ -635,9 +667,9 @@ const I18N = {
     'sd.title':      'Walidator StarDict',
     'sd.desc':       'Wczytaj skonwertowane pliki StarDict, przeszukuj wpisy i weryfikuj wynik konwersji.',
     'about.heading': '💡 O projekcie',
-    'about.p1':      'Główną motywacją projektu jest umożliwienie korzystania z doskonałego <strong>Wielkiego Słownika Angielsko-Polskiego</strong> - słownika dostępnego wyłącznie na Kindle - na innych czytnikach, takich jak <strong>Onyx Boox</strong>, obsługujących format StarDict.',
-    'about.p2':      'Algorytm dekompresji inspirowany jest projektem <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a>i przeportowany do JavaScript, aby działał w przeglądarce - bez serwera, bez Pythona, bez zewnętrznych zależności.',
-    'about.p3':      'Repozytorium zawiera tylko narzędzie do konwersji. Słownik należy <strong>zakupić osobno</strong>. Projekt nie dystrybuuje ani nie obchodzi żadnych zabezpieczeń DRM - odczytuje wyłącznie treści, które legalnie posiadasz.',
+    'about.p1':      'Główną motywacją projektu było zbudowanie prostego narzędzia, którego użyję raz sam dla siebie, usunę i zapomnę. Postanowiłem z czasem się jednak się trochę pobawić, stworzyć na szybko stronę i udostępnić kod na github. Celem jest umożliwienie korzystania z doskonałego <strong>Wielkiego Słownika Angielsko-Polskiego</strong> dostępnego wyłącznie na Kindle i PocketBook, również na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>, obsługujących format StarDict.',
+    'about.p2':      'Algorytm dekompresji inspirowany jest projektem <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> i przeportowany do JavaScript, aby działał w przeglądarce, również po otwarciu pliku HTML bez dostępu do sieci.',
+    'about.p3':      'Repozytorium zawiera tylko narzędzia do konwersji. Słownik należy <strong>zakupić osobno</strong>. Projekt nie dystrybuuje ani nie obchodzi żadnych zabezpieczeń DRM - odczytuje wyłącznie treści, które legalnie posiadasz.',
     'about.btn':     'Zobacz na GitHub',
     'disc.heading':  '⚠️ Zastrzeżenie',
     'disc.p1':       '⚠️ <strong>Brak usuwania DRM.</strong> Narzędzie odczytuje i konwertuje tylko treści z plików, które legalnie posiadasz.',

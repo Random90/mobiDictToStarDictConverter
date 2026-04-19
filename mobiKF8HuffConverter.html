@@ -569,6 +569,7 @@ class KF8Converter extends HuffCdicBase {
         this.finalMap = new Map();   // word → styled definition HTML
         this.synMap   = new Map();   // alternate_form → canonical_word
         this.entrySeen = new Map();  // word → Set(fingerprint) for overlap dedupe
+        this.synStats = { idxBlocks: 0, idxIformsSeen: 0, idxIformsAdded: 0, phraseTailAdded: 0 };
     }
 
     _sanitizeEntryHtml(html) {
@@ -627,7 +628,8 @@ class KF8Converter extends HuffCdicBase {
                 .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, '')
                 .trim();
             def = styleFn(word, `<span><b>${word}</b></span> ${def}`);
-            this._ingestEntry(word, def, def);
+            // Keep raw idx block for synonym extraction (idx:iform inflections).
+            this._ingestEntry(word, def, block);
         }
 
         // ── Method 2: h2-based (JEM / older Mobipocket dictionary style) ──────
@@ -702,10 +704,65 @@ class KF8Converter extends HuffCdicBase {
     _collectSyns(canonicalWord, html) {
         if (!this.options.generateSyn) return;
 
+        const normalizeCandidate = (raw) => {
+            if (!raw) return '';
+            return raw
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/&amp;/gi, '&')
+                .replace(/&quot;/gi, '"')
+                .replace(/&#39;/gi, "'")
+                .normalize('NFKC')
+                .replace(/^[\s,;:()\[\]{}"'`]+|[\s,;:()\[\]{}"'`]+$/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        };
+
+        const maybeAddSyn = (candidate) => {
+            const alt = normalizeCandidate(candidate);
+            if (!alt) return false;
+            if (alt.length < 2 || alt.length > 80) return false;
+            if (/^\d+$/.test(alt)) return false;
+            if (alt.toLowerCase() === canonicalWord.toLowerCase()) return false;
+            if (!this.synMap.has(alt)) {
+                this.synMap.set(alt, canonicalWord);
+                return true;
+            }
+            return false;
+        };
+
+        const looksLikeInflectionOf = (candidate, base) => {
+            const c = (candidate || '').toLowerCase();
+            const b = (base || '').toLowerCase();
+            if (!c || !b || c === b) return false;
+            if (c === b + 's' || c === b + 'ed' || c === b + 'ing') return true;
+            if (/(s|x|z|ch|sh|o)$/.test(b) && c === b + 'es') return true;
+            if (b.endsWith('y') && b.length > 2 && !/[aeiou]y$/.test(b) && c === b.slice(0, -1) + 'ies') return true;
+            return false;
+        };
+
         // 1. Subscript-stripped variant: word₁ / word² → word
         const stripped = canonicalWord.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3\u2070]$/, '').trim();
         if (stripped !== canonicalWord && stripped.length > 1 && !this.synMap.has(stripped))
             this.synMap.set(stripped, canonicalWord);
+
+        // 1b. KF8 inflections from idx metadata, e.g. <idx:iform value="workers">
+        if (/<idx:entry\b/i.test(html)) this.synStats.idxBlocks++;
+        const extractIformValue = (attrs, inner) => {
+            const vm = attrs.match(/\bvalue\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
+            return vm ? (vm[1] || vm[2] || vm[3] || '') : (inner || '');
+        };
+        const iformPairRe = /<idx:iform\b([^>]*)>([\s\S]*?)<\/idx:iform>/gi;
+        let ifm;
+        while ((ifm = iformPairRe.exec(html)) !== null) {
+            this.synStats.idxIformsSeen++;
+            if (maybeAddSyn(extractIformValue(ifm[1] || '', ifm[2] || ''))) this.synStats.idxIformsAdded++;
+        }
+        const iformSelfRe = /<idx:iform\b([^>]*)\/>/gi;
+        while ((ifm = iformSelfRe.exec(html)) !== null) {
+            this.synStats.idxIformsSeen++;
+            if (maybeAddSyn(extractIformValue(ifm[1] || '', ''))) this.synStats.idxIformsAdded++;
+        }
 
         // 2. Sub-phrase <span><b>phrase</b></span> entries (multi-word or different from headword)
         for (const m of html.matchAll(/<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/gi)) {
@@ -713,18 +770,29 @@ class KF8Converter extends HuffCdicBase {
             if (!phrase || phrase.toLowerCase() === canonicalWord.toLowerCase()) continue;
             if (phrase.length < 2 || phrase.length > 80) continue;
             if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
+
+            // Fallback for dictionaries that strip idx:iform metadata: derive tail inflection from phrases.
+            // Example: "core workers" -> add "workers" as alias of "worker".
+            const toks = phrase.split(/\s+/).filter(Boolean);
+            if (toks.length >= 2) {
+                const tail = toks[toks.length - 1].replace(/^[^A-Za-z0-9'-]+|[^A-Za-z0-9'-]+$/g, '');
+                if (looksLikeInflectionOf(tail, canonicalWord) && maybeAddSyn(tail)) this.synStats.phraseTailAdded++;
+            }
         }
 
-        // 3. "też X" / "also X" alternate forms
-        for (const m of html.matchAll(/\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi)) {
-            const alt = m[1].trim();
-            if (alt && alt !== canonicalWord && !this.synMap.has(alt))
-                this.synMap.set(alt, canonicalWord);
+        // 3. Plural markers in parentheses, e.g. (<i>l.m.</i> <b>visionaries</b>)
+        for (const m of html.matchAll(/\(\s*<i[^>]*>\s*(?:l\.?\s*m\.?|liczba\s+mnoga|plural|pl\.?)\s*<\/i>\s*<b[^>]*>([\s\S]*?)<\/b>\s*\)/gi)) {
+            maybeAddSyn(m[1]);
         }
 
-        // 4. Plain <b>X</b> where X looks like a compound (contains space)
-        for (const m of html.matchAll(/<b>([^<]{3,70})<\/b>/g)) {
-            const phrase = m[1].trim();
+        // 4. "też X" / "also X" alternate forms
+        for (const m of html.matchAll(/\((?:też|also)\s+<b[^>]*>([\s\S]*?)<\/b>/gi)) {
+            maybeAddSyn(m[1]);
+        }
+
+        // 5. Plain <b>X</b> where X looks like a compound (contains space)
+        for (const m of html.matchAll(/<b[^>]*>([\s\S]*?)<\/b>/gi)) {
+            const phrase = normalizeCandidate(m[1]);
             if (!phrase.includes(' ')) continue;          // only multi-word
             if (phrase.toLowerCase() === canonicalWord.toLowerCase()) continue;
             if (phrase.length > 80 || /^\d/.test(phrase)) continue;
@@ -806,6 +874,9 @@ class KF8Converter extends HuffCdicBase {
         }
 
         await this.streamDecompress(textRecordMax, extraFlags);
+        if (this.options.generateSyn) {
+            addLog(`idx:entry blocks seen: ${this.synStats.idxBlocks}, idx:iform seen: ${this.synStats.idxIformsSeen}, idx:iform added: ${this.synStats.idxIformsAdded}, phrase-tail inflections: ${this.synStats.phraseTailAdded}`);
+        }
         addLog(`Synonyms collected: ${this.synMap.size}`);
         return { finalMap: this.finalMap, synMap: this.synMap };
     }

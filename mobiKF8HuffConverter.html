@@ -87,6 +87,36 @@
 // Style engines  (applied to each extracted entry's HTML)
 // ─────────────────────────────────────────────────────────────────────────────
 const STYLES = {
+    _escapeRegExp(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    },
+
+    _ensureHeadwordSpan(word, html) {
+        if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html)) return html;
+        const w = (word || '').trim();
+        if (!w) return html;
+        const escaped = STYLES._escapeRegExp(w);
+
+        // Convert a leading <h2>...</h2> block into canonical span/b headword form.
+        const h2Match = html.match(/^\s*<h2\b[^>]*>([\s\S]*?)<\/h2>\s*/i);
+        if (h2Match) {
+            const plain = h2Match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, 'i');
+            if (reLeadWord.test(plain)) {
+                const tail = plain.replace(new RegExp(`^${escaped}\\s*`, 'i'), '').trim();
+                const rest = html.slice(h2Match[0].length);
+                return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ''}${rest ? ` ${rest}` : ''}`.trim();
+            }
+        }
+
+        // Fallback: replace leading plain-word occurrence.
+        const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, 'i');
+        if (leadRe.test(html)) {
+            return html.replace(leadRe, `<span><b>${w}</b></span> `);
+        }
+        return html;
+    },
+
     none(word, pHtml) {
         return pHtml;
     },
@@ -99,6 +129,7 @@ const STYLES = {
     },
 
     nice(word, pHtml) {
+        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
         // Colour POS tags inside <i>
         let body = pHtml
             .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
@@ -115,6 +146,7 @@ const STYLES = {
     },
 
     rich(word, pHtml) {
+        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
         const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
         const ipa  = ipaM
             ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
@@ -130,16 +162,22 @@ const STYLES = {
             .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
             // Domain labels (fin. biz. etc.) violet + small
             .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
-                     '<span style="color:#7c3aed;font-size:.83em">$1</span>')
-            // Sub-phrase bold spans (after first) → olive
-            .replace(/(<span\s*>\s*<b>)((?:[^<]{3,60})\s[^<]{1,50})(<\/b>\s*<\/span>)/g,
-                     `<span><b style="color:#5c4b00">$2</b></span>`);
-        // Style the main headword
-        body = body.replace(
-            /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
-            `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">`
-          + `<b style="font-size:1.18em;color:#1a237e">$2</b>${ipa}</span>`
-        );
+                     '<span style="color:#7c3aed;font-size:.83em">$1</span>');
+
+        // Style span-headwords in one pass: first is the main headword, later multi-word spans are sub-phrases.
+        let seenHeadword = false;
+        body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
+            if (!seenHeadword) {
+                seenHeadword = true;
+                return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">`
+                     + `<b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`;
+            }
+            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' ')) {
+                return `<span><b style="color:#5c4b00">${inner}</b></span>`;
+            }
+            return m;
+        });
         return body;
     }
 };

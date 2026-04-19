@@ -34,6 +34,10 @@ const OUTPUTS = [
         template: 'src/MobiReader-PalmDoc.template.html',
         output:   'Tools/MobiReader-PalmDoc.html',
     },
+    {
+        template: 'src/StarDictReaderValidator.template.html',
+        output:   'Tools/StarDictReaderValidator.html',
+    },
 ];
 
 const INCLUDE_RE = /^(\s*)\/\/\s*@@include\(([^)]+)\)\s*$/;

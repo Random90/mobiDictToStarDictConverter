@@ -65,6 +65,11 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
     if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
     const ifo = ifoLines.join('\n') + '\n';
 
+    const ifoBytes = new TextEncoder().encode(ifo);
+    const idxBytes = new Uint8Array(idx);
+    const dictBytes = new Uint8Array(dict);
+    const synBytesArr = synCount > 0 ? new Uint8Array(synBytes) : null;
+
     // Download links
     const dl = (name, data) => {
         const a = document.createElement('a');
@@ -74,11 +79,11 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
         a.textContent = `⬇ ${name}`;
         links.appendChild(a);
     };
-    dl('dictionary.ifo', new TextEncoder().encode(ifo));
-    dl('dictionary.idx', new Uint8Array(idx));
-    dl('dictionary.dict', new Uint8Array(dict));
+    dl('dictionary.ifo', ifoBytes);
+    dl('dictionary.idx', idxBytes);
+    dl('dictionary.dict', dictBytes);
     if (synCount > 0) {
-        dl('dictionary.syn', new Uint8Array(synBytes));
+        dl('dictionary.syn', synBytesArr);
         const badge = document.createElement('span');
         badge.className = 'badge-syn';
         badge.textContent = `${synCount} synonyms`;
@@ -94,15 +99,49 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
     pArea.style.display = 'block';
     const keys = sortedEntries.map(([k]) => k);
     const shown = new Set();
-    for (let i = 0; i < Math.min(12, keys.length); i++) {
+    const sampleKeys = [];
+    for (let i = 0; i < Math.min(3, keys.length); i++) {
         let k;
         do { k = keys[Math.floor(Math.random() * keys.length)]; } while (shown.has(k));
         shown.add(k);
+        sampleKeys.push(k);
         const div = document.createElement('div');
         div.className = 'preview-item';
         div.innerHTML = `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:5px">${k}</b>`
-                      + finalMap.get(k).substring(0, 250);
+                      + finalMap.get(k);
         pGrid.appendChild(div);
+    }
+
+    if (window.StarDictValidator) {
+        if (!window.__palmValidator) {
+            window.__palmValidator = window.StarDictValidator.create({
+                ids: {
+                    status: 'validatorStatus',
+                    search: 'validatorSearchBox',
+                    resultCard: 'validatorResultCard',
+                    resultWord: 'validatorResultWord',
+                    byteBadge: 'validatorByteBadge',
+                    synInfo: 'validatorSynInfo',
+                    paneRendered: 'validatorPaneRendered',
+                    copyBtn: 'validatorCopyBtn',
+                },
+                getCopyLabel: () => 'Copy HTML',
+                getCopiedLabel: () => 'Copied',
+            });
+        }
+        window.__palmValidator.loadFromBuffers({
+            ifoText: new TextDecoder('utf-8').decode(ifoBytes),
+            idxBuffer: idxBytes.buffer,
+            dictBuffer: dictBytes.buffer,
+            synBuffer: synBytesArr ? synBytesArr.buffer : null,
+        });
+
+        const searchEl = document.getElementById('validatorSearchBox');
+        if (searchEl && sampleKeys.length > 0) {
+            const pick = sampleKeys[Math.floor(Math.random() * sampleKeys.length)];
+            searchEl.value = pick;
+            searchEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     }
 }
 

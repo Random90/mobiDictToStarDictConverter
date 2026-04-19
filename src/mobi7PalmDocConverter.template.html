@@ -24,8 +24,13 @@
         .btn-main.processing { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { background-color: #007bff; } 50% { background-color: #0056b3; } 100% { background-color: #007bff; } }
         .preview-area { margin-top: 25px; display: none; }
-        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 10px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 6px; font-size: 11px; max-height: 170px; overflow-y: auto; }
+        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
+        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
+        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
+        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
+        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
         .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
         .badge-syn { background: #6f42c1; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; }
         .style-preview { border: 1px solid #ddd; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; background: #fafafa; min-height: 36px; }
@@ -59,12 +64,6 @@
             </div>
             <div class="style-preview" id="stylePreview"></div>
 
-            <div class="check-item" style="margin-top:10px;">
-                <label class="check-item">
-                    <input type="checkbox" id="synCheck" checked>
-                    <span data-i18n-html="synLabel"></span>
-                </label>
-            </div>
             <div class="check-item">
                 <label class="check-item">
                     <input type="checkbox" id="mergeCheck" checked>
@@ -78,14 +77,30 @@
 
     <div id="log" data-i18n="logIdle"></div>
 
-    <div id="previewArea" class="preview-area">
-        <h3 data-i18n="previewTitle"></h3>
-        <div class="preview-grid" id="previewGrid"></div>
-    </div>
-
     <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border: 1px solid #b7eb8f;">
         <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
+    </div>
+
+    <div id="previewArea" class="preview-area">
+        <h3 data-i18n="previewTitle"></h3>
+        <div class="preview-grid" id="previewGrid"></div>
+        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
+        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <div id="validatorStatus" class="validator-status"></div>
+        <div id="validatorResultCard" class="validator-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b id="validatorResultWord"></b>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <span id="validatorByteBadge" class="badge-syn"></span>
+                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
+                </div>
+            </div>
+            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
+            <div class="validator-split">
+                <div id="validatorPaneRendered" class="validator-pane"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -205,14 +220,14 @@ startBtn.onclick = () => {
     const options = {
         style:       document.getElementById('styleSelect').value,
         merge:       document.getElementById('mergeCheck').checked,
-        generateSyn: document.getElementById('synCheck').checked,
+        generateSyn: true,
     };
 
     const converter = new Converter(globalBuffer, options, addLog);
     setTimeout(async () => {
         try {
             const { finalMap, synMap } = await converter.run();
-            renderOutput(finalMap, synMap, converter.encoder, options.generateSyn);
+            renderOutput(finalMap, synMap, converter.encoder, true);
             startBtn.classList.remove('processing');
             startBtn.textContent = "✅ DONE";
         } catch (err) {
@@ -225,6 +240,7 @@ startBtn.onclick = () => {
 };
 
 // ── Output ────────────────────────────────────────────────────────────────────
+// @@include(src/stardict-validator-core.js)
 // @@include(src/stardict-output-palmdoc.js)
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
@@ -241,11 +257,12 @@ const I18N = {
         styleNice:   'Nice Theme – headword + phonetics styled',
         styleEink:   'E-ink mono – high contrast, no color styling',
         styleRich:   'Rich Color – full color-coded sections',
-        synLabel:    '<b>Generate .syn file</b> — extracts sub-phrases &amp; alternate forms as synonyms',
         mergeLabel:  '<b>Smart Merging</b> — combine duplicate headwords into one entry',
         startBtn:    'START CONVERSION',
         logIdle:     'Status: Idle. Waiting for file...',
-        previewTitle:'🔍 Processed Entries Preview',
+        previewTitle:'🧩 Processed Entries Preview',
+        validatorTitle:'🔎 Search Generated Dictionary',
+        validatorSearchPh: '🔍 Search generated dictionary...',
         doneTitle:   '✅ Done! Download Files:',
     },
     pl: {
@@ -260,11 +277,12 @@ const I18N = {
         styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
         styleEink:   'E-ink mono – wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy – pełne kolorowanie sekcji',
-        synLabel:    '<b>Generuj plik .syn</b> - wyodrębnia pod-frazy i formy alternatywne jako synonimy',
         mergeLabel:  '<b>Inteligentne scalanie</b> - łączy zduplikowane nagłówki w jeden wpis',
         startBtn:    'ROZPOCZNIJ KONWERSJĘ',
         logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
-        previewTitle:'🔍 Podgląd przetworzonych wpisów',
+        previewTitle:'🧩 Podgląd przetworzonych wpisów',
+        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
+        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
         doneTitle:   '✅ Gotowe! Pobierz pliki:',
     }
 };

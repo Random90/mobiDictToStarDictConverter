@@ -20,8 +20,14 @@
         .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; margin-top: 10px; }
         .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
         .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 150px; overflow: hidden; }
+        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
+        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
+        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
+        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
+        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
+        .validator-raw { background:#1c1e21; color:#e8e8e8; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
         .option-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px 18px; border-radius: 10px; margin-bottom: 14px; }
         .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
         .option-row label { font-weight: 600; min-width: 120px; font-size: 13px; }
@@ -62,10 +68,6 @@
             </select>
         </div>
         <div class="style-preview" id="stylePreview"></div>
-        <div class="check-item" style="margin-top:8px;">
-            <input type="checkbox" id="synCheck" checked>
-            <span data-i18n-html="synLabel"></span>
-        </div>
     </div>
 
     <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
@@ -80,6 +82,22 @@
     <div id="previewArea" style="display:none; margin-top:20px;">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
+        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
+        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <div id="validatorStatus" class="validator-status"></div>
+        <div id="validatorResultCard" class="validator-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b id="validatorResultWord"></b>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <span id="validatorByteBadge" class="badge-syn"></span>
+                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
+                </div>
+            </div>
+            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
+            <div class="validator-split">
+                <div id="validatorPaneRendered" class="validator-pane"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -887,6 +905,210 @@ class KF8Converter extends HuffCdicBase {
 // ─────────────────────────────────────────────────────────────────────────────
 // StarDict output
 // ─────────────────────────────────────────────────────────────────────────────
+// Shared StarDict validator logic used by converter and standalone validator tool.
+(function () {
+    function create(config) {
+        const ids = config.ids || {};
+        const el = {
+            status:      document.getElementById(ids.status),
+            search:      document.getElementById(ids.search),
+            resultCard:  document.getElementById(ids.resultCard),
+            resultWord:  document.getElementById(ids.resultWord),
+            byteBadge:   document.getElementById(ids.byteBadge),
+            synInfo:     document.getElementById(ids.synInfo),
+            paneRendered:document.getElementById(ids.paneRendered),
+            paneRaw:     document.getElementById(ids.paneRaw),
+            copyBtn:     document.getElementById(ids.copyBtn),
+        };
+
+        let idxData = null;
+        let dictData = null;
+        let wordMap = new Map();
+        let synMap = new Map();
+        let ordinalToKey = [];
+        let rawHtml = '';
+
+        const dec = new TextDecoder('utf-8');
+
+        function setStatus(msg) {
+            if (el.status) el.status.textContent = msg;
+        }
+
+        function parseIdx(buffer) {
+            idxData = new DataView(buffer);
+            wordMap.clear();
+            ordinalToKey = [];
+            let offset = 0;
+            while (offset < idxData.byteLength) {
+                const start = offset;
+                while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0) offset++;
+                const word = dec.decode(new Uint8Array(idxData.buffer, start, offset - start));
+                offset++;
+                if (offset + 8 > idxData.byteLength) break;
+                const dataOffset = idxData.getUint32(offset, false);
+                const dataSize   = idxData.getUint32(offset + 4, false);
+                const lc = word.toLowerCase();
+                ordinalToKey.push(lc);
+                const entry = { off: dataOffset, sz: dataSize, original: word };
+                if (wordMap.has(lc)) wordMap.get(lc).push(entry);
+                else wordMap.set(lc, [entry]);
+                offset += 8;
+            }
+        }
+
+        function parseSyn(buffer) {
+            synMap.clear();
+            if (!buffer) return;
+            const synView = new DataView(buffer);
+            let so = 0;
+            while (so < synView.byteLength) {
+                const ss = so;
+                while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
+                const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
+                so++;
+                if (so + 4 > synView.byteLength) break;
+                const ordinal = synView.getUint32(so, false);
+                so += 4;
+                if (ordinal < ordinalToKey.length) synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
+            }
+        }
+
+        function showEntry(lowerKey, synHit) {
+            const entries = wordMap.get(lowerKey);
+            if (!entries) return;
+
+            rawHtml = entries.map(e => dec.decode(new Uint8Array(dictData, e.off, e.sz))).join('');
+            const first = entries[0];
+
+            if (el.resultWord) el.resultWord.textContent = first.original;
+            if (el.byteBadge) {
+                el.byteBadge.textContent = entries.length > 1
+                    ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
+                    : `${first.sz} bytes`;
+            }
+
+            if (el.synInfo) {
+                if (synHit) {
+                    el.synInfo.style.display = 'block';
+                    el.synInfo.innerHTML = `Synonym redirect: <b>${synHit}</b> -> <b>${first.original}</b>`;
+                } else {
+                    el.synInfo.style.display = 'none';
+                }
+            }
+
+            if (el.paneRendered) el.paneRendered.innerHTML = rawHtml;
+            if (el.paneRaw) el.paneRaw.textContent = rawHtml;
+            if (el.resultCard) el.resultCard.style.display = 'block';
+        }
+
+        function bindSearch() {
+            if (!el.search) return;
+            el.search.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                const lower = query.toLowerCase();
+                if (!query) {
+                    if (el.resultCard) el.resultCard.style.display = 'none';
+                    return;
+                }
+
+                let matchKey = wordMap.has(lower) ? lower : null;
+                let synHit = null;
+                if (!matchKey && synMap.has(lower)) {
+                    matchKey = synMap.get(lower);
+                    synHit = query;
+                }
+
+                if (!matchKey) {
+                    if (el.resultCard) el.resultCard.style.display = 'none';
+                    return;
+                }
+                showEntry(matchKey, synHit);
+            });
+        }
+
+        function bindCopy() {
+            if (!el.copyBtn) return;
+            el.copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(rawHtml).then(() => {
+                    const copied = config.getCopiedLabel ? config.getCopiedLabel() : 'Copied';
+                    const copy = config.getCopyLabel ? config.getCopyLabel() : 'Copy HTML';
+                    el.copyBtn.textContent = copied;
+                    setTimeout(() => { el.copyBtn.textContent = copy; }, 1200);
+                });
+            });
+        }
+
+        async function loadFromFiles(files) {
+            if (!files.idx || !files.dict) return;
+
+            const idxBuffer = await files.idx.arrayBuffer();
+            const dictBuffer = await files.dict.arrayBuffer();
+            const synBuffer = files.syn ? await files.syn.arrayBuffer() : null;
+            const ifoText = files.ifo ? dec.decode(await files.ifo.arrayBuffer()) : '';
+
+            loadFromBuffers({ idxBuffer, dictBuffer, synBuffer, ifoText });
+        }
+
+        function loadFromBuffers(data) {
+            parseIdx(data.idxBuffer);
+            dictData = data.dictBuffer;
+            parseSyn(data.synBuffer || null);
+
+            const ifoText = data.ifoText || '';
+            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || '?';
+            const syncount  = (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
+
+            setStatus(
+                `Ready: ${wordMap.size} entries` +
+                (synMap.size ? ` · ${synMap.size} synonyms` : '') +
+                (ifoText ? ` (ifo: wordcount=${wordcount}${syncount !== '0' ? ', synwordcount=' + syncount : ''})` : '')
+            );
+            if (el.search) el.search.style.display = 'block';
+        }
+
+        function attachFileInputs(fileInputIds) {
+            const idsMap = fileInputIds || {};
+            const ifoEl = document.getElementById(idsMap.ifo);
+            const idxEl = document.getElementById(idsMap.idx);
+            const dictEl = document.getElementById(idsMap.dict);
+            const synEl = document.getElementById(idsMap.syn);
+
+            const triggerLoad = () => {
+                loadFromFiles({
+                    ifo: ifoEl ? ifoEl.files[0] : null,
+                    idx: idxEl ? idxEl.files[0] : null,
+                    dict: dictEl ? dictEl.files[0] : null,
+                    syn: synEl ? synEl.files[0] : null,
+                });
+            };
+
+            [ifoEl, idxEl, dictEl, synEl].forEach(node => {
+                if (node) node.addEventListener('change', triggerLoad);
+            });
+        }
+
+        bindSearch();
+        bindCopy();
+
+        return {
+            loadFromBuffers,
+            loadFromFiles,
+            attachFileInputs,
+            getRawHtml: () => rawHtml,
+        };
+    }
+
+    window.StarDictValidator = {
+        create,
+        initFromFiles(config) {
+            const api = create(config);
+            api.attachFileInputs(config.fileInputIds || {});
+            return api;
+        },
+    };
+})();
+
+
 // StarDict output renderer for KF8 converter.
 function renderOutput(finalMap, synMap, generateSyn) {
     document.getElementById('downloadArea').style.display = 'block';
@@ -951,6 +1173,11 @@ function renderOutput(finalMap, synMap, generateSyn) {
     if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
     const ifo = ifoLines.join('\n') + '\n';
 
+    const ifoBytes = enc.encode(ifo);
+    const idxBytes = new Uint8Array(idx);
+    const dictBytes = new Uint8Array(dict);
+    const synBytesArr = synCount > 0 ? new Uint8Array(synBytes) : null;
+
     // Download links
     const dl = (name, data) => {
         const a = document.createElement('a');
@@ -960,11 +1187,11 @@ function renderOutput(finalMap, synMap, generateSyn) {
         a.textContent = `⬇ ${name}`;
         links.appendChild(a);
     };
-    dl('dictionary.ifo', enc.encode(ifo));
-    dl('dictionary.idx', new Uint8Array(idx));
-    dl('dictionary.dict', new Uint8Array(dict));
+    dl('dictionary.ifo', ifoBytes);
+    dl('dictionary.idx', idxBytes);
+    dl('dictionary.dict', dictBytes);
     if (synCount > 0) {
-        dl('dictionary.syn', new Uint8Array(synBytes));
+        dl('dictionary.syn', synBytesArr);
         const badge = document.createElement('span');
         badge.className = 'badge-syn';
         badge.textContent = `${synCount} synonyms`;
@@ -979,16 +1206,51 @@ function renderOutput(finalMap, synMap, generateSyn) {
 
     const keys = sorted.map(([k]) => k);
     const shown = new Set();
-    for (let i = 0; i < Math.min(12, keys.length); i++) {
+    const sampleKeys = [];
+    for (let i = 0; i < Math.min(3, keys.length); i++) {
         let k;
         do { k = keys[Math.floor(Math.random() * keys.length)]; } while (shown.has(k));
         shown.add(k);
+        sampleKeys.push(k);
         const div = document.createElement('div');
         div.className = 'preview-item';
         div.innerHTML = `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:4px">${k}</b>`
                       // Do not truncate raw HTML; rich style markup breaks when sliced mid-tag.
                       + finalMap.get(k);
         pGrid.appendChild(div);
+    }
+
+    if (window.StarDictValidator) {
+        if (!window.__kf8Validator) {
+            window.__kf8Validator = window.StarDictValidator.create({
+                ids: {
+                    status: 'validatorStatus',
+                    search: 'validatorSearchBox',
+                    resultCard: 'validatorResultCard',
+                    resultWord: 'validatorResultWord',
+                    byteBadge: 'validatorByteBadge',
+                    synInfo: 'validatorSynInfo',
+                    paneRendered: 'validatorPaneRendered',
+                    copyBtn: 'validatorCopyBtn',
+                },
+                getCopyLabel: () => 'Copy HTML',
+                getCopiedLabel: () => 'Copied',
+            });
+        }
+        window.__kf8Validator.loadFromBuffers({
+            ifoText: new TextDecoder('utf-8').decode(ifoBytes),
+            idxBuffer: idxBytes.buffer,
+            dictBuffer: dictBytes.buffer,
+            synBuffer: synBytesArr ? synBytesArr.buffer : null,
+        });
+
+        // Seed search from random samples and render the full entry immediately.
+        const searchEl = document.getElementById('validatorSearchBox');
+        if (searchEl && sampleKeys.length > 0) {
+            const pick = sampleKeys[Math.floor(Math.random() * sampleKeys.length)];
+            searchEl.value = pick;
+            searchEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     }
 
     addLog(`✅ Output ready. ${count} entries, idx=${idx.length} B, dict=${dict.length} B${synCount ? `, syn=${synCount}` : ''}.`);
@@ -1006,7 +1268,7 @@ document.getElementById('startBtn').onclick = () => {
 
     const options = {
         style:       document.getElementById('styleSelect').value,
-        generateSyn: document.getElementById('synCheck').checked,
+        generateSyn: true,
     };
 
     const conv = new KF8Converter(globalBuffer, options);
@@ -1015,7 +1277,7 @@ document.getElementById('startBtn').onclick = () => {
         try {
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
-                renderOutput(finalMap, synMap, options.generateSyn);
+                renderOutput(finalMap, synMap, true);
                 btn.textContent = '✅ DONE';
             } else {
                 addLog('⚠️ No entries extracted. Check log for details.');
@@ -1034,7 +1296,7 @@ document.getElementById('startBtn').onclick = () => {
 const I18N = {
     en: {
         title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
-        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br><small>Experimental version, not fully functional. Some records might be missing or glitched</small>',
+        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>',
         dropzone:    '📁 Click or drag your .mobi file here',
         styleLabel:  '🎨 Entry Style:',
         styleNone:   'None - original HTML pass-through',
@@ -1042,15 +1304,16 @@ const I18N = {
         styleNice:   'Nice - headword + phonetics styled',
         styleEink:   'E-ink mono - high contrast, no color styling',
         styleRich:   'Rich Color - full color-coded sections',
-        synLabel:    '<b>Generate .syn file</b> - for synonyms and conjugations',
         startBtn:    'START CONVERSION',
         logIdle:     'Status: Idle. Waiting for file...',
         doneTitle:   '✅ Done! Download StarDict Files:',
-        previewTitle:'🔍 Sample Entries',
+        previewTitle:'🧩 Sample Entries',
+        validatorTitle:'🔎 Search Generated Dictionary',
+        validatorSearchPh: '🔍 Search generated dictionary...',
     },
     pl: {
         title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
-        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b> i podobnych słowników w formacie KF8.<br><small>Wersja eksperymentalna, nie w pełni funkcjonalna. Niektóre rekordy mogą być pominięte lub uszkodzone</small>',
+        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>',
         dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
         styleLabel:  '🎨 Styl wpisów:',
         styleNone:   'Brak - oryginalny HTML bez zmian',
@@ -1058,11 +1321,12 @@ const I18N = {
         styleNice:   'Ładny - nagłówek + fonetyka ze stylem',
         styleEink:   'E-ink mono - wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy - pełne kolorowanie sekcji',
-        synLabel:    '<b>Generuj plik .syn</b> - dla synonimów i odmian',
         startBtn:    'ROZPOCZNIJ KONWERSJĘ',
         logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
         doneTitle:   '✅ Gotowe! Pobierz pliki StarDict:',
-        previewTitle:'🔍 Przykładowe wpisy',
+        previewTitle:'🧩 Przykładowe wpisy',
+        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
+        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
     }
 };
 // ── i18n: language detection, application & toggle ───────────────────────────

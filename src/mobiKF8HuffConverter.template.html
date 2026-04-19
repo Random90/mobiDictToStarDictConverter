@@ -14,8 +14,14 @@
         .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; margin-top: 10px; }
         .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
         .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 150px; overflow: hidden; }
+        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
+        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
+        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
+        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
+        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
+        .validator-raw { background:#1c1e21; color:#e8e8e8; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
         .option-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px 18px; border-radius: 10px; margin-bottom: 14px; }
         .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
         .option-row label { font-weight: 600; min-width: 120px; font-size: 13px; }
@@ -48,10 +54,6 @@
             </select>
         </div>
         <div class="style-preview" id="stylePreview"></div>
-        <div class="check-item" style="margin-top:8px;">
-            <input type="checkbox" id="synCheck" checked>
-            <span data-i18n-html="synLabel"></span>
-        </div>
     </div>
 
     <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
@@ -66,6 +68,22 @@
     <div id="previewArea" style="display:none; margin-top:20px;">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
+        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
+        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <div id="validatorStatus" class="validator-status"></div>
+        <div id="validatorResultCard" class="validator-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b id="validatorResultWord"></b>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <span id="validatorByteBadge" class="badge-syn"></span>
+                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
+                </div>
+            </div>
+            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
+            <div class="validator-split">
+                <div id="validatorPaneRendered" class="validator-pane"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -241,6 +259,7 @@ fileInput.addEventListener('change', async (e) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // StarDict output
 // ─────────────────────────────────────────────────────────────────────────────
+// @@include(src/stardict-validator-core.js)
 // @@include(src/stardict-output-kf8.js)
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -253,7 +272,7 @@ document.getElementById('startBtn').onclick = () => {
 
     const options = {
         style:       document.getElementById('styleSelect').value,
-        generateSyn: document.getElementById('synCheck').checked,
+        generateSyn: true,
     };
 
     const conv = new KF8Converter(globalBuffer, options);
@@ -262,7 +281,7 @@ document.getElementById('startBtn').onclick = () => {
         try {
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
-                renderOutput(finalMap, synMap, options.generateSyn);
+                renderOutput(finalMap, synMap, true);
                 btn.textContent = '✅ DONE';
             } else {
                 addLog('⚠️ No entries extracted. Check log for details.');
@@ -281,7 +300,7 @@ document.getElementById('startBtn').onclick = () => {
 const I18N = {
     en: {
         title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
-        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b> and similar KF8-format dictionaries.<br><small>Experimental version, not fully functional. Some records might be missing or glitched</small>',
+        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2026</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>',
         dropzone:    '📁 Click or drag your .mobi file here',
         styleLabel:  '🎨 Entry Style:',
         styleNone:   'None - original HTML pass-through',
@@ -289,15 +308,16 @@ const I18N = {
         styleNice:   'Nice - headword + phonetics styled',
         styleEink:   'E-ink mono - high contrast, no color styling',
         styleRich:   'Rich Color - full color-coded sections',
-        synLabel:    '<b>Generate .syn file</b> - for synonyms and conjugations',
         startBtn:    'START CONVERSION',
         logIdle:     'Status: Idle. Waiting for file...',
         doneTitle:   '✅ Done! Download StarDict Files:',
-        previewTitle:'🔍 Sample Entries',
+        previewTitle:'🧩 Sample Entries',
+        validatorTitle:'🔎 Search Generated Dictionary',
+        validatorSearchPh: '🔍 Search generated dictionary...',
     },
     pl: {
         title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
-        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b> i podobnych słowników w formacie KF8.<br><small>Wersja eksperymentalna, nie w pełni funkcjonalna. Niektóre rekordy mogą być pominięte lub uszkodzone</small>',
+        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2026</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>',
         dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
         styleLabel:  '🎨 Styl wpisów:',
         styleNone:   'Brak - oryginalny HTML bez zmian',
@@ -305,11 +325,12 @@ const I18N = {
         styleNice:   'Ładny - nagłówek + fonetyka ze stylem',
         styleEink:   'E-ink mono - wysoki kontrast, bez kolorowania',
         styleRich:   'Kolorowy - pełne kolorowanie sekcji',
-        synLabel:    '<b>Generuj plik .syn</b> - dla synonimów i odmian',
         startBtn:    'ROZPOCZNIJ KONWERSJĘ',
         logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
         doneTitle:   '✅ Gotowe! Pobierz pliki StarDict:',
-        previewTitle:'🔍 Przykładowe wpisy',
+        previewTitle:'🧩 Przykładowe wpisy',
+        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
+        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
     }
 };
 // @@include(src/i18n-core.js)

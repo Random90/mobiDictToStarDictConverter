@@ -183,7 +183,7 @@ const STYLES = {
 };
 
 // Live preview using a fake entry
-const PREVIEW_HTML = `<p width="-20"> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
+const PREVIEW_HTML = `<p> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
 function updateStylePreview() {
     const fn = STYLES[document.getElementById('styleSelect').value] || STYLES.nice;
     document.getElementById('stylePreview').innerHTML = fn('download', PREVIEW_HTML);
@@ -543,10 +543,18 @@ class KF8Converter extends HuffCdicBase {
         this.entrySeen = new Map();  // word → Set(fingerprint) for overlap dedupe
     }
 
+    _sanitizeEntryHtml(html) {
+        if (!html) return html;
+        // Legacy Mobipocket width attributes on <p> are invalid in modern HTML output.
+        return html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, '');
+    }
+
     _ingestEntry(word, def, synHtml = '') {
         if (!word || !def) return;
         const key = word.trim();
         if (!key) return;
+
+        def = this._sanitizeEntryHtml(def);
 
         const fp = def.replace(/\s+/g, ' ').trim();
         if (!fp) return;

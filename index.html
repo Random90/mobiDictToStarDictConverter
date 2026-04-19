@@ -109,7 +109,7 @@
       gap: 10px;
     }
 
-    p { color: var(--muted); margin-bottom: 12px; }
+    p:not(.thm-preview) { color: var(--muted); margin-bottom: 12px; }
     p:last-child { margin-bottom: 0; }
 
     /* ── CARDS ── */
@@ -199,6 +199,46 @@
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
     }
+
+    /* ── THEME SHOWCASE ── */
+    .theme-showcase {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-top: 20px;
+    }
+    .theme-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .theme-controls label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .theme-controls select {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .theme-preview {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      background: #fff;
+      color: #1c1e21;
+      min-height: 72px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
     .tool-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -271,6 +311,23 @@
 </header>
 
 <main class="container">
+
+  <!-- THEME SHOWCASE -->
+  <section>
+    <h2 data-i18n="theme.heading"></h2>
+    <p data-i18n="theme.desc"></p>
+    <div class="theme-showcase">
+      <div class="theme-controls">
+        <label for="themeStyleSelect" data-i18n="theme.label"></label>
+        <select id="themeStyleSelect">
+          <option value="clean" data-i18n="theme.clean"></option>
+          <option value="nice" data-i18n="theme.nice"></option>
+          <option value="rich" data-i18n="theme.rich"></option>
+        </select>
+      </div>
+      <div class="theme-preview" id="themePreview"></div>
+    </div>
+  </section>
 
   <!-- CONVERTERS -->
   <section>
@@ -400,6 +457,68 @@
 </footer>
 
 <script>
+const THEME_PREVIEW_HTML = `<p class="thm-preview" width="-20"> <span><b>roll call</b></span> /rəʊl kɔːl/ <i>n</i> <b>1.</b> sprawdzanie obecności <b>2.</b> <i>milit.</i> apel <br/> <span><b>vote by roll call</b></span> <i>am.</i> głosowanie imienne </p>`;
+
+const THEME_STYLES = {
+  none(word, html) {
+    return html;
+  },
+  clean(word, html) {
+    return html.replace(/ width="[^"]*"/gi, '').replace(/ style="[^"]*"/gi, '');
+  },
+  nice(word, html) {
+    let body = html
+      .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+               '<span style="color:#c0392b;font-weight:bold">$1</span>')
+      .replace(/\b(<b>(\d+)\.<\/b>)/g,
+               '<span style="color:#2980b9;font-weight:bold">$1</span>');
+    body = body.replace(
+      /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
+      `<span><b style="font-size:1.08em;color:#003d82">$2</b></span>`
+    );
+    return body;
+  },
+  rich(word, html) {
+    const ipaM = html.match(/(?<!<)\/([^/<]{2,60})\//);
+    const ipa = ipaM
+      ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
+      : '';
+    let body = ipaM ? html.replace(ipaM[0], '') : html;
+    body = body
+      .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+               '<b style="color:#e74c3c">$1</b>')
+      .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
+      .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
+               '<span style="color:#7c3aed;font-size:.83em">$1</span>');
+
+    let seenHead = false;
+    body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
+      if (!seenHead) {
+        seenHead = true;
+        return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px"><b style="font-size:1.15em;color:#1a237e">${inner}</b>${ipa}</span>`;
+      }
+      return `<span><b style="color:#5c4b00">${inner}</b></span>`;
+    });
+    return body;
+  }
+};
+
+function updateThemePreview() {
+  const select = document.getElementById('themeStyleSelect');
+  const pane = document.getElementById('themePreview');
+  if (!select || !pane) return;
+  const fn = THEME_STYLES[select.value] || THEME_STYLES.nice;
+  pane.innerHTML = fn('roll call', THEME_PREVIEW_HTML);
+}
+
+function initThemeShowcase() {
+  const select = document.getElementById('themeStyleSelect');
+  if (!select) return;
+  select.value = 'nice';
+  select.addEventListener('change', updateThemePreview);
+  updateThemePreview();
+}
+
 const I18N = {
   en: {
     'hero.title':    'Mobi Dictionary → StarDict Converter',
@@ -415,6 +534,12 @@ const I18N = {
     'palm.title':    'PalmDoc Converter',
     'palm.desc':     'For older Mobi 7 dictionaries that use PalmDoc compression. Works with the 2014 edition and some earlier updates.',
     'palm.btn':      'Open Converter →',
+    'theme.heading': '🎨 Style Showcase',
+    'theme.desc':    'You can choose additional entry styles beyond the original dictionary formatting to improve readability on e-ink devices.',
+    'theme.label':   'Preview style:',
+    'theme.clean':   'Original - original HTML',
+    'theme.nice':    'Nice - headword + phonetics styled',
+    'theme.rich':    'Rich Color - full color-coded sections',
     'how.heading':   '🚀 How to use',
     's1.title':      'Pick the right converter',
     's1.desc':       'Choose KF8 for newer editions or PalmDoc for older ones. When in doubt, start with KF8.',
@@ -459,6 +584,12 @@ const I18N = {
     'palm.title':    'Konwerter PalmDoc',
     'palm.desc':     'Dla starszych słowników Mobi 7 z kompresją PalmDoc. Działa z wydaniem 2014 i wcześniejszymi aktualizacjami.',
     'palm.btn':      'Otwórz konwerter →',
+    'theme.heading': '🎨 Podgląd stylów',
+    'theme.desc':    'Możesz wybrać dodatkowe style wpisów poza oryginalnym formatowaniem słownika, aby poprawić czytelność na urządzeniach e-ink.',
+    'theme.label':   'Styl podglądu:',
+    'theme.clean':   'Oryginalny - oryginalny HTML',
+    'theme.nice':    'Ładny - nagłówek + fonetyka ze stylem',
+    'theme.rich':    'Kolorowy - pełne kolorowanie sekcji',
     'how.heading':   '🚀 Jak używać',
     's1.title':      'Wybierz odpowiedni konwerter',
     's1.desc':       'Wybierz KF8 dla nowszych wydań lub PalmDoc dla starszych. W razie wątpliwości zacznij od KF8.',
@@ -520,6 +651,7 @@ function toggleLang() {
 }
 
 // Run immediately (script is at end of body — DOM is ready, no flash)
+initThemeShowcase();
 applyI18n();
 </script>
 </body>

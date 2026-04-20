@@ -79,8 +79,8 @@
         height: 14px;
       }
 
-      /* ── HERO ── */
-      .hero {
+      /* ── main-header ── */
+      .main-header {
         background: linear-gradient(
           135deg,
           #12162b 0%,
@@ -93,7 +93,7 @@
         position: relative;
         overflow: hidden;
       }
-      .hero::before {
+      .main-header::before {
         content: "";
         position: absolute;
         inset: 0;
@@ -104,12 +104,12 @@
         );
         pointer-events: none;
       }
-      .hero-icon {
+      .main-header-icon {
         font-size: 3.5rem;
         margin-bottom: 16px;
         display: block;
       }
-      .hero h1 {
+      .main-header h1 {
         font-size: clamp(1.8rem, 5vw, 3rem);
         font-weight: 700;
         background: linear-gradient(90deg, var(--accent), var(--accent2));
@@ -118,7 +118,7 @@
         background-clip: text;
         margin-bottom: 16px;
       }
-      .hero p {
+      .main-header p {
         font-size: clamp(1rem, 2.5vw, 1.2rem);
         color: var(--muted);
         max-width: 60%;
@@ -399,9 +399,15 @@
         text-decoration: underline;
       }
 
-      @media (max-width: 480px) {
-        .hero {
+      @media only screen and (max-width: 720px) {
+        .main-header {
           padding: 56px 20px 48px;
+        }
+        .main-header p {
+          max-width: 100%;
+        }
+        .theme-controls select {
+          width: 100%;
         }
         section {
           padding: 40px 0;
@@ -450,12 +456,12 @@
       </button>
     </div>
 
-    <!-- HERO -->
-    <header class="hero">
-      <span class="hero-icon">📖</span>
-      <h1 data-i18n="hero.title"></h1>
-      <p data-i18n-html="hero.desc"></p>
-      <span class="badge" data-i18n="hero.badge"></span>
+    <!-- main-header -->
+    <header class="main-header">
+      <span class="main-header-icon">📖</span>
+      <h1 data-i18n="main-header.title"></h1>
+      <p data-i18n-html="main-header.desc"></p>
+      <span class="badge" data-i18n="main-header.badge"></span>
     </header>
 
     <main class="container">
@@ -728,10 +734,10 @@
 
       const I18N = {
         en: {
-          "hero.title": "Mobi Dictionary → StarDict Converter",
-          "hero.desc":
+          "main-header.title": "Mobi Dictionary → StarDict Converter",
+          "main-header.desc":
             'Converter for Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> dictionaries to <strong>StarDict</strong> format I\'ve designed with converting the "Wielki Slownik Angielsko Polski" dictionary to the StarDict format used on other e-readers in mind, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app. Just download the .html file (or use the link below), choose your dictionary, and convert it.',
-          "hero.badge": "✨ 100% client-side code",
+          "main-header.badge": "✨ 100% client-side code",
           "conv.heading": "🔄 Converters",
           "conv.desc":
             'Two converters are available depending on the .mobi file format. If you are not sure which one to choose, start with the KF8 converter or use the version tester below. The converters may work with other dictionaries, but I tested them only with "Wielki Slownik Angielsko Polski".',
@@ -799,10 +805,10 @@
             'Made with 🥤 · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">GitHub Repository</a>',
         },
         pl: {
-          "hero.title": "Konwerter słowników Mobi → StarDict",
-          "hero.desc":
+          "main-header.title": "Konwerter słowników Mobi → StarDict",
+          "main-header.desc":
             'Konwerter dla słowników Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> do formatu <strong>StarDict</strong>, który zaprojektowałem z myślą o przekonwertowaniu „Wielkiego Słownika Angielsko Polskiego” do formatu StarDict używanego na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>.  Wystarczy pobrać plik .html (lub użyć linka poniżej), wybrać swój słownik i przekonwertować. ',
-          "hero.badge": "✨ Kod 100% działający po stronie użytkownika",
+          "main-header.badge": "✨ Kod 100% działający po stronie użytkownika",
           "conv.heading": "🔄 Konwertery",
           "conv.desc":
             "Dostępne są dwa konwertery w zależności od formatu pliku .mobi. Jeśli nie wiesz, który wybrać, zacznij od konwertera KF8 lub użyj testera wersji poniżej. Konwertery mogą zadziałać z innymi słownikami, ale testowałem je tylko z „Wielkim Słownikiem Angielsko Polskim”.",

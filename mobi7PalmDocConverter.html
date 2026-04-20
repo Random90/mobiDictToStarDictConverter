@@ -8,6 +8,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOBI to StarDict</title>
     <style>
         #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
@@ -21,7 +22,7 @@
         .option-box { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
         .option-row label { font-weight: 600; min-width: 130px; }
-        .option-row select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; }
+        .option-row select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; width: 100%; text-overflow: ellipsis; }
         .option-row .hint { font-size: 12px; color: #888; }
         .check-item { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 8px; border-radius: 5px; transition: 0.2s; }
         .check-item:hover { background: #f0f7ff; }
@@ -61,7 +62,7 @@
         <label data-i18n="step1"></label>
         <div class="upload-section" id="dropZone">
             <span id="fileNameDisplay" data-i18n="dropzone"></span>
-            <input type="file" id="fileInput" style="display:none">
+            <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
         </div>
 
         <label data-i18n="step2"></label>

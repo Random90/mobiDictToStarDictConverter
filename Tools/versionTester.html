@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOBI Diagnostic Tool</title>
     <style>
         body { font-family: monospace; background: #121212; color: #00ff00; padding: 20px; }
@@ -23,7 +24,9 @@
 </noscript>
 <button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
     <h2 data-i18n="title">MOBI File Diagnostics</h2>
-    <input type="file" id="f">
+    <div class="input-wrapper">
+        <input type="file" id="f" accept=".mobi,.azw,.azw3">
+    </div>
     <div id="out" class="report" style="margin-top:20px; display:none"></div>
 
 <script>

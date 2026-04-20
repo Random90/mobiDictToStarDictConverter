@@ -4,41 +4,214 @@
   To make changes, edit the template and/or shared files from src/*.js,
   then run:  node build.js
 -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOBI8/KF8 to StarDict - HUFF/CDIC </title>
+    <title>MOBI8/KF8 to StarDict - HUFF/CDIC</title>
     <style>
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; }
-        .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
-        .upload-section { border: 3px dashed #007bff; background: #f8fbff; padding: 30px; text-align: center; cursor: pointer; border-radius: 12px; margin-bottom: 20px; }
-        #log { background: #1c1e21; color: #a5d6a7; padding: 15px; font-family: monospace; height: 340px; overflow-y: auto; border-radius: 8px; margin-top: 20px; font-size: 12px; border: 1px solid #30363d; white-space: pre-wrap; }
-        .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
-        .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
-        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
-        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
-        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
-        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
-        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
-        .validator-raw { background:#1c1e21; color:#e8e8e8; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
-        .option-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px 18px; border-radius: 10px; margin-bottom: 14px; }
-        .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-        .option-row label { font-weight: 600; min-width: 120px; font-size: 13px; }
-        .option-row select { padding: 5px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; width: 100%; text-overflow: ellipsis; }
-        .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; }
-        .style-preview { border: 1px solid #ddd; border-radius: 7px; padding: 9px 13px; margin-top: 6px; font-size: 12px; background: #fff; min-height: 32px; }
-        .badge-syn { background: #6f42c1; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; vertical-align: middle; }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1000px;
+        margin: 30px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+      }
+      .card {
+        background: white;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+      h2 {
+        color: #007bff;
+        margin-top: 0;
+        border-bottom: 2px solid #e1e4e8;
+        padding-bottom: 10px;
+      }
+      .upload-section {
+        border: 3px dashed #007bff;
+        background: #f8fbff;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+      #log {
+        background: #1c1e21;
+        color: #a5d6a7;
+        padding: 15px;
+        font-family: monospace;
+        height: 340px;
+        overflow-y: auto;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 12px;
+        border: 1px solid #30363d;
+        white-space: pre-wrap;
+      }
+      .btn-main {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        transition: 0.3s;
+        margin-top: 10px;
+      }
+      .btn-main:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .btn-dl {
+        display: inline-block;
+        margin: 5px;
+        padding: 10px 15px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .preview-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .validator-search {
+        width: 100%;
+        padding: 11px;
+        font-size: 16px;
+        margin-top: 12px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        box-sizing: border-box;
+        display: none;
+      }
+      .validator-status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 7px;
+      }
+      .validator-card {
+        display: none;
+        margin-top: 10px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .validator-split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .validator-pane {
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 10px;
+        max-height: 560px;
+        overflow: auto;
+      }
+      .validator-raw {
+        background: #1c1e21;
+        color: #e8e8e8;
+        font-family: monospace;
+        font-size: 11px;
+        white-space: pre-wrap;
+      }
+      .option-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 14px 18px;
+        border-radius: 10px;
+        margin-bottom: 14px;
+      }
+      .option-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      .option-row label {
+        font-weight: 600;
+        min-width: 120px;
+        font-size: 13px;
+      }
+      .option-row select {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        text-overflow: ellipsis;
+      }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        padding: 5px 0;
+      }
+      .style-preview {
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 9px 13px;
+        margin-top: 6px;
+        font-size: 12px;
+        background: #fff;
+        min-height: 32px;
+      }
+      .badge-syn {
+        background: #6f42c1;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
 <noscript>
 <style>body>*:not(noscript){display:none!important}</style>
 <div style="font-family:'Segoe UI',sans-serif;max-width:480px;margin:80px auto;padding:28px;background:#fff3cd;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:10px;color:#1c1e21;">
@@ -47,508 +220,665 @@
   <small style="color:#666">JavaScript jest wymagany do działania tej strony.</small>
 </div>
 </noscript>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
-<div class="card">
-    <h2 data-i18n="title"></h2>
-    <p data-i18n-html="desc"></p>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
+    <div class="card">
+      <h2 data-i18n="title"></h2>
+      <p data-i18n-html="desc"></p>
 
-    <div class="upload-section" id="dropZone">
+      <div class="upload-section" id="dropZone">
         <span id="fileNameDisplay" data-i18n="dropzone"></span>
-        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
-    </div>
+        <input
+          type="file"
+          id="fileInput"
+          accept=".mobi,.azw,.azw3"
+          style="display: none"
+        />
+      </div>
 
-    <div class="option-box">
+      <div class="option-box">
         <div class="option-row">
-            <label data-i18n="styleLabel"></label>
-            <select id="styleSelect">
-                <option value="none" data-i18n="styleNone"></option>
-<!--                <option value="clean" data-i18n="styleClean"></option>-->
-                <option value="nice" selected data-i18n="styleNice"></option>
-                <option value="eink" data-i18n="styleEink"></option>
-                <option value="rich" data-i18n="styleRich"></option>
-            </select>
+          <label data-i18n="styleLabel"></label>
+          <select id="styleSelect">
+            <option value="none" data-i18n="styleNone"></option>
+            <!--                <option value="clean" data-i18n="styleClean"></option>-->
+            <option value="nice" selected data-i18n="styleNice"></option>
+            <option value="eink" data-i18n="styleEink"></option>
+            <option value="rich" data-i18n="styleRich"></option>
+          </select>
         </div>
         <div class="style-preview" id="stylePreview"></div>
-    </div>
+      </div>
 
-    <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
+      <button
+        id="startBtn"
+        class="btn-main"
+        disabled
+        data-i18n="startBtn"
+      ></button>
 
-    <div id="log" data-i18n="logIdle"></div>
+      <div id="log" data-i18n="logIdle"></div>
 
-    <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border:1px solid #b7eb8f;">
+      <div
+        id="downloadArea"
+        style="
+          display: none;
+          margin-top: 25px;
+          padding: 20px;
+          background: #e6ffed;
+          border-radius: 8px;
+          border: 1px solid #b7eb8f;
+        "
+      >
         <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
-    </div>
+      </div>
 
-    <div id="previewArea" style="display:none; margin-top:20px;">
+      <div id="previewArea" style="display: none; margin-top: 20px">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
-        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
-        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <h4
+          data-i18n="validatorTitle"
+          style="margin: 14px 0 6px; color: #5b6570"
+        ></h4>
+        <input
+          type="text"
+          id="validatorSearchBox"
+          class="validator-search"
+          data-i18n-ph="validatorSearchPh"
+          placeholder="Search in generated StarDict..."
+        />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-                <b id="validatorResultWord"></b>
-                <div style="display:flex;gap:6px;align-items:center;">
-                    <span id="validatorByteBadge" class="badge-syn"></span>
-                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
-                </div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            "
+          >
+            <b id="validatorResultWord"></b>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <span id="validatorByteBadge" class="badge-syn"></span>
+              <button
+                id="validatorCopyBtn"
+                class="btn-dl"
+                style="padding: 6px 10px; background: #6c757d"
+              >
+                Copy HTML
+              </button>
             </div>
-            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
-            <div class="validator-split">
-                <div id="validatorPaneRendered" class="validator-pane"></div>
-            </div>
+          </div>
+          <div
+            id="validatorSynInfo"
+            style="
+              display: none;
+              color: #6f42c1;
+              font-size: 12px;
+              margin-top: 6px;
+            "
+          ></div>
+          <div class="validator-split">
+            <div id="validatorPaneRendered" class="validator-pane"></div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
-// Style engines  (applied to each extracted entry's HTML)
-// ─────────────────────────────────────────────────────────────────────────────
-const STYLES = {
-    _escapeRegExp(s) {
-        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    },
+    <script>
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Style engines  (applied to each extracted entry's HTML)
+      // ─────────────────────────────────────────────────────────────────────────────
+      const STYLES = {
+        _escapeRegExp(s) {
+          return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        },
 
-    _ensureHeadwordSpan(word, html) {
-        if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html)) return html;
-        const w = (word || '').trim();
-        if (!w) return html;
-        const escaped = STYLES._escapeRegExp(w);
+        _ensureHeadwordSpan(word, html) {
+          if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html))
+            return html;
+          const w = (word || "").trim();
+          if (!w) return html;
+          const escaped = STYLES._escapeRegExp(w);
 
-        // Convert a leading <h2>...</h2> block into canonical span/b headword form.
-        const h2Match = html.match(/^\s*<h2\b[^>]*>([\s\S]*?)<\/h2>\s*/i);
-        if (h2Match) {
-            const plain = h2Match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, 'i');
+          // Convert a leading <h2>...</h2> block into canonical span/b headword form.
+          const h2Match = html.match(/^\s*<h2\b[^>]*>([\s\S]*?)<\/h2>\s*/i);
+          if (h2Match) {
+            const plain = h2Match[1]
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, "i");
             if (reLeadWord.test(plain)) {
-                const tail = plain.replace(new RegExp(`^${escaped}\\s*`, 'i'), '').trim();
-                const rest = html.slice(h2Match[0].length);
-                return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ''}${rest ? ` ${rest}` : ''}`.trim();
+              const tail = plain
+                .replace(new RegExp(`^${escaped}\\s*`, "i"), "")
+                .trim();
+              const rest = html.slice(h2Match[0].length);
+              return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ""}${rest ? ` ${rest}` : ""}`.trim();
             }
-        }
+          }
 
-        // Fallback: replace leading plain-word occurrence.
-        const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, 'i');
-        if (leadRe.test(html)) {
+          // Fallback: replace leading plain-word occurrence.
+          const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, "i");
+          if (leadRe.test(html)) {
             return html.replace(leadRe, `<span><b>${w}</b></span> `);
-        }
-        return html;
-    },
+          }
+          return html;
+        },
 
-    none(word, pHtml) {
-        return pHtml;
-    },
+        none(word, pHtml) {
+          return pHtml;
+        },
 
-    clean(word, pHtml) {
-        // Strip width attribute and all inline styles; keep semantics
-        return pHtml
-            .replace(/ width="[^"]*"/gi, '')
-            .replace(/ style="[^"]*"/gi, '');
-    },
+        clean(word, pHtml) {
+          // Strip width attribute and all inline styles; keep semantics
+          return pHtml
+            .replace(/ width="[^"]*"/gi, "")
+            .replace(/ style="[^"]*"/gi, "");
+        },
 
-    nice(word, pHtml) {
-        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
-        // Colour POS tags inside <i>
-        let body = pHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<span style="color:#c0392b;font-weight:bold">$1</span>')
+        nice(word, pHtml) {
+          pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+          // Colour POS tags inside <i>
+          let body = pHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<span style="color:#c0392b;font-weight:bold">$1</span>',
+            )
             // bold sense numbers
-            .replace(/\b(<b>(\d+)\.<\/b>)/g,
-                     '<span style="color:#2980b9;font-weight:bold">$1</span>');
-        // Replace the first <span><b>word</b></span> with a styled headword
-        body = body.replace(
+            .replace(
+              /\b(<b>(\d+)\.<\/b>)/g,
+              '<span style="color:#2980b9;font-weight:bold">$1</span>',
+            );
+          // Replace the first <span><b>word</b></span> with a styled headword
+          body = body.replace(
             /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
-            `<span><b style="font-size:1.15em;color:#003d82">$2</b></span>`
-        );
-        return body;
-    },
+            `<span><b style="font-size:1.15em;color:#003d82">$2</b></span>`,
+          );
+          return body;
+        },
 
-    eink(word, pHtml) {
-        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
-        const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
-        const ipa  = ipaM ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>` : '';
-        let body = ipaM ? pHtml.replace(ipaM[0], '') : pHtml;
+        eink(word, pHtml) {
+          pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+          const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
+          const ipa = ipaM
+            ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>`
+            : "";
+          let body = ipaM ? pHtml.replace(ipaM[0], "") : pHtml;
 
-        body = body
-            .replace(/<b>(\d+)\.<\/b>/g, '<b>$1.</b>')
-            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, '<small>$1</small>')
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>');
+          body = body
+            .replace(/<b>(\d+)\.<\/b>/g, "<b>$1.</b>")
+            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, "<small>$1</small>")
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              "<b>$1</b>",
+            );
 
-        let seenHeadword = false;
-        body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-            if (!seenHeadword) {
+          let seenHeadword = false;
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHeadword) {
                 seenHeadword = true;
-                return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px">`
-                     + `<b style="font-size:1.18em">${inner}</b>${ipa}</span>`;
-            }
-            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' ')) {
+                return (
+                  `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px">` +
+                  `<b style="font-size:1.18em">${inner}</b>${ipa}</span>`
+                );
+              }
+              const plain = inner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (
+                plain.length >= 3 &&
+                plain.length <= 80 &&
+                plain.includes(" ")
+              ) {
                 return `<span><b style="text-decoration:underline">${inner}</b></span>`;
-            }
-            return m;
-        });
-        return body;
-    },
+              }
+              return m;
+            },
+          );
+          return body;
+        },
 
-    rich(word, pHtml) {
-        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
-        const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
-        const ipa  = ipaM
+        rich(word, pHtml) {
+          pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+          const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
+          const ipa = ipaM
             ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
-            : '';
-        let body = ipaM
-            ? pHtml.replace(ipaM[0], '')   // remove the matched IPA from body so it doesn't appear twice
+            : "";
+          let body = ipaM
+            ? pHtml.replace(ipaM[0], "") // remove the matched IPA from body so it doesn't appear twice
             : pHtml;
-        body = body
+          body = body
             // POS tags red
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<b style="color:#e74c3c">$1</b>')
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<b style="color:#e74c3c">$1</b>',
+            )
             // Sense numbers blue - only match <b>N.</b> to avoid injecting tags inside HTML attributes
             .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
             // Domain labels (fin. biz. etc.) violet + small
-            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
-                     '<span style="color:#7c3aed;font-size:.83em">$1</span>');
+            .replace(
+              /(<i>(?:[a-z]{2,5})\.<\/i>)/g,
+              '<span style="color:#7c3aed;font-size:.83em">$1</span>',
+            );
 
-        // Style span-headwords in one pass: first is the main headword, later multi-word spans are sub-phrases.
-        let seenHeadword = false;
-        body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-            if (!seenHeadword) {
+          // Style span-headwords in one pass: first is the main headword, later multi-word spans are sub-phrases.
+          let seenHeadword = false;
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHeadword) {
                 seenHeadword = true;
-                return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">`
-                     + `<b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`;
-            }
-            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' ')) {
+                return (
+                  `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">` +
+                  `<b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`
+                );
+              }
+              const plain = inner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (
+                plain.length >= 3 &&
+                plain.length <= 80 &&
+                plain.includes(" ")
+              ) {
                 return `<span><b style="color:#5c4b00">${inner}</b></span>`;
-            }
-            return m;
-        });
-        return body;
-    }
-};
+              }
+              return m;
+            },
+          );
+          return body;
+        },
+      };
 
-// Live preview using a fake entry
-const PREVIEW_HTML = `<p> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
-function updateStylePreview() {
-    const fn = STYLES[document.getElementById('styleSelect').value] || STYLES.nice;
-    document.getElementById('stylePreview').innerHTML = fn('download', PREVIEW_HTML);
-}
-document.getElementById('styleSelect').addEventListener('change', updateStylePreview);
-updateStylePreview();
+      // Live preview using a fake entry
+      const PREVIEW_HTML = `<p> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
+      function updateStylePreview() {
+        const fn =
+          STYLES[document.getElementById("styleSelect").value] || STYLES.nice;
+        document.getElementById("stylePreview").innerHTML = fn(
+          "download",
+          PREVIEW_HTML,
+        );
+      }
+      document
+        .getElementById("styleSelect")
+        .addEventListener("change", updateStylePreview);
+      updateStylePreview();
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Logging
-// ─────────────────────────────────────────────────────────────────────────────
-const logEl = document.getElementById('log');
-function addLog(msg) {
-    logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Logging
+      // ─────────────────────────────────────────────────────────────────────────────
+      const logEl = document.getElementById("log");
+      function addLog(msg) {
+        logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// File I/O
-// ─────────────────────────────────────────────────────────────────────────────
-let globalBuffer = null;
-const fileInput = document.getElementById('fileInput');
-document.getElementById('dropZone').onclick = () => fileInput.click();
-fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById('fileNameDisplay').textContent = `📁 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-    globalBuffer = await file.arrayBuffer();
-    document.getElementById('startBtn').disabled = false;
-    addLog(`File loaded: ${file.name}`);
-});
+      // ─────────────────────────────────────────────────────────────────────────────
+      // File I/O
+      // ─────────────────────────────────────────────────────────────────────────────
+      let globalBuffer = null;
+      const fileInput = document.getElementById("fileInput");
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById("fileNameDisplay").textContent =
+          `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        globalBuffer = await file.arrayBuffer();
+        document.getElementById("startBtn").disabled = false;
+        addLog(`File loaded: ${file.name}`);
+      });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
-// HuffCdicBase – shared HUFF/CDIC decompression logic
-// Used by mobiKF8HuffConverter.html and Tools/MobiReader-Huff-KF8.html
-// DO NOT edit the compiled HTML files directly – edit this file and the
-// templates, then run:  node build.js
-// ─────────────────────────────────────────────────────────────────────────────
-class HuffCdicBase {
-    constructor(buffer) {
-        this.buffer      = buffer;
-        this.raw         = new Uint8Array(buffer);
-        this.recs        = [];
-        this.dict1       = [];
-        this.mincodeArr  = new Array(33).fill(0);
-        this.maxcodeArr  = new Array(33).fill(0);
-        this.dict        = [];
-    }
-
-    _stripTrailingWithFlags(data, flags) {
-        // KindleUnpack parity: count trailer entries from set bits > 0 and trim one entry per count.
-        const multibyte = flags & 1;
-        let trailers = 0;
-        let tmp = flags >>> 1;
-        while (tmp > 0) {
-            if (tmp & 1) trailers++;
-            tmp >>>= 1;
+      // ─────────────────────────────────────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────────────────────
+      // HuffCdicBase – shared HUFF/CDIC decompression logic
+      // Used by mobiKF8HuffConverter.html and Tools/MobiReader-Huff-KF8.html
+      // DO NOT edit the compiled HTML files directly – edit this file and the
+      // templates, then run:  node build.js
+      // ─────────────────────────────────────────────────────────────────────────────
+      class HuffCdicBase {
+        constructor(buffer) {
+          this.buffer = buffer;
+          this.raw = new Uint8Array(buffer);
+          this.recs = [];
+          this.dict1 = [];
+          this.mincodeArr = new Array(33).fill(0);
+          this.maxcodeArr = new Array(33).fill(0);
+          this.dict = [];
         }
 
-        const getSizeOfTrailingDataEntry = (buf) => {
+        _stripTrailingWithFlags(data, flags) {
+          // KindleUnpack parity: count trailer entries from set bits > 0 and trim one entry per count.
+          const multibyte = flags & 1;
+          let trailers = 0;
+          let tmp = flags >>> 1;
+          while (tmp > 0) {
+            if (tmp & 1) trailers++;
+            tmp >>>= 1;
+          }
+
+          const getSizeOfTrailingDataEntry = (buf) => {
             if (buf.length === 0) return 0;
             let num = 0;
             const start = Math.max(0, buf.length - 4);
             for (let i = start; i < buf.length; i++) {
-                const v = buf[i];
-                if (v & 0x80) num = 0;
-                num = ((num << 7) | (v & 0x7F)) >>> 0;
+              const v = buf[i];
+              if (v & 0x80) num = 0;
+              num = ((num << 7) | (v & 0x7f)) >>> 0;
             }
             return num;
-        };
+          };
 
-        let out = data;
-        for (let i = 0; i < trailers; i++) {
+          let out = data;
+          for (let i = 0; i < trailers; i++) {
             const num = getSizeOfTrailingDataEntry(out);
             const keep = Math.max(0, out.length - num);
             out = out.slice(0, keep);
-        }
+          }
 
-        if (multibyte) {
+          if (multibyte) {
             const tail = out.length ? out[out.length - 1] : 0;
             const num = (tail & 3) + 1;
             const keep = Math.max(0, out.length - num);
             out = out.slice(0, keep);
+          }
+
+          return out;
         }
 
-        return out;
-    }
-
-    _normalizeExtraDataFlags(raw, sourceLabel) {
-        if (raw === 0xFFFF) {
+        _normalizeExtraDataFlags(raw, sourceLabel) {
+          if (raw === 0xffff) {
             // For sentinel/noisy values, start in conservative mode immediately.
-            addLog(`⚠️ ${sourceLabel}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.`);
+            addLog(
+              `⚠️ ${sourceLabel}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.`,
+            );
             return 0x0001;
+          }
+          // MOBI ExtraDataFlags trailer layout uses low bits; high bits are often noisy/vendor-specific.
+          const masked = raw & 0x001f;
+          if (masked !== raw) {
+            addLog(
+              `⚠️ ${sourceLabel}: masking ExtraDataFlags 0x${raw.toString(16)} -> 0x${masked.toString(16)}`,
+            );
+          }
+          return masked || 0x0001;
         }
-        // MOBI ExtraDataFlags trailer layout uses low bits; high bits are often noisy/vendor-specific.
-        const masked = raw & 0x001F;
-        if (masked !== raw) {
-            addLog(`⚠️ ${sourceLabel}: masking ExtraDataFlags 0x${raw.toString(16)} -> 0x${masked.toString(16)}`);
+
+        // ── Low-level readers ─────────────────────────────────────────────────────
+        u32(o) {
+          const r = this.raw;
+          return ((r[o] << 24) | (r[o + 1] << 16) | (r[o + 2] << 8) | r[o + 3]) >>> 0;
         }
-        return masked || 0x0001;
-    }
+        u16(o) {
+          return ((this.raw[o] << 8) | this.raw[o + 1]) >>> 0;
+        }
 
-    // ── Low-level readers ─────────────────────────────────────────────────────
-    u32(o) { const r = this.raw; return ((r[o]<<24)|(r[o+1]<<16)|(r[o+2]<<8)|r[o+3]) >>> 0; }
-    u16(o) { return ((this.raw[o]<<8)|this.raw[o+1]) >>> 0; }
-
-    _getRecord0Base() {
-        const r0 = this.recs[0];
-        let mobi = r0 + 16;
-        if (!(this.raw[mobi]===0x4D && this.raw[mobi+1]===0x4F &&
-              this.raw[mobi+2]===0x42 && this.raw[mobi+3]===0x49)) {
+        _getRecord0Base() {
+          const r0 = this.recs[0];
+          let mobi = r0 + 16;
+          if (
+            !(
+              this.raw[mobi] === 0x4d &&
+              this.raw[mobi + 1] === 0x4f &&
+              this.raw[mobi + 2] === 0x42 &&
+              this.raw[mobi + 3] === 0x49
+            )
+          ) {
             mobi = r0;
+          }
+          return mobi === r0 + 16 ? r0 : mobi;
         }
-        return (mobi === r0 + 16) ? r0 : mobi;
-    }
 
-    // PalmDOC text_records is the authoritative end of text payload.
-    getTextRecordMax(huffIdx) {
-        const recBase = this._getRecord0Base();
-        const headerCount = this.u16(recBase + 0x08);
-        const huffBound = Math.max(0, huffIdx - 1);
+        // PalmDOC text_records is the authoritative end of text payload.
+        getTextRecordMax(huffIdx) {
+          const recBase = this._getRecord0Base();
+          const headerCount = this.u16(recBase + 0x08);
+          const huffBound = Math.max(0, huffIdx - 1);
 
-        if (!headerCount) return huffBound;
-        if (headerCount > huffBound) {
-            addLog(`⚠️ text_records (${headerCount}) exceeds HUFF bound (${huffBound}); clamping.`);
+          if (!headerCount) return huffBound;
+          if (headerCount > huffBound) {
+            addLog(
+              `⚠️ text_records (${headerCount}) exceeds HUFF bound (${huffBound}); clamping.`,
+            );
             return huffBound;
-        }
-        return headerCount;
-    }
-
-    // ── PDB record list ───────────────────────────────────────────────────────
-    // Populates this.recs with file offsets and returns the array.
-    buildRecords() {
-        const n = this.u16(76);
-        this.recs = [];
-        for (let i = 0; i < n; i++) this.recs.push(this.u32(78 + i * 8));
-        return this.recs;
-    }
-
-    // ── Find ExtraDataFlags ───────────────────────────────────────────────────
-    // KindleUnpack-parity lookup for pure and hybrid KF8 files (EXTH tag 121 boundary override).
-    findExtraDataFlags() {
-        const recs = this.recs;
-        const recBase = this._getRecord0Base();
-
-        // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
-        const hdrLen   = this.u32(recBase + 0x14);
-        const mobiType = this.u32(recBase + 0x18);
-        const mobiVer  = this.u32(recBase + 0x68);
-        addLog(`Record 0: MOBI type=${mobiType}, headerLen=0x${hdrLen.toString(16)}`);
-
-        let flags = 0x0001;
-        if (hdrLen >= 0xE4 && mobiVer >= 5) {
-            const raw = this.u16(recBase + 0xF2);
-            addLog(`ExtraDataFlags from MOBI header (offset 0xF2): 0x${raw.toString(16)}`);
-            flags = this._normalizeExtraDataFlags(raw, 'MOBI header');
+          }
+          return headerCount;
         }
 
-        // EXTH tag 121 points to the KF8 boundary; when present, use KF8 section flags.
-        const exthOff = recBase + 16 + hdrLen;
-        if (this.raw[exthOff]===0x45 && this.raw[exthOff+1]===0x58 &&
-            this.raw[exthOff+2]===0x54 && this.raw[exthOff+3]===0x48) {
+        // ── PDB record list ───────────────────────────────────────────────────────
+        // Populates this.recs with file offsets and returns the array.
+        buildRecords() {
+          const n = this.u16(76);
+          this.recs = [];
+          for (let i = 0; i < n; i++) this.recs.push(this.u32(78 + i * 8));
+          return this.recs;
+        }
 
+        // ── Find ExtraDataFlags ───────────────────────────────────────────────────
+        // KindleUnpack-parity lookup for pure and hybrid KF8 files (EXTH tag 121 boundary override).
+        findExtraDataFlags() {
+          const recs = this.recs;
+          const recBase = this._getRecord0Base();
+
+          // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
+          const hdrLen = this.u32(recBase + 0x14);
+          const mobiType = this.u32(recBase + 0x18);
+          const mobiVer = this.u32(recBase + 0x68);
+          addLog(
+            `Record 0: MOBI type=${mobiType}, headerLen=0x${hdrLen.toString(16)}`,
+          );
+
+          let flags = 0x0001;
+          if (hdrLen >= 0xe4 && mobiVer >= 5) {
+            const raw = this.u16(recBase + 0xf2);
+            addLog(
+              `ExtraDataFlags from MOBI header (offset 0xF2): 0x${raw.toString(16)}`,
+            );
+            flags = this._normalizeExtraDataFlags(raw, "MOBI header");
+          }
+
+          // EXTH tag 121 points to the KF8 boundary; when present, use KF8 section flags.
+          const exthOff = recBase + 16 + hdrLen;
+          if (
+            this.raw[exthOff] === 0x45 &&
+            this.raw[exthOff + 1] === 0x58 &&
+            this.raw[exthOff + 2] === 0x54 &&
+            this.raw[exthOff + 3] === 0x48
+          ) {
             const exthLen = this.u32(exthOff + 4);
-            const numRec  = this.u32(exthOff + 8);
-            let   pos     = exthOff + 12;
+            const numRec = this.u32(exthOff + 8);
+            let pos = exthOff + 12;
 
             for (let i = 0; i < numRec && pos + 8 <= exthOff + exthLen; i++) {
-                const tag = this.u32(pos);
-                const len = this.u32(pos + 4);
-                if (tag === 121 && len === 12) {
-                    const kf8Bound  = this.u32(pos + 8);
-                    addLog(`KF8 boundary record: ${kf8Bound}`);
-                    const kf8RecIdx = kf8Bound + 1;
-                    if (kf8RecIdx < recs.length) {
-                        const kf8Off  = recs[kf8RecIdx];
-                        let   kf8Mobi = kf8Off + 16;
-                        if (!(this.raw[kf8Mobi]===0x4D && this.raw[kf8Mobi+1]===0x4F &&
-                              this.raw[kf8Mobi+2]===0x42 && this.raw[kf8Mobi+3]===0x49))
-                            kf8Mobi = kf8Off;
-                        const kf8Base = (kf8Mobi === kf8Off + 16) ? kf8Off : kf8Mobi;
-                        const kl = this.u32(kf8Base + 0x14);
-                        const kv = this.u32(kf8Base + 0x68);
-                        if (kl >= 0xE4 && kv >= 5) {
-                            const raw = this.u16(kf8Base + 0xF2);
-                            flags = this._normalizeExtraDataFlags(raw, 'KF8 override');
-                            addLog(`KF8 section flags override: 0x${flags.toString(16)}`);
-                        }
-                    }
+              const tag = this.u32(pos);
+              const len = this.u32(pos + 4);
+              if (tag === 121 && len === 12) {
+                const kf8Bound = this.u32(pos + 8);
+                addLog(`KF8 boundary record: ${kf8Bound}`);
+                const kf8RecIdx = kf8Bound + 1;
+                if (kf8RecIdx < recs.length) {
+                  const kf8Off = recs[kf8RecIdx];
+                  let kf8Mobi = kf8Off + 16;
+                  if (
+                    !(
+                      this.raw[kf8Mobi] === 0x4d &&
+                      this.raw[kf8Mobi + 1] === 0x4f &&
+                      this.raw[kf8Mobi + 2] === 0x42 &&
+                      this.raw[kf8Mobi + 3] === 0x49
+                    )
+                  )
+                    kf8Mobi = kf8Off;
+                  const kf8Base = kf8Mobi === kf8Off + 16 ? kf8Off : kf8Mobi;
+                  const kl = this.u32(kf8Base + 0x14);
+                  const kv = this.u32(kf8Base + 0x68);
+                  if (kl >= 0xe4 && kv >= 5) {
+                    const raw = this.u16(kf8Base + 0xf2);
+                    flags = this._normalizeExtraDataFlags(raw, "KF8 override");
+                    addLog(`KF8 section flags override: 0x${flags.toString(16)}`);
+                  }
                 }
-                pos += len;
+              }
+              pos += len;
             }
+          }
+
+          addLog(`Final ExtraDataFlags: 0x${flags.toString(16)}`);
+          return flags;
         }
 
-        addLog(`Final ExtraDataFlags: 0x${flags.toString(16)}`);
-        return flags;
-    }
-
-    // ── Strip trailing bytes ───────────────────────────────────────────────────
-    stripTrailing(data, flags) {
-        if (!flags || data.length === 0) return data;
-        return this._stripTrailingWithFlags(data, flags);
-    }
-
-    // ── Load HUFF record ──────────────────────────────────────────────────────
-    loadHuff(hOff) {
-        if (
-            this.raw[hOff] !== 0x48 || this.raw[hOff + 1] !== 0x55 ||
-            this.raw[hOff + 2] !== 0x46 || this.raw[hOff + 3] !== 0x46 ||
-            this.raw[hOff + 4] !== 0x00 || this.raw[hOff + 5] !== 0x00 ||
-            this.raw[hOff + 6] !== 0x00 || this.raw[hOff + 7] !== 0x18
-        ) {
-            throw new Error('invalid huff header');
+        // ── Strip trailing bytes ───────────────────────────────────────────────────
+        stripTrailing(data, flags) {
+          if (!flags || data.length === 0) return data;
+          return this._stripTrailingWithFlags(data, flags);
         }
 
-        const off1 = this.u32(hOff + 8);
-        const off2 = this.u32(hOff + 12);
-        this.dict1 = [];
-        for (let i = 0; i < 256; i++) {
-            const v       = this.u32(hOff + off1 + i * 4);
-            const codelen = v & 0x1F;
-            const term    = !!(v & 0x80);
-            if (codelen === 0) throw new Error('invalid huff table: zero codelen');
-            if (codelen <= 8 && !term) throw new Error('invalid huff table: short non-terminal code');
-            const mxraw   = (v >>> 8) >>> 0;
-            const maxcode = Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
+        // ── Load HUFF record ──────────────────────────────────────────────────────
+        loadHuff(hOff) {
+          if (
+            this.raw[hOff] !== 0x48 ||
+            this.raw[hOff + 1] !== 0x55 ||
+            this.raw[hOff + 2] !== 0x46 ||
+            this.raw[hOff + 3] !== 0x46 ||
+            this.raw[hOff + 4] !== 0x00 ||
+            this.raw[hOff + 5] !== 0x00 ||
+            this.raw[hOff + 6] !== 0x00 ||
+            this.raw[hOff + 7] !== 0x18
+          ) {
+            throw new Error("invalid huff header");
+          }
+
+          const off1 = this.u32(hOff + 8);
+          const off2 = this.u32(hOff + 12);
+          this.dict1 = [];
+          for (let i = 0; i < 256; i++) {
+            const v = this.u32(hOff + off1 + i * 4);
+            const codelen = v & 0x1f;
+            const term = !!(v & 0x80);
+            if (codelen === 0) throw new Error("invalid huff table: zero codelen");
+            if (codelen <= 8 && !term)
+              throw new Error("invalid huff table: short non-terminal code");
+            const mxraw = (v >>> 8) >>> 0;
+            const maxcode =
+              Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
             this.dict1.push({ codelen, term, maxcode });
-        }
-        this.mincodeArr = new Array(33).fill(0);
-        this.maxcodeArr = new Array(33).fill(0);
-        for (let i = 1; i <= 32; i++) {
+          }
+          this.mincodeArr = new Array(33).fill(0);
+          this.maxcodeArr = new Array(33).fill(0);
+          for (let i = 1; i <= 32; i++) {
             const rawMin = this.u32(hOff + off2 + (i - 1) * 8);
             const rawMax = this.u32(hOff + off2 + (i - 1) * 8 + 4);
-            const shift  = 32 - i;
+            const shift = 32 - i;
             this.mincodeArr[i] = Number(BigInt(rawMin) << BigInt(shift)) >>> 0;
-            this.maxcodeArr[i] = Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
-        }
-        addLog(`HUFF loaded. off1=0x${off1.toString(16)} off2=0x${off2.toString(16)}`);
-    }
-
-    // ── Load one CDIC record ──────────────────────────────────────────────────
-    loadCdic(rOff) {
-        if (
-            this.raw[rOff] !== 0x43 || this.raw[rOff + 1] !== 0x44 ||
-            this.raw[rOff + 2] !== 0x49 || this.raw[rOff + 3] !== 0x43 ||
-            this.raw[rOff + 4] !== 0x00 || this.raw[rOff + 5] !== 0x00 ||
-            this.raw[rOff + 6] !== 0x00 || this.raw[rOff + 7] !== 0x10
-        ) {
-            throw new Error('invalid cdic header');
+            this.maxcodeArr[i] =
+              Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
+          }
+          addLog(
+            `HUFF loaded. off1=0x${off1.toString(16)} off2=0x${off2.toString(16)}`,
+          );
         }
 
-        const phrases = this.u32(rOff + 8);
-        const bits    = this.u32(rOff + 12);
-        const n       = Math.min(1 << bits, phrases - this.dict.length);
-        for (let j = 0; j < n; j++) {
-            const off   = this.u16(rOff + 16 + j * 2);
-            const blen  = this.u16(rOff + 16 + off);
-            const flag  = !!(blen & 0x8000);
-            const slen  = blen & 0x7FFF;
+        // ── Load one CDIC record ──────────────────────────────────────────────────
+        loadCdic(rOff) {
+          if (
+            this.raw[rOff] !== 0x43 ||
+            this.raw[rOff + 1] !== 0x44 ||
+            this.raw[rOff + 2] !== 0x49 ||
+            this.raw[rOff + 3] !== 0x43 ||
+            this.raw[rOff + 4] !== 0x00 ||
+            this.raw[rOff + 5] !== 0x00 ||
+            this.raw[rOff + 6] !== 0x00 ||
+            this.raw[rOff + 7] !== 0x10
+          ) {
+            throw new Error("invalid cdic header");
+          }
+
+          const phrases = this.u32(rOff + 8);
+          const bits = this.u32(rOff + 12);
+          const n = Math.min(1 << bits, phrases - this.dict.length);
+          for (let j = 0; j < n; j++) {
+            const off = this.u16(rOff + 16 + j * 2);
+            const blen = this.u16(rOff + 16 + off);
+            const flag = !!(blen & 0x8000);
+            const slen = blen & 0x7fff;
             const slice = this.raw.slice(rOff + 18 + off, rOff + 18 + off + slen);
             this.dict.push({ slice, flag });
+          }
         }
-    }
 
-    // ── Load all consecutive CDIC records after a HUFF record ────────────────
-    loadAllCdic(huffIdx) {
-        const recs = this.recs;
-        let count = 0;
-        for (let i = huffIdx + 1; i < recs.length; i++) {
-            const rOff  = recs[i];
-            const magic = String.fromCharCode(this.raw[rOff], this.raw[rOff+1], this.raw[rOff+2], this.raw[rOff+3]);
-            if (magic !== 'CDIC') break;
+        // ── Load all consecutive CDIC records after a HUFF record ────────────────
+        loadAllCdic(huffIdx) {
+          const recs = this.recs;
+          let count = 0;
+          for (let i = huffIdx + 1; i < recs.length; i++) {
+            const rOff = recs[i];
+            const magic = String.fromCharCode(
+              this.raw[rOff],
+              this.raw[rOff + 1],
+              this.raw[rOff + 2],
+              this.raw[rOff + 3],
+            );
+            if (magic !== "CDIC") break;
             this.loadCdic(rOff);
             count++;
+          }
+          addLog(
+            `Loaded ${count} CDIC records → ${this.dict.length} symbols in dictionary.`,
+          );
         }
-        addLog(`Loaded ${count} CDIC records → ${this.dict.length} symbols in dictionary.`);
-    }
 
-    // ── HUFF/CDIC decompression ────────────────────────────────────────────────
-    decompress(data) {
-        if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
+        // ── HUFF/CDIC decompression ────────────────────────────────────────────────
+        decompress(data) {
+          if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
 
-        const padded = new Uint8Array(data.length + 8);
-        padded.set(data);
+          const padded = new Uint8Array(data.length + 8);
+          padded.set(data);
 
-        const readU64 = (p) => {
+          const readU64 = (p) => {
             let x = 0n;
             for (let i = 0; i < 8; i++) x = (x << 8n) | BigInt(padded[p + i]);
             return x;
-        };
+          };
 
-        let bitsleft = data.length * 8;
-        let pos = 0;
-        let x = readU64(0);
-        let n   = 32;
+          let bitsleft = data.length * 8;
+          let pos = 0;
+          let x = readU64(0);
+          let n = 32;
 
-        const chunks = [];
-        let outLen = 0;
+          const chunks = [];
+          let outLen = 0;
 
-        while (true) {
+          while (true) {
             if (n <= 0) {
-                pos += 4;
-                x = readU64(pos);
-                n += 32;
+              pos += 4;
+              x = readU64(pos);
+              n += 32;
             }
 
-            const code = Number((x >> BigInt(n)) & 0xFFFFFFFFn) >>> 0;
+            const code = Number((x >> BigInt(n)) & 0xffffffffn) >>> 0;
 
-            const e     = this.dict1[code >>> 24];
+            const e = this.dict1[code >>> 24];
             let codelen = e.codelen;
             let maxcode = e.maxcode;
 
             if (!e.term) {
-                while (code < this.mincodeArr[codelen]) codelen++;
-                maxcode = this.maxcodeArr[codelen];
+              while (code < this.mincodeArr[codelen]) codelen++;
+              maxcode = this.maxcodeArr[codelen];
             }
 
-            n        -= codelen;
+            n -= codelen;
             bitsleft -= codelen;
             if (bitsleft < 0) break;
 
@@ -558,235 +888,276 @@ class HuffCdicBase {
             let entry = this.dict[r];
             if (!entry) break;
             if (!entry.flag) {
-                // KindleUnpack sets temporary None sentinel before recursive expansion.
-                this.dict[r] = null;
-                const expanded = this.decompress(entry.slice);
-                entry = { slice: expanded, flag: true };
-                this.dict[r] = entry;
+              // KindleUnpack sets temporary None sentinel before recursive expansion.
+              this.dict[r] = null;
+              const expanded = this.decompress(entry.slice);
+              entry = { slice: expanded, flag: true };
+              this.dict[r] = entry;
             }
             chunks.push(entry.slice);
             outLen += entry.slice.length;
+          }
+
+          const result = new Uint8Array(outLen);
+          let off = 0;
+          for (const c of chunks) {
+            result.set(c, off);
+            off += c.length;
+          }
+          return result;
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Main converter class
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Main converter class for KF8/HUFF dictionaries.
+      class KF8Converter extends HuffCdicBase {
+        constructor(buffer, options = {}) {
+          super(buffer);
+          this.options = { style: "nice", generateSyn: true, ...options };
+          this.finalMap = new Map(); // word -> styled definition HTML
+          this.synMap = new Map(); // alternate_form -> canonical_word
+          this.entrySeen = new Map(); // word -> Set(fingerprint) for overlap dedupe
+          this.synStats = {
+            idxBlocks: 0,
+            idxIformsSeen: 0,
+            idxIformsAdded: 0,
+            phraseTailAdded: 0,
+          };
         }
 
-        const result = new Uint8Array(outLen);
-        let off = 0;
-        for (const c of chunks) { result.set(c, off); off += c.length; }
-        return result;
-    }
-}
+        _sanitizeEntryHtml(html) {
+          if (!html) return html;
+          // Legacy Mobipocket width attributes on <p> are invalid in modern HTML output.
+          return html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, "");
+        }
 
+        _ingestEntry(word, def, synHtml = "") {
+          if (!word || !def) return;
+          const key = word.trim();
+          if (!key) return;
 
-// ─────────────────────────────────────────────────────────────────────────────
+          def = this._sanitizeEntryHtml(def);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main converter class
-// ─────────────────────────────────────────────────────────────────────────────
-// Main converter class for KF8/HUFF dictionaries.
-class KF8Converter extends HuffCdicBase {
-    constructor(buffer, options = {}) {
-        super(buffer);
-        this.options  = { style: 'nice', generateSyn: true, ...options };
-        this.finalMap = new Map();   // word -> styled definition HTML
-        this.synMap   = new Map();   // alternate_form -> canonical_word
-        this.entrySeen = new Map();  // word -> Set(fingerprint) for overlap dedupe
-        this.synStats = { idxBlocks: 0, idxIformsSeen: 0, idxIformsAdded: 0, phraseTailAdded: 0 };
-    }
+          const fp = def.replace(/\s+/g, " ").trim();
+          if (!fp) return;
 
-    _sanitizeEntryHtml(html) {
-        if (!html) return html;
-        // Legacy Mobipocket width attributes on <p> are invalid in modern HTML output.
-        return html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, '');
-    }
-
-    _ingestEntry(word, def, synHtml = '') {
-        if (!word || !def) return;
-        const key = word.trim();
-        if (!key) return;
-
-        def = this._sanitizeEntryHtml(def);
-
-        const fp = def.replace(/\s+/g, ' ').trim();
-        if (!fp) return;
-
-        let seen = this.entrySeen.get(key);
-        if (!seen) {
+          let seen = this.entrySeen.get(key);
+          if (!seen) {
             seen = new Set();
             this.entrySeen.set(key, seen);
-        }
-        if (seen.has(fp)) return;
-        seen.add(fp);
+          }
+          if (seen.has(fp)) return;
+          seen.add(fp);
 
-        if (!this.finalMap.has(key)) {
+          if (!this.finalMap.has(key)) {
             this.finalMap.set(key, def);
-        } else {
-            const merged = this.finalMap.get(key) + '<hr/>' + def;
+          } else {
+            const merged = this.finalMap.get(key) + "<hr/>" + def;
             this.finalMap.set(key, merged);
+          }
+
+          this._collectSyns(key, synHtml || def);
         }
 
-        this._collectSyns(key, synHtml || def);
-    }
+        // Extract entries from a HTML chunk (both idx:entry and h2 styles)
+        extractEntriesFrom(html, isFinal = false) {
+          const styleFn = STYLES[this.options.style] || STYLES.nice;
 
-    // Extract entries from a HTML chunk (both idx:entry and h2 styles)
-    extractEntriesFrom(html, isFinal = false) {
-        const styleFn = STYLES[this.options.style] || STYLES.nice;
-
-        // Method 1: KF8 idx:entry
-        const entryRe = /<idx:entry\b[^>]*>([\s\S]*?)<\/idx:entry>/gi;
-        let m;
-        while ((m = entryRe.exec(html)) !== null) {
-            const block  = m[0];
-            const orthM  = block.match(/<idx:orth\b[^>]*>/i);
+          // Method 1: KF8 idx:entry
+          const entryRe = /<idx:entry\b[^>]*>([\s\S]*?)<\/idx:entry>/gi;
+          let m;
+          while ((m = entryRe.exec(html)) !== null) {
+            const block = m[0];
+            const orthM = block.match(/<idx:orth\b[^>]*>/i);
             if (!orthM) continue;
             const valueM = orthM[0].match(/\bvalue="([^"]+)"/i);
             if (!valueM) continue;
             const word = valueM[1].trim();
             if (!word || word.length >= 120) continue;
             let def = block
-                .replace(/<idx:entry[^>]*>/gi, '')
-                .replace(/<\/idx:entry>/gi, '')
-                .replace(/<idx:orth[^>]*>[\s\S]*?<\/idx:orth>/gi, '')
-                .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, '')
-                .trim();
+              .replace(/<idx:entry[^>]*>/gi, "")
+              .replace(/<\/idx:entry>/gi, "")
+              .replace(/<idx:orth[^>]*>[\s\S]*?<\/idx:orth>/gi, "")
+              .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, "")
+              .trim();
             def = styleFn(word, `<span><b>${word}</b></span> ${def}`);
             // Keep raw idx block for synonym extraction (idx:iform inflections).
             this._ingestEntry(word, def, block);
-        }
+          }
 
-        // Method 2: h2-based (JEM / older Mobipocket dictionary style)
-        const parts = html.split(/<h2\b/i);
-        for (let k = 1; k < parts.length; k++) {
-            const seg      = parts[k];
-            const tagEnd   = seg.indexOf('>');
+          // Method 2: h2-based (JEM / older Mobipocket dictionary style)
+          const parts = html.split(/<h2\b/i);
+          for (let k = 1; k < parts.length; k++) {
+            const seg = parts[k];
+            const tagEnd = seg.indexOf(">");
             if (tagEnd === -1) continue;
-            const h2Close  = seg.indexOf('</h2>', tagEnd);
+            const h2Close = seg.indexOf("</h2>", tagEnd);
             if (h2Close === -1) continue;
 
             const h2Content = seg.substring(tagEnd + 1, h2Close);
-            const rawText   = h2Content.replace(/<[^>]+>/g, '');
-            const word      = rawText.split('[')[0].trim();
+            const rawText = h2Content.replace(/<[^>]+>/g, "");
+            const word = rawText.split("[")[0].trim();
             if (!word || word.length >= 100) continue;
 
-            const after    = seg.substring(h2Close + 5);
+            const after = seg.substring(h2Close + 5);
             const boundary = after.search(/<h2\b|<hr\b/i);
             if (!isFinal && boundary === -1) continue;
 
             const defContent = boundary >= 0 ? after.substring(0, boundary) : after;
-            const rawHtml    = `<h2>${h2Content}</h2>${defContent}`;
-            const def        = styleFn(word, rawHtml);
+            const rawHtml = `<h2>${h2Content}</h2>${defContent}`;
+            const def = styleFn(word, rawHtml);
             this._ingestEntry(word, def, defContent);
-        }
+          }
 
-        // Method 3: <p width="-20"><span><b>headword</b></span>...</p>
-        const hrParts = html.split(/<hr\s*\/?>/i);
-        for (let k = 0; k < hrParts.length; k++) {
+          // Method 3: <p width="-20"><span><b>headword</b></span>...</p>
+          const hrParts = html.split(/<hr\s*\/?>/i);
+          for (let k = 0; k < hrParts.length; k++) {
             const seg = hrParts[k];
             if (!/<p\b[^>]*width\s*=\s*["']?-20/i.test(seg)) continue;
 
-            const pClose = seg.indexOf('</p>');
+            const pClose = seg.indexOf("</p>");
             if (!isFinal && pClose === -1) continue;
 
-            const pOpen    = seg.search(/<p\b[^>]*width\s*=\s*["']?-20/i);
-            const pEnd     = pClose >= 0 ? pClose + 4 : seg.length;
+            const pOpen = seg.search(/<p\b[^>]*width\s*=\s*["']?-20/i);
+            const pEnd = pClose >= 0 ? pClose + 4 : seg.length;
             if (pOpen < 0) continue;
             let pContent = seg.substring(pOpen, pEnd);
 
             // Defensive guard: reject overlap/boundary fragments unless headword starts the paragraph.
-            const headAtStart = pContent.match(/^\s*<p\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i);
+            const headAtStart = pContent.match(
+              /^\s*<p\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i,
+            );
             if (!headAtStart) continue;
 
             const headInner = headAtStart[1].trim();
-            let word = '';
-            if (headInner.includes('<')) {
-                // Boundary-fragment paragraphs sometimes leak POS markup into the headword field.
-                const plain = headInner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-                const candidate = plain.split('/')[0].trim();
-                if (!candidate || candidate.length >= 120) continue;
-                if (/\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(plain)) continue;
-                word = candidate;
-                pContent = pContent.replace(
-                    /(^\s*<p\b[^>]*>\s*<span\s*>\s*<b>)[\s\S]*?(<\/b>\s*<\/span>)/i,
-                    `$1${word}$2`
-                );
+            let word = "";
+            if (headInner.includes("<")) {
+              // Boundary-fragment paragraphs sometimes leak POS markup into the headword field.
+              const plain = headInner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              const candidate = plain.split("/")[0].trim();
+              if (!candidate || candidate.length >= 120) continue;
+              if (
+                /\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(
+                  plain,
+                )
+              )
+                continue;
+              word = candidate;
+              pContent = pContent.replace(
+                /(^\s*<p\b[^>]*>\s*<span\s*>\s*<b>)[\s\S]*?(<\/b>\s*<\/span>)/i,
+                `$1${word}$2`,
+              );
             } else {
-                word = headInner.replace(/\s+/g, ' ').trim();
-                if (/\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(word)) continue;
+              word = headInner.replace(/\s+/g, " ").trim();
+              if (
+                /\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(
+                  word,
+                )
+              )
+                continue;
             }
 
             if (!word || word.length >= 120) continue;
 
             const def = styleFn(word, pContent);
             this._ingestEntry(word, def, pContent);
+          }
         }
-    }
 
-    // Synonym collection helper
-    _collectSyns(canonicalWord, html) {
-        if (!this.options.generateSyn) return;
+        // Synonym collection helper
+        _collectSyns(canonicalWord, html) {
+          if (!this.options.generateSyn) return;
 
-        const normalizeCandidate = (raw) => {
-            if (!raw) return '';
+          const normalizeCandidate = (raw) => {
+            if (!raw) return "";
             return raw
-                .replace(/<[^>]+>/g, ' ')
-                .replace(/&nbsp;/gi, ' ')
-                .replace(/&amp;/gi, '&')
-                .replace(/&quot;/gi, '"')
-                .replace(/&#39;/gi, "'")
-                .normalize('NFKC')
-                .replace(/^[\s,;:()\[\]{}"'`]+|[\s,;:()\[\]{}"'`]+$/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-        };
+              .replace(/<[^>]+>/g, " ")
+              .replace(/&nbsp;/gi, " ")
+              .replace(/&amp;/gi, "&")
+              .replace(/&quot;/gi, '"')
+              .replace(/&#39;/gi, "'")
+              .normalize("NFKC")
+              .replace(/^[\s,;:()\[\]{}"'`]+|[\s,;:()\[\]{}"'`]+$/g, "")
+              .replace(/\s+/g, " ")
+              .trim();
+          };
 
-        const maybeAddSyn = (candidate) => {
+          const maybeAddSyn = (candidate) => {
             const alt = normalizeCandidate(candidate);
             if (!alt) return false;
             if (alt.length < 2 || alt.length > 80) return false;
             if (/^\d+$/.test(alt)) return false;
             if (alt.toLowerCase() === canonicalWord.toLowerCase()) return false;
             if (!this.synMap.has(alt)) {
-                this.synMap.set(alt, canonicalWord);
-                return true;
+              this.synMap.set(alt, canonicalWord);
+              return true;
             }
             return false;
-        };
+          };
 
-        const looksLikeInflectionOf = (candidate, base) => {
-            const c = (candidate || '').toLowerCase();
-            const b = (base || '').toLowerCase();
+          const looksLikeInflectionOf = (candidate, base) => {
+            const c = (candidate || "").toLowerCase();
+            const b = (base || "").toLowerCase();
             if (!c || !b || c === b) return false;
-            if (c === b + 's' || c === b + 'ed' || c === b + 'ing') return true;
-            if (/(s|x|z|ch|sh|o)$/.test(b) && c === b + 'es') return true;
-            if (b.endsWith('y') && b.length > 2 && !/[aeiou]y$/.test(b) && c === b.slice(0, -1) + 'ies') return true;
+            if (c === b + "s" || c === b + "ed" || c === b + "ing") return true;
+            if (/(s|x|z|ch|sh|o)$/.test(b) && c === b + "es") return true;
+            if (
+              b.endsWith("y") &&
+              b.length > 2 &&
+              !/[aeiou]y$/.test(b) &&
+              c === b.slice(0, -1) + "ies"
+            )
+              return true;
             return false;
-        };
+          };
 
-        // 1. Subscript-stripped variant: word1 / word2 -> word
-        const stripped = canonicalWord.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3\u2070]$/, '').trim();
-        if (stripped !== canonicalWord && stripped.length > 1 && !this.synMap.has(stripped))
+          // 1. Subscript-stripped variant: word1 / word2 -> word
+          const stripped = canonicalWord
+            .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3\u2070]$/, "")
+            .trim();
+          if (
+            stripped !== canonicalWord &&
+            stripped.length > 1 &&
+            !this.synMap.has(stripped)
+          )
             this.synMap.set(stripped, canonicalWord);
 
-        // 1b. KF8 inflections from idx metadata, e.g. <idx:iform value="workers">
-        if (/<idx:entry\b/i.test(html)) this.synStats.idxBlocks++;
-        const extractIformValue = (attrs, inner) => {
-            const vm = attrs.match(/\bvalue\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
-            return vm ? (vm[1] || vm[2] || vm[3] || '') : (inner || '');
-        };
-        const iformPairRe = /<idx:iform\b([^>]*)>([\s\S]*?)<\/idx:iform>/gi;
-        let ifm;
-        while ((ifm = iformPairRe.exec(html)) !== null) {
+          // 1b. KF8 inflections from idx metadata, e.g. <idx:iform value="workers">
+          if (/<idx:entry\b/i.test(html)) this.synStats.idxBlocks++;
+          const extractIformValue = (attrs, inner) => {
+            const vm = attrs.match(
+              /\bvalue\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
+            );
+            return vm ? vm[1] || vm[2] || vm[3] || "" : inner || "";
+          };
+          const iformPairRe = /<idx:iform\b([^>]*)>([\s\S]*?)<\/idx:iform>/gi;
+          let ifm;
+          while ((ifm = iformPairRe.exec(html)) !== null) {
             this.synStats.idxIformsSeen++;
-            if (maybeAddSyn(extractIformValue(ifm[1] || '', ifm[2] || ''))) this.synStats.idxIformsAdded++;
-        }
-        const iformSelfRe = /<idx:iform\b([^>]*)\/>/gi;
-        while ((ifm = iformSelfRe.exec(html)) !== null) {
+            if (maybeAddSyn(extractIformValue(ifm[1] || "", ifm[2] || "")))
+              this.synStats.idxIformsAdded++;
+          }
+          const iformSelfRe = /<idx:iform\b([^>]*)\/>/gi;
+          while ((ifm = iformSelfRe.exec(html)) !== null) {
             this.synStats.idxIformsSeen++;
-            if (maybeAddSyn(extractIformValue(ifm[1] || '', ''))) this.synStats.idxIformsAdded++;
-        }
+            if (maybeAddSyn(extractIformValue(ifm[1] || "", "")))
+              this.synStats.idxIformsAdded++;
+          }
 
-        // 2. Sub-phrase <span><b>phrase</b></span> entries (multi-word or different from headword)
-        for (const m of html.matchAll(/<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/gi)) {
-            const phrase = m[1].replace(/<[^>]+>/g, '').trim();
-            if (!phrase || phrase.toLowerCase() === canonicalWord.toLowerCase()) continue;
+          // 2. Sub-phrase <span><b>phrase</b></span> entries (multi-word or different from headword)
+          for (const m of html.matchAll(
+            /<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/gi,
+          )) {
+            const phrase = m[1].replace(/<[^>]+>/g, "").trim();
+            if (!phrase || phrase.toLowerCase() === canonicalWord.toLowerCase())
+              continue;
             if (phrase.length < 2 || phrase.length > 80) continue;
             if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
 
@@ -794,324 +1165,370 @@ class KF8Converter extends HuffCdicBase {
             // Example: "core workers" -> add "workers" as alias of "worker".
             const toks = phrase.split(/\s+/).filter(Boolean);
             if (toks.length >= 2) {
-                const tail = toks[toks.length - 1].replace(/^[^A-Za-z0-9'-]+|[^A-Za-z0-9'-]+$/g, '');
-                if (looksLikeInflectionOf(tail, canonicalWord) && maybeAddSyn(tail)) this.synStats.phraseTailAdded++;
+              const tail = toks[toks.length - 1].replace(
+                /^[^A-Za-z0-9'-]+|[^A-Za-z0-9'-]+$/g,
+                "",
+              );
+              if (looksLikeInflectionOf(tail, canonicalWord) && maybeAddSyn(tail))
+                this.synStats.phraseTailAdded++;
             }
-        }
+          }
 
-        // 3. Plural markers in parentheses, e.g. (<i>l.m.</i> <b>visionaries</b>)
-        for (const m of html.matchAll(/\(\s*<i[^>]*>\s*(?:l\.?\s*m\.?|liczba\s+mnoga|plural|pl\.?)\s*<\/i>\s*<b[^>]*>([\s\S]*?)<\/b>\s*\)/gi)) {
+          // 3. Plural markers in parentheses, e.g. (<i>l.m.</i> <b>visionaries</b>)
+          for (const m of html.matchAll(
+            /\(\s*<i[^>]*>\s*(?:l\.?\s*m\.?|liczba\s+mnoga|plural|pl\.?)\s*<\/i>\s*<b[^>]*>([\s\S]*?)<\/b>\s*\)/gi,
+          )) {
             maybeAddSyn(m[1]);
-        }
+          }
 
-        // 4. "tez X" / "also X" alternate forms
-        for (const m of html.matchAll(/\((?:też|also)\s+<b[^>]*>([\s\S]*?)<\/b>/gi)) {
+          // 4. "tez X" / "also X" alternate forms
+          for (const m of html.matchAll(
+            /\((?:też|also)\s+<b[^>]*>([\s\S]*?)<\/b>/gi,
+          )) {
             maybeAddSyn(m[1]);
-        }
+          }
 
-        // 5. Plain <b>X</b> where X looks like a compound (contains space)
-        for (const m of html.matchAll(/<b[^>]*>([\s\S]*?)<\/b>/gi)) {
+          // 5. Plain <b>X</b> where X looks like a compound (contains space)
+          for (const m of html.matchAll(/<b[^>]*>([\s\S]*?)<\/b>/gi)) {
             const phrase = normalizeCandidate(m[1]);
-            if (!phrase.includes(' ')) continue;          // only multi-word
+            if (!phrase.includes(" ")) continue; // only multi-word
             if (phrase.toLowerCase() === canonicalWord.toLowerCase()) continue;
             if (phrase.length > 80 || /^\d/.test(phrase)) continue;
             if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
+          }
         }
-    }
 
-    // Streaming decompress + extract
-    streamDecompress(textRecordMax, extraFlags) {
-        return new Promise(resolve => {
-            const utf8    = new TextDecoder('utf-8', { fatal: false });
+        // Streaming decompress + extract
+        streamDecompress(textRecordMax, extraFlags) {
+          return new Promise((resolve) => {
+            const utf8 = new TextDecoder("utf-8", { fatal: false });
             const OVERLAP = 16384;
-            let   overlap = '';
-            let   i       = 1;
-            const BATCH   = 80;
-            let   firstDecodedLogged = false;
+            let overlap = "";
+            let i = 1;
+            const BATCH = 80;
+            let firstDecodedLogged = false;
             const endExclusive = textRecordMax + 1;
 
             const processChunk = () => {
-                const lim = Math.min(i + BATCH, endExclusive);
-                for (; i < lim; i++) {
-                    const start = this.recs[i];
-                    const end   = (i + 1 < this.recs.length) ? this.recs[i + 1] : this.buffer.byteLength;
-                    let   data  = this.raw.slice(start, end);
-                    data        = this.stripTrailing(data, extraFlags);
-                    const dec   = this.decompress(data);
-                    const text  = utf8.decode(dec, { stream: true });
+              const lim = Math.min(i + BATCH, endExclusive);
+              for (; i < lim; i++) {
+                const start = this.recs[i];
+                const end =
+                  i + 1 < this.recs.length
+                    ? this.recs[i + 1]
+                    : this.buffer.byteLength;
+                let data = this.raw.slice(start, end);
+                data = this.stripTrailing(data, extraFlags);
+                const dec = this.decompress(data);
+                const text = utf8.decode(dec, { stream: true });
 
-                    if (!firstDecodedLogged && text.length > 0) {
-                        firstDecodedLogged = true;
-                        const preview = text.substring(0, 300).replace(/[\r\n]+/g, ' ');
-                        addLog(`First record decoded (${dec.length} bytes). Preview:\n  ${preview}`);
-                    }
-
-                    const chunk = overlap + text;
-                    this.extractEntriesFrom(chunk, false);
-                    overlap = chunk.length > OVERLAP ? chunk.slice(-OVERLAP) : chunk;
+                if (!firstDecodedLogged && text.length > 0) {
+                  firstDecodedLogged = true;
+                  const preview = text.substring(0, 300).replace(/[\r\n]+/g, " ");
+                  addLog(
+                    `First record decoded (${dec.length} bytes). Preview:\n  ${preview}`,
+                  );
                 }
 
-                if (i < endExclusive) {
-                    if ((i % 500) < BATCH)
-                        addLog(`Decompressing: ${i}/${textRecordMax}... entries so far: ${this.finalMap.size}`);
-                    setTimeout(processChunk, 0);
-                } else {
-                    this.extractEntriesFrom(overlap, true);
-                    addLog(`Extraction complete: ${this.finalMap.size} unique entries.`);
-                    resolve();
-                }
+                const chunk = overlap + text;
+                this.extractEntriesFrom(chunk, false);
+                overlap = chunk.length > OVERLAP ? chunk.slice(-OVERLAP) : chunk;
+              }
+
+              if (i < endExclusive) {
+                if (i % 500 < BATCH)
+                  addLog(
+                    `Decompressing: ${i}/${textRecordMax}... entries so far: ${this.finalMap.size}`,
+                  );
+                setTimeout(processChunk, 0);
+              } else {
+                this.extractEntriesFrom(overlap, true);
+                addLog(`Extraction complete: ${this.finalMap.size} unique entries.`);
+                resolve();
+              }
             };
             processChunk();
-        });
-    }
+          });
+        }
 
-    // Main pipeline
-    async run() {
-        this.buildRecords();
-        addLog(`PDB records: ${this.recs.length}`);
+        // Main pipeline
+        async run() {
+          this.buildRecords();
+          addLog(`PDB records: ${this.recs.length}`);
 
-        const extraFlags = this.findExtraDataFlags();
+          const extraFlags = this.findExtraDataFlags();
 
-        // Find HUFF record
-        let huffIdx = -1;
-        for (let i = 0; i < this.recs.length; i++) {
+          // Find HUFF record
+          let huffIdx = -1;
+          for (let i = 0; i < this.recs.length; i++) {
             const o = this.recs[i];
-            if (this.raw[o]===72 && this.raw[o+1]===85 && this.raw[o+2]===70 && this.raw[o+3]===70) {
-                huffIdx = i; break;
+            if (
+              this.raw[o] === 72 &&
+              this.raw[o + 1] === 85 &&
+              this.raw[o + 2] === 70 &&
+              this.raw[o + 3] === 70
+            ) {
+              huffIdx = i;
+              break;
             }
-        }
-        if (huffIdx === -1) { addLog('ERROR: No HUFF record found.'); return this.finalMap; }
-        const textRecordMax = this.getTextRecordMax(huffIdx);
-        addLog(`HUFF record: ${huffIdx}  (text records: 1-${textRecordMax})`);
-
-        this.loadHuff(this.recs[huffIdx]);
-        this.loadAllCdic(huffIdx);
-
-        if (this.dict.length === 0) {
-            addLog('ERROR: Symbol dictionary is empty. Cannot decompress.');
+          }
+          if (huffIdx === -1) {
+            addLog("ERROR: No HUFF record found.");
             return this.finalMap;
+          }
+          const textRecordMax = this.getTextRecordMax(huffIdx);
+          addLog(`HUFF record: ${huffIdx}  (text records: 1-${textRecordMax})`);
+
+          this.loadHuff(this.recs[huffIdx]);
+          this.loadAllCdic(huffIdx);
+
+          if (this.dict.length === 0) {
+            addLog("ERROR: Symbol dictionary is empty. Cannot decompress.");
+            return this.finalMap;
+          }
+
+          await this.streamDecompress(textRecordMax, extraFlags);
+          if (this.options.generateSyn) {
+            addLog(
+              `idx:entry blocks seen: ${this.synStats.idxBlocks}, idx:iform seen: ${this.synStats.idxIformsSeen}, idx:iform added: ${this.synStats.idxIformsAdded}, phrase-tail inflections: ${this.synStats.phraseTailAdded}`,
+            );
+          }
+          addLog(`Synonyms collected: ${this.synMap.size}`);
+          return { finalMap: this.finalMap, synMap: this.synMap };
         }
-
-        await this.streamDecompress(textRecordMax, extraFlags);
-        if (this.options.generateSyn) {
-            addLog(`idx:entry blocks seen: ${this.synStats.idxBlocks}, idx:iform seen: ${this.synStats.idxIformsSeen}, idx:iform added: ${this.synStats.idxIformsAdded}, phrase-tail inflections: ${this.synStats.phraseTailAdded}`);
-        }
-        addLog(`Synonyms collected: ${this.synMap.size}`);
-        return { finalMap: this.finalMap, synMap: this.synMap };
-    }
-}
+      }
 
 
+      // ─────────────────────────────────────────────────────────────────────────────
+      // StarDict output
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Shared StarDict validator logic used by converter and standalone validator tool.
+      (function () {
+        function create(config) {
+          const ids = config.ids || {};
+          const el = {
+            status: document.getElementById(ids.status),
+            search: document.getElementById(ids.search),
+            resultCard: document.getElementById(ids.resultCard),
+            resultWord: document.getElementById(ids.resultWord),
+            byteBadge: document.getElementById(ids.byteBadge),
+            synInfo: document.getElementById(ids.synInfo),
+            paneRendered: document.getElementById(ids.paneRendered),
+            paneRaw: document.getElementById(ids.paneRaw),
+            copyBtn: document.getElementById(ids.copyBtn),
+          };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// StarDict output
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared StarDict validator logic used by converter and standalone validator tool.
-(function () {
-    function create(config) {
-        const ids = config.ids || {};
-        const el = {
-            status:      document.getElementById(ids.status),
-            search:      document.getElementById(ids.search),
-            resultCard:  document.getElementById(ids.resultCard),
-            resultWord:  document.getElementById(ids.resultWord),
-            byteBadge:   document.getElementById(ids.byteBadge),
-            synInfo:     document.getElementById(ids.synInfo),
-            paneRendered:document.getElementById(ids.paneRendered),
-            paneRaw:     document.getElementById(ids.paneRaw),
-            copyBtn:     document.getElementById(ids.copyBtn),
-        };
+          let idxData = null;
+          let dictData = null;
+          let wordMap = new Map();
+          let synMap = new Map();
+          let ordinalToKey = [];
+          let rawHtml = "";
 
-        let idxData = null;
-        let dictData = null;
-        let wordMap = new Map();
-        let synMap = new Map();
-        let ordinalToKey = [];
-        let rawHtml = '';
+          const dec = new TextDecoder("utf-8");
 
-        const dec = new TextDecoder('utf-8');
-
-        function setStatus(msg) {
+          function setStatus(msg) {
             if (el.status) el.status.textContent = msg;
-        }
+          }
 
-        function parseIdx(buffer) {
+          function parseIdx(buffer) {
             idxData = new DataView(buffer);
             wordMap.clear();
             ordinalToKey = [];
             let offset = 0;
             while (offset < idxData.byteLength) {
-                const start = offset;
-                while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0) offset++;
-                const word = dec.decode(new Uint8Array(idxData.buffer, start, offset - start));
+              const start = offset;
+              while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0)
                 offset++;
-                if (offset + 8 > idxData.byteLength) break;
-                const dataOffset = idxData.getUint32(offset, false);
-                const dataSize   = idxData.getUint32(offset + 4, false);
-                const lc = word.toLowerCase();
-                ordinalToKey.push(lc);
-                const entry = { off: dataOffset, sz: dataSize, original: word };
-                if (wordMap.has(lc)) wordMap.get(lc).push(entry);
-                else wordMap.set(lc, [entry]);
-                offset += 8;
+              const word = dec.decode(
+                new Uint8Array(idxData.buffer, start, offset - start),
+              );
+              offset++;
+              if (offset + 8 > idxData.byteLength) break;
+              const dataOffset = idxData.getUint32(offset, false);
+              const dataSize = idxData.getUint32(offset + 4, false);
+              const lc = word.toLowerCase();
+              ordinalToKey.push(lc);
+              const entry = { off: dataOffset, sz: dataSize, original: word };
+              if (wordMap.has(lc)) wordMap.get(lc).push(entry);
+              else wordMap.set(lc, [entry]);
+              offset += 8;
             }
-        }
+          }
 
-        function parseSyn(buffer) {
+          function parseSyn(buffer) {
             synMap.clear();
             if (!buffer) return;
             const synView = new DataView(buffer);
             let so = 0;
             while (so < synView.byteLength) {
-                const ss = so;
-                while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
-                const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
-                so++;
-                if (so + 4 > synView.byteLength) break;
-                const ordinal = synView.getUint32(so, false);
-                so += 4;
-                if (ordinal < ordinalToKey.length) synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
+              const ss = so;
+              while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
+              const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
+              so++;
+              if (so + 4 > synView.byteLength) break;
+              const ordinal = synView.getUint32(so, false);
+              so += 4;
+              if (ordinal < ordinalToKey.length)
+                synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
             }
-        }
+          }
 
-        function showEntry(lowerKey, matchInfo) {
+          function showEntry(lowerKey, matchInfo) {
             const entries = wordMap.get(lowerKey);
             if (!entries) return;
 
-            rawHtml = entries.map(e => dec.decode(new Uint8Array(dictData, e.off, e.sz))).join('');
+            rawHtml = entries
+              .map((e) => dec.decode(new Uint8Array(dictData, e.off, e.sz)))
+              .join("");
             const first = entries[0];
 
             if (el.resultWord) el.resultWord.textContent = first.original;
             if (el.byteBadge) {
-                el.byteBadge.textContent = entries.length > 1
-                    ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
-                    : `${first.sz} bytes`;
+              el.byteBadge.textContent =
+                entries.length > 1
+                  ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
+                  : `${first.sz} bytes`;
             }
 
             if (el.synInfo) {
-                if (matchInfo && matchInfo.mode === 'synonym') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else if (matchInfo && matchInfo.mode === 'fallback-word') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else if (matchInfo && matchInfo.mode === 'fallback-synonym') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else {
-                    el.synInfo.style.display = 'none';
-                }
+              if (matchInfo && matchInfo.mode === "synonym") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else if (matchInfo && matchInfo.mode === "fallback-word") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else if (matchInfo && matchInfo.mode === "fallback-synonym") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else {
+                el.synInfo.style.display = "none";
+              }
             }
 
             if (el.paneRendered) el.paneRendered.innerHTML = rawHtml;
             if (el.paneRaw) el.paneRaw.textContent = rawHtml;
-            if (el.resultCard) el.resultCard.style.display = 'block';
-        }
+            if (el.resultCard) el.resultCard.style.display = "block";
+          }
 
-        function bindSearch() {
+          function bindSearch() {
             if (!el.search) return;
 
             const candidateBases = (q) => {
-                const out = new Set();
-                const w = (q || '').toLowerCase();
-                if (!w) return out;
-                out.add(w);
-                if (w.endsWith('ies') && w.length > 4) out.add(w.slice(0, -3) + 'y');
-                if (w.endsWith('es') && w.length > 3) out.add(w.slice(0, -2));
-                if (w.endsWith('s') && w.length > 2) out.add(w.slice(0, -1));
-                if (w.endsWith('ing') && w.length > 5) {
-                    out.add(w.slice(0, -3));
-                    out.add(w.slice(0, -3) + 'e');
-                }
-                if (w.endsWith('ed') && w.length > 4) {
-                    out.add(w.slice(0, -2));
-                    out.add(w.slice(0, -1));
-                }
-                return out;
+              const out = new Set();
+              const w = (q || "").toLowerCase();
+              if (!w) return out;
+              out.add(w);
+              if (w.endsWith("ies") && w.length > 4) out.add(w.slice(0, -3) + "y");
+              if (w.endsWith("es") && w.length > 3) out.add(w.slice(0, -2));
+              if (w.endsWith("s") && w.length > 2) out.add(w.slice(0, -1));
+              if (w.endsWith("ing") && w.length > 5) {
+                out.add(w.slice(0, -3));
+                out.add(w.slice(0, -3) + "e");
+              }
+              if (w.endsWith("ed") && w.length > 4) {
+                out.add(w.slice(0, -2));
+                out.add(w.slice(0, -1));
+              }
+              return out;
             };
 
             const resolveKey = (queryLower) => {
-                if (wordMap.has(queryLower)) {
-                    return { key: queryLower, mode: 'exact' };
-                }
-                if (synMap.has(queryLower)) {
-                    return { key: synMap.get(queryLower), mode: 'synonym' };
-                }
+              if (wordMap.has(queryLower)) {
+                return { key: queryLower, mode: "exact" };
+              }
+              if (synMap.has(queryLower)) {
+                return { key: synMap.get(queryLower), mode: "synonym" };
+              }
 
-                for (const base of candidateBases(queryLower)) {
-                    if (base === queryLower) continue;
-                    if (wordMap.has(base)) {
-                        return { key: base, mode: 'fallback-word' };
-                    }
-                    if (synMap.has(base)) {
-                        return { key: synMap.get(base), mode: 'fallback-synonym' };
-                    }
+              for (const base of candidateBases(queryLower)) {
+                if (base === queryLower) continue;
+                if (wordMap.has(base)) {
+                  return { key: base, mode: "fallback-word" };
                 }
-                return null;
+                if (synMap.has(base)) {
+                  return { key: synMap.get(base), mode: "fallback-synonym" };
+                }
+              }
+              return null;
             };
 
-            el.search.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-                const lower = query.toLowerCase();
-                if (!query) {
-                    if (el.resultCard) el.resultCard.style.display = 'none';
-                    return;
-                }
+            el.search.addEventListener("input", (e) => {
+              const query = e.target.value.trim();
+              const lower = query.toLowerCase();
+              if (!query) {
+                if (el.resultCard) el.resultCard.style.display = "none";
+                return;
+              }
 
-                const resolved = resolveKey(lower);
-                const matchKey = resolved ? resolved.key : null;
+              const resolved = resolveKey(lower);
+              const matchKey = resolved ? resolved.key : null;
 
-                if (!matchKey) {
-                    if (el.resultCard) el.resultCard.style.display = 'none';
-                    return;
-                }
-                showEntry(matchKey, resolved && resolved.mode !== 'exact'
-                    ? { mode: resolved.mode, query }
-                    : null);
+              if (!matchKey) {
+                if (el.resultCard) el.resultCard.style.display = "none";
+                return;
+              }
+              showEntry(
+                matchKey,
+                resolved && resolved.mode !== "exact"
+                  ? { mode: resolved.mode, query }
+                  : null,
+              );
             });
-        }
+          }
 
-        function bindCopy() {
+          function bindCopy() {
             if (!el.copyBtn) return;
-            el.copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(rawHtml).then(() => {
-                    const copied = config.getCopiedLabel ? config.getCopiedLabel() : 'Copied';
-                    const copy = config.getCopyLabel ? config.getCopyLabel() : 'Copy HTML';
-                    el.copyBtn.textContent = copied;
-                    setTimeout(() => { el.copyBtn.textContent = copy; }, 1200);
-                });
+            el.copyBtn.addEventListener("click", () => {
+              navigator.clipboard.writeText(rawHtml).then(() => {
+                const copied = config.getCopiedLabel
+                  ? config.getCopiedLabel()
+                  : "Copied";
+                const copy = config.getCopyLabel
+                  ? config.getCopyLabel()
+                  : "Copy HTML";
+                el.copyBtn.textContent = copied;
+                setTimeout(() => {
+                  el.copyBtn.textContent = copy;
+                }, 1200);
+              });
             });
-        }
+          }
 
-        async function loadFromFiles(files) {
+          async function loadFromFiles(files) {
             if (!files.idx || !files.dict) return;
 
             const idxBuffer = await files.idx.arrayBuffer();
             const dictBuffer = await files.dict.arrayBuffer();
             const synBuffer = files.syn ? await files.syn.arrayBuffer() : null;
-            const ifoText = files.ifo ? dec.decode(await files.ifo.arrayBuffer()) : '';
+            const ifoText = files.ifo
+              ? dec.decode(await files.ifo.arrayBuffer())
+              : "";
 
             loadFromBuffers({ idxBuffer, dictBuffer, synBuffer, ifoText });
-        }
+          }
 
-        function loadFromBuffers(data) {
+          function loadFromBuffers(data) {
             parseIdx(data.idxBuffer);
             dictData = data.dictBuffer;
             parseSyn(data.synBuffer || null);
 
-            const ifoText = data.ifoText || '';
-            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || '?';
-            const syncount  = (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
+            const ifoText = data.ifoText || "";
+            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || "?";
+            const syncount =
+              (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
 
             setStatus(
-                `Ready: ${wordMap.size} entries` +
-                (synMap.size ? ` · ${synMap.size} synonyms` : '') +
-                (ifoText ? ` (ifo: wordcount=${wordcount}${syncount !== '0' ? ', synwordcount=' + syncount : ''})` : '')
+              `Ready: ${wordMap.size} entries` +
+                (synMap.size ? ` · ${synMap.size} synonyms` : "") +
+                (ifoText
+                  ? ` (ifo: wordcount=${wordcount}${syncount !== "0" ? ", synwordcount=" + syncount : ""})`
+                  : ""),
             );
-            if (el.search) el.search.style.display = 'block';
-        }
+            if (el.search) el.search.style.display = "block";
+          }
 
-        function attachFileInputs(fileInputIds) {
+          function attachFileInputs(fileInputIds) {
             const idsMap = fileInputIds || {};
             const ifoEl = document.getElementById(idsMap.ifo);
             const idxEl = document.getElementById(idsMap.idx);
@@ -1119,301 +1536,311 @@ class KF8Converter extends HuffCdicBase {
             const synEl = document.getElementById(idsMap.syn);
 
             const triggerLoad = () => {
-                loadFromFiles({
-                    ifo: ifoEl ? ifoEl.files[0] : null,
-                    idx: idxEl ? idxEl.files[0] : null,
-                    dict: dictEl ? dictEl.files[0] : null,
-                    syn: synEl ? synEl.files[0] : null,
-                });
+              loadFromFiles({
+                ifo: ifoEl ? ifoEl.files[0] : null,
+                idx: idxEl ? idxEl.files[0] : null,
+                dict: dictEl ? dictEl.files[0] : null,
+                syn: synEl ? synEl.files[0] : null,
+              });
             };
 
-            [ifoEl, idxEl, dictEl, synEl].forEach(node => {
-                if (node) node.addEventListener('change', triggerLoad);
+            [ifoEl, idxEl, dictEl, synEl].forEach((node) => {
+              if (node) node.addEventListener("change", triggerLoad);
             });
-        }
+          }
 
-        bindSearch();
-        bindCopy();
+          bindSearch();
+          bindCopy();
 
-        return {
+          return {
             loadFromBuffers,
             loadFromFiles,
             attachFileInputs,
             getRawHtml: () => rawHtml,
-        };
-    }
+          };
+        }
 
-    window.StarDictValidator = {
-        create,
-        initFromFiles(config) {
+        window.StarDictValidator = {
+          create,
+          initFromFiles(config) {
             const api = create(config);
             api.attachFileInputs(config.fileInputIds || {});
             return api;
-        },
-    };
-})();
+          },
+        };
+      })();
 
+      // StarDict output renderer for KF8 converter.
+      function renderOutput(finalMap, synMap, generateSyn) {
+        document.getElementById("downloadArea").style.display = "block";
+        const links = document.getElementById("links");
+        links.innerHTML = "";
 
-// StarDict output renderer for KF8 converter.
-function renderOutput(finalMap, synMap, generateSyn) {
-    document.getElementById('downloadArea').style.display = 'block';
-    const links = document.getElementById('links');
-    links.innerHTML = '';
+        const enc = new TextEncoder();
 
-    const enc = new TextEncoder();
+        // StarDict .idx must be sorted alphabetically (case-insensitive)
+        const sorted = Array.from(finalMap.entries()).sort(([a], [b]) =>
+          a.toLowerCase().localeCompare(b.toLowerCase()),
+        );
 
-    // StarDict .idx must be sorted alphabetically (case-insensitive)
-    const sorted = Array.from(finalMap.entries())
-        .sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const wordToOrdinal = new Map();
+        let dict = [],
+          idx = [],
+          offset = 0,
+          count = 0;
 
-    const wordToOrdinal = new Map();
-    let dict = [], idx = [], offset = 0, count = 0;
+        for (const [word, def] of sorted) {
+          wordToOrdinal.set(word, count);
+          const db = enc.encode(def);
+          const wb = enc.encode(word);
+          for (const b of db) dict.push(b);
+          for (const b of wb) idx.push(b);
+          idx.push(0);
+          const dv = new DataView(new ArrayBuffer(8));
+          dv.setUint32(0, offset, false);
+          dv.setUint32(4, db.length, false);
+          for (let i = 0; i < 8; i++) idx.push(dv.getUint8(i));
+          offset += db.length;
+          count++;
+        }
 
-    for (const [word, def] of sorted) {
-        wordToOrdinal.set(word, count);
-        const db = enc.encode(def);
-        const wb = enc.encode(word);
-        for (const b of db) dict.push(b);
-        for (const b of wb) idx.push(b);
-        idx.push(0);
-        const dv = new DataView(new ArrayBuffer(8));
-        dv.setUint32(0, offset, false);
-        dv.setUint32(4, db.length, false);
-        for (let i = 0; i < 8; i++) idx.push(dv.getUint8(i));
-        offset += db.length;
-        count++;
-    }
-
-    // Build .syn
-    let synBytes = [], synCount = 0;
-    if (generateSyn && synMap.size > 0) {
-        const validSyns = [];
-        for (const [alt, canonical] of synMap.entries()) {
+        // Build .syn
+        let synBytes = [],
+          synCount = 0;
+        if (generateSyn && synMap.size > 0) {
+          const validSyns = [];
+          for (const [alt, canonical] of synMap.entries()) {
             if (!wordToOrdinal.has(canonical)) continue;
             if (wordToOrdinal.has(alt)) continue;
             validSyns.push([alt, wordToOrdinal.get(canonical)]);
-        }
-        validSyns.sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        for (const [alt, ordinal] of validSyns) {
+          }
+          validSyns.sort(([a], [b]) =>
+            a.toLowerCase().localeCompare(b.toLowerCase()),
+          );
+          for (const [alt, ordinal] of validSyns) {
             const ab = enc.encode(alt);
             for (const b of ab) synBytes.push(b);
             synBytes.push(0);
             const dv = new DataView(new ArrayBuffer(4));
             dv.setUint32(0, ordinal, false);
             for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
+          }
+          synCount = validSyns.length;
+          addLog(`Synonym file: ${synCount} entries.`);
         }
-        synCount = validSyns.length;
-        addLog(`Synonym file: ${synCount} entries.`);
-    }
 
-    // .ifo
-    const ifoLines = [
-        "StarDict's dict ifo file",
-        'version=2.4.2',
-        `wordcount=${count}`,
-        `idxfilesize=${idx.length}`,
-        'bookname=Wielki_Slownik_Ang-Pol_JEM',
-        'sametypesequence=h',
-    ];
-    if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
-    const ifo = ifoLines.join('\n') + '\n';
+        // .ifo
+        const ifoLines = [
+          "StarDict's dict ifo file",
+          "version=2.4.2",
+          `wordcount=${count}`,
+          `idxfilesize=${idx.length}`,
+          "bookname=Wielki_Slownik_Ang-Pol_JEM",
+          "sametypesequence=h",
+        ];
+        if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
+        const ifo = ifoLines.join("\n") + "\n";
 
-    const ifoBytes = enc.encode(ifo);
-    const idxBytes = new Uint8Array(idx);
-    const dictBytes = new Uint8Array(dict);
-    const synBytesArr = synCount > 0 ? new Uint8Array(synBytes) : null;
+        const ifoBytes = enc.encode(ifo);
+        const idxBytes = new Uint8Array(idx);
+        const dictBytes = new Uint8Array(dict);
+        const synBytesArr = synCount > 0 ? new Uint8Array(synBytes) : null;
 
-    // Download links
-    const dl = (name, data) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([data]));
-        a.download = name;
-        a.className = 'btn-dl';
-        a.textContent = `⬇ ${name}`;
-        links.appendChild(a);
-    };
-    dl('dictionary.ifo', ifoBytes);
-    dl('dictionary.idx', idxBytes);
-    dl('dictionary.dict', dictBytes);
-    if (synCount > 0) {
-        dl('dictionary.syn', synBytesArr);
-        const badge = document.createElement('span');
-        badge.className = 'badge-syn';
-        badge.textContent = `${synCount} synonyms`;
-        links.appendChild(badge);
-    }
+        // Download links
+        const dl = (name, data) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([data]));
+          a.download = name;
+          a.className = "btn-dl";
+          a.textContent = `⬇ ${name}`;
+          links.appendChild(a);
+        };
+        dl("dictionary.ifo", ifoBytes);
+        dl("dictionary.idx", idxBytes);
+        dl("dictionary.dict", dictBytes);
+        if (synCount > 0) {
+          dl("dictionary.syn", synBytesArr);
+          const badge = document.createElement("span");
+          badge.className = "badge-syn";
+          badge.textContent = `${synCount} synonyms`;
+          links.appendChild(badge);
+        }
 
-    // Preview
-    const pArea = document.getElementById('previewArea');
-    const pGrid = document.getElementById('previewGrid');
-    pGrid.innerHTML = '';
-    pArea.style.display = 'block';
+        // Preview
+        const pArea = document.getElementById("previewArea");
+        const pGrid = document.getElementById("previewGrid");
+        pGrid.innerHTML = "";
+        pArea.style.display = "block";
 
-    const keys = sorted.map(([k]) => k);
-    const shown = new Set();
-    const sampleKeys = [];
-    for (let i = 0; i < Math.min(3, keys.length); i++) {
-        let k;
-        do { k = keys[Math.floor(Math.random() * keys.length)]; } while (shown.has(k));
-        shown.add(k);
-        sampleKeys.push(k);
-        const div = document.createElement('div');
-        div.className = 'preview-item';
-        div.innerHTML = `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:4px">${k}</b>`
-                      // Do not truncate raw HTML; rich style markup breaks when sliced mid-tag.
-                      + finalMap.get(k);
-        pGrid.appendChild(div);
-    }
+        const keys = sorted.map(([k]) => k);
+        const shown = new Set();
+        const sampleKeys = [];
+        for (let i = 0; i < Math.min(3, keys.length); i++) {
+          let k;
+          do {
+            k = keys[Math.floor(Math.random() * keys.length)];
+          } while (shown.has(k));
+          shown.add(k);
+          sampleKeys.push(k);
+          const div = document.createElement("div");
+          div.className = "preview-item";
+          div.innerHTML =
+            `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:4px">${k}</b>` +
+            // Do not truncate raw HTML; rich style markup breaks when sliced mid-tag.
+            finalMap.get(k);
+          pGrid.appendChild(div);
+        }
 
-    if (window.StarDictValidator) {
-        if (!window.__kf8Validator) {
+        if (window.StarDictValidator) {
+          if (!window.__kf8Validator) {
             window.__kf8Validator = window.StarDictValidator.create({
-                ids: {
-                    status: 'validatorStatus',
-                    search: 'validatorSearchBox',
-                    resultCard: 'validatorResultCard',
-                    resultWord: 'validatorResultWord',
-                    byteBadge: 'validatorByteBadge',
-                    synInfo: 'validatorSynInfo',
-                    paneRendered: 'validatorPaneRendered',
-                    copyBtn: 'validatorCopyBtn',
-                },
-                getCopyLabel: () => 'Copy HTML',
-                getCopiedLabel: () => 'Copied',
+              ids: {
+                status: "validatorStatus",
+                search: "validatorSearchBox",
+                resultCard: "validatorResultCard",
+                resultWord: "validatorResultWord",
+                byteBadge: "validatorByteBadge",
+                synInfo: "validatorSynInfo",
+                paneRendered: "validatorPaneRendered",
+                copyBtn: "validatorCopyBtn",
+              },
+              getCopyLabel: () => "Copy HTML",
+              getCopiedLabel: () => "Copied",
             });
-        }
-        window.__kf8Validator.loadFromBuffers({
-            ifoText: new TextDecoder('utf-8').decode(ifoBytes),
+          }
+          window.__kf8Validator.loadFromBuffers({
+            ifoText: new TextDecoder("utf-8").decode(ifoBytes),
             idxBuffer: idxBytes.buffer,
             dictBuffer: dictBytes.buffer,
             synBuffer: synBytesArr ? synBytesArr.buffer : null,
-        });
+          });
 
-        // Seed search from random samples and render the full entry immediately.
-        const searchEl = document.getElementById('validatorSearchBox');
-        if (searchEl && sampleKeys.length > 0) {
+          // Seed search from random samples and render the full entry immediately.
+          const searchEl = document.getElementById("validatorSearchBox");
+          if (searchEl && sampleKeys.length > 0) {
             const pick = sampleKeys[Math.floor(Math.random() * sampleKeys.length)];
             searchEl.value = pick;
-            searchEl.dispatchEvent(new Event('input', { bubbles: true }));
+            searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+          }
         }
-    }
 
-    addLog(`✅ Output ready. ${count} entries, idx=${idx.length} B, dict=${dict.length} B${synCount ? `, syn=${synCount}` : ''}.`);
-}
+        addLog(
+          `✅ Output ready. ${count} entries, idx=${idx.length} B, dict=${dict.length} B${synCount ? `, syn=${synCount}` : ""}.`,
+        );
+      }
 
 
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Button handler
+      // ─────────────────────────────────────────────────────────────────────────────
+      document.getElementById("startBtn").onclick = () => {
+        const btn = document.getElementById("startBtn");
+        btn.disabled = true;
+        btn.textContent = "WORKING...";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Button handler
-// ─────────────────────────────────────────────────────────────────────────────
-document.getElementById('startBtn').onclick = () => {
-    const btn = document.getElementById('startBtn');
-    btn.disabled = true;
-    btn.textContent = 'WORKING...';
+        const options = {
+          style: document.getElementById("styleSelect").value,
+          generateSyn: true,
+        };
 
-    const options = {
-        style:       document.getElementById('styleSelect').value,
-        generateSyn: true,
-    };
+        const conv = new KF8Converter(globalBuffer, options);
 
-    const conv = new KF8Converter(globalBuffer, options);
-
-    setTimeout(async () => {
-        try {
+        setTimeout(async () => {
+          try {
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
-                renderOutput(finalMap, synMap, true);
-                btn.textContent = '✅ DONE';
+              renderOutput(finalMap, synMap, true);
+              btn.textContent = "✅ DONE";
             } else {
-                addLog('⚠️ No entries extracted. Check log for details.');
-                btn.disabled = false;
-                btn.textContent = 'RETRY';
+              addLog("⚠️ No entries extracted. Check log for details.");
+              btn.disabled = false;
+              btn.textContent = "RETRY";
             }
-        } catch (err) {
-            addLog('FATAL ERROR: ' + err.message + '\n' + err.stack);
+          } catch (err) {
+            addLog("FATAL ERROR: " + err.message + "\n" + err.stack);
             btn.disabled = false;
-            btn.textContent = 'ERROR – Retry';
-        }
-    }, 150);
-};
+            btn.textContent = "ERROR – Retry";
+          }
+        }, 150);
+      };
 
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N = {
-    en: {
-        title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
-        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>',
-        dropzone:    '📁 Click or drag your .mobi file here',
-        styleLabel:  '🎨 Entry Style:',
-        styleNone:   'Original - original HTML pass-through',
-        styleClean:  'Clean - semantic, no inline styles',
-        styleNice:   'Nice - headword + phonetics styled',
-        styleEink:   'E-ink mono - high contrast, no color styling',
-        styleRich:   'Rich Color - full color-coded sections',
-        startBtn:    'START CONVERSION',
-        logIdle:     'Status: Idle. Waiting for file...',
-        doneTitle:   '✅ Done! Download StarDict Files:',
-        previewTitle:'🧩 Sample Entries',
-        validatorTitle:'🔎 Search Generated Dictionary',
-        validatorSearchPh: '🔍 Search generated dictionary...',
-    },
-    pl: {
-        title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
-        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>',
-        dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
-        styleLabel:  '🎨 Styl wpisów:',
-        styleNone:   'Oryginalny - oryginalny HTML bez stylowania',
-        styleClean:  'Czysty - semantyczny, bez stylów inline',
-        styleNice:   'Ładny - nagłówek + fonetyka ze stylem',
-        styleEink:   'E-ink mono - wysoki kontrast, bez kolorowania',
-        styleRich:   'Kolorowy - pełne kolorowanie sekcji',
-        startBtn:    'ROZPOCZNIJ KONWERSJĘ',
-        logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
-        doneTitle:   '✅ Gotowe! Pobierz pliki StarDict:',
-        previewTitle:'🧩 Przykładowe wpisy',
-        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
-        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
-    }
-};
-// ── i18n: language detection, application & toggle ───────────────────────────
-// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
-// file is included. All text lives only in I18N — HTML elements are empty shells.
+      // ── i18n ──────────────────────────────────────────────────────────────────────
+      const I18N = {
+        en: {
+          title: "MOBI/KF8 → StarDict (HUFF/CDIC Decoder)",
+          desc: "Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>",
+          dropzone: "📁 Click or drag your .mobi file here",
+          styleLabel: "🎨 Entry Style:",
+          styleNone: "Original - original HTML pass-through",
+          styleClean: "Clean - semantic, no inline styles",
+          styleNice: "Nice - headword + phonetics styled",
+          styleEink: "E-ink mono - high contrast, no color styling",
+          styleRich: "Rich Color - full color-coded sections",
+          startBtn: "START CONVERSION",
+          logIdle: "Status: Idle. Waiting for file...",
+          doneTitle: "✅ Done! Download StarDict Files:",
+          previewTitle: "🧩 Sample Entries",
+          validatorTitle: "🔎 Search Generated Dictionary",
+          validatorSearchPh: "🔍 Search generated dictionary...",
+        },
+        pl: {
+          title: "MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)",
+          desc: "Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>",
+          dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
+          styleLabel: "🎨 Styl wpisów:",
+          styleNone: "Oryginalny - oryginalny HTML bez stylowania",
+          styleClean: "Czysty - semantyczny, bez stylów inline",
+          styleNice: "Ładny - nagłówek + fonetyka ze stylem",
+          styleEink: "E-ink mono - wysoki kontrast, bez kolorowania",
+          styleRich: "Kolorowy - pełne kolorowanie sekcji",
+          startBtn: "ROZPOCZNIJ KONWERSJĘ",
+          logIdle: "Status: Bezczynny. Oczekiwanie na plik...",
+          doneTitle: "✅ Gotowe! Pobierz pliki StarDict:",
+          previewTitle: "🧩 Przykładowe wpisy",
+          validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
+          validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+        },
+      };
+      // ── i18n: language detection, application & toggle ───────────────────────────
+      // Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+      // file is included. All text lives only in I18N — HTML elements are empty shells.
 
-(function () {
-    var stored = localStorage.getItem('lang');
-    var auto   = navigator.language && navigator.language.startsWith('pl') ? 'pl' : 'en';
-    window.LANG  = stored || auto;
-    document.documentElement.lang = window.LANG;
-})();
+      (function () {
+        var stored = localStorage.getItem("lang");
+        var auto =
+          navigator.language && navigator.language.startsWith("pl") ? "pl" : "en";
+        window.LANG = stored || auto;
+        document.documentElement.lang = window.LANG;
+      })();
 
-function applyI18n() {
-    var t = I18N[window.LANG] || I18N.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n')];
-        if (v !== undefined) el.textContent = v;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-html')];
-        if (v !== undefined) el.innerHTML = v;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-ph')];
-        if (v !== undefined) el.placeholder = v;
-    });
-    var btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
-}
+      function applyI18n() {
+        var t = I18N[window.LANG] || I18N.en;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n")];
+          if (v !== undefined) el.textContent = v;
+        });
+        document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-html")];
+          if (v !== undefined) el.innerHTML = v;
+        });
+        document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-ph")];
+          if (v !== undefined) el.placeholder = v;
+        });
+        var btn = document.getElementById("langToggle");
+        if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";
+      }
 
-function toggleLang() {
-    window.LANG = window.LANG === 'pl' ? 'en' : 'pl';
-    localStorage.setItem('lang', window.LANG);
-    document.documentElement.lang = window.LANG;
-    applyI18n();
-}
+      function toggleLang() {
+        window.LANG = window.LANG === "pl" ? "en" : "pl";
+        localStorage.setItem("lang", window.LANG);
+        document.documentElement.lang = window.LANG;
+        applyI18n();
+      }
 
-// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
-applyI18n();
+      // Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+      applyI18n();
 
-</script>
-</body>
+    </script>
+  </body>
 </html>
-

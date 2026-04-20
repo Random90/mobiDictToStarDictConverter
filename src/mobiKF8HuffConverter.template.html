@@ -1,341 +1,620 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOBI8/KF8 to StarDict - HUFF/CDIC </title>
+    <title>MOBI8/KF8 to StarDict - HUFF/CDIC</title>
     <style>
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; }
-        .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
-        .upload-section { border: 3px dashed #007bff; background: #f8fbff; padding: 30px; text-align: center; cursor: pointer; border-radius: 12px; margin-bottom: 20px; }
-        #log { background: #1c1e21; color: #a5d6a7; padding: 15px; font-family: monospace; height: 340px; overflow-y: auto; border-radius: 8px; margin-top: 20px; font-size: 12px; border: 1px solid #30363d; white-space: pre-wrap; }
-        .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
-        .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
-        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
-        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
-        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
-        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
-        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
-        .validator-raw { background:#1c1e21; color:#e8e8e8; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
-        .option-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px 18px; border-radius: 10px; margin-bottom: 14px; }
-        .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-        .option-row label { font-weight: 600; min-width: 120px; font-size: 13px; }
-        .option-row select { padding: 5px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; width: 100%; text-overflow: ellipsis; }
-        .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; }
-        .style-preview { border: 1px solid #ddd; border-radius: 7px; padding: 9px 13px; margin-top: 6px; font-size: 12px; background: #fff; min-height: 32px; }
-        .badge-syn { background: #6f42c1; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; vertical-align: middle; }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1000px;
+        margin: 30px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+      }
+      .card {
+        background: white;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+      h2 {
+        color: #007bff;
+        margin-top: 0;
+        border-bottom: 2px solid #e1e4e8;
+        padding-bottom: 10px;
+      }
+      .upload-section {
+        border: 3px dashed #007bff;
+        background: #f8fbff;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+      #log {
+        background: #1c1e21;
+        color: #a5d6a7;
+        padding: 15px;
+        font-family: monospace;
+        height: 340px;
+        overflow-y: auto;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 12px;
+        border: 1px solid #30363d;
+        white-space: pre-wrap;
+      }
+      .btn-main {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        transition: 0.3s;
+        margin-top: 10px;
+      }
+      .btn-main:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .btn-dl {
+        display: inline-block;
+        margin: 5px;
+        padding: 10px 15px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .preview-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .validator-search {
+        width: 100%;
+        padding: 11px;
+        font-size: 16px;
+        margin-top: 12px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        box-sizing: border-box;
+        display: none;
+      }
+      .validator-status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 7px;
+      }
+      .validator-card {
+        display: none;
+        margin-top: 10px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .validator-split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .validator-pane {
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 10px;
+        max-height: 560px;
+        overflow: auto;
+      }
+      .validator-raw {
+        background: #1c1e21;
+        color: #e8e8e8;
+        font-family: monospace;
+        font-size: 11px;
+        white-space: pre-wrap;
+      }
+      .option-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 14px 18px;
+        border-radius: 10px;
+        margin-bottom: 14px;
+      }
+      .option-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      .option-row label {
+        font-weight: 600;
+        min-width: 120px;
+        font-size: 13px;
+      }
+      .option-row select {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        text-overflow: ellipsis;
+      }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        padding: 5px 0;
+      }
+      .style-preview {
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 9px 13px;
+        margin-top: 6px;
+        font-size: 12px;
+        background: #fff;
+        min-height: 32px;
+      }
+      .badge-syn {
+        background: #6f42c1;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
     </style>
-</head>
-<body>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
-<div class="card">
-    <h2 data-i18n="title"></h2>
-    <p data-i18n-html="desc"></p>
+  </head>
+  <body>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
+    <div class="card">
+      <h2 data-i18n="title"></h2>
+      <p data-i18n-html="desc"></p>
 
-    <div class="upload-section" id="dropZone">
+      <div class="upload-section" id="dropZone">
         <span id="fileNameDisplay" data-i18n="dropzone"></span>
-        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
-    </div>
+        <input
+          type="file"
+          id="fileInput"
+          accept=".mobi,.azw,.azw3"
+          style="display: none"
+        />
+      </div>
 
-    <div class="option-box">
+      <div class="option-box">
         <div class="option-row">
-            <label data-i18n="styleLabel"></label>
-            <select id="styleSelect">
-                <option value="none" data-i18n="styleNone"></option>
-<!--                <option value="clean" data-i18n="styleClean"></option>-->
-                <option value="nice" selected data-i18n="styleNice"></option>
-                <option value="eink" data-i18n="styleEink"></option>
-                <option value="rich" data-i18n="styleRich"></option>
-            </select>
+          <label data-i18n="styleLabel"></label>
+          <select id="styleSelect">
+            <option value="none" data-i18n="styleNone"></option>
+            <!--                <option value="clean" data-i18n="styleClean"></option>-->
+            <option value="nice" selected data-i18n="styleNice"></option>
+            <option value="eink" data-i18n="styleEink"></option>
+            <option value="rich" data-i18n="styleRich"></option>
+          </select>
         </div>
         <div class="style-preview" id="stylePreview"></div>
-    </div>
+      </div>
 
-    <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
+      <button
+        id="startBtn"
+        class="btn-main"
+        disabled
+        data-i18n="startBtn"
+      ></button>
 
-    <div id="log" data-i18n="logIdle"></div>
+      <div id="log" data-i18n="logIdle"></div>
 
-    <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border:1px solid #b7eb8f;">
+      <div
+        id="downloadArea"
+        style="
+          display: none;
+          margin-top: 25px;
+          padding: 20px;
+          background: #e6ffed;
+          border-radius: 8px;
+          border: 1px solid #b7eb8f;
+        "
+      >
         <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
-    </div>
+      </div>
 
-    <div id="previewArea" style="display:none; margin-top:20px;">
+      <div id="previewArea" style="display: none; margin-top: 20px">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
-        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
-        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <h4
+          data-i18n="validatorTitle"
+          style="margin: 14px 0 6px; color: #5b6570"
+        ></h4>
+        <input
+          type="text"
+          id="validatorSearchBox"
+          class="validator-search"
+          data-i18n-ph="validatorSearchPh"
+          placeholder="Search in generated StarDict..."
+        />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-                <b id="validatorResultWord"></b>
-                <div style="display:flex;gap:6px;align-items:center;">
-                    <span id="validatorByteBadge" class="badge-syn"></span>
-                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
-                </div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            "
+          >
+            <b id="validatorResultWord"></b>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <span id="validatorByteBadge" class="badge-syn"></span>
+              <button
+                id="validatorCopyBtn"
+                class="btn-dl"
+                style="padding: 6px 10px; background: #6c757d"
+              >
+                Copy HTML
+              </button>
             </div>
-            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
-            <div class="validator-split">
-                <div id="validatorPaneRendered" class="validator-pane"></div>
-            </div>
+          </div>
+          <div
+            id="validatorSynInfo"
+            style="
+              display: none;
+              color: #6f42c1;
+              font-size: 12px;
+              margin-top: 6px;
+            "
+          ></div>
+          <div class="validator-split">
+            <div id="validatorPaneRendered" class="validator-pane"></div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
-// Style engines  (applied to each extracted entry's HTML)
-// ─────────────────────────────────────────────────────────────────────────────
-const STYLES = {
-    _escapeRegExp(s) {
-        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    },
+    <script>
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Style engines  (applied to each extracted entry's HTML)
+      // ─────────────────────────────────────────────────────────────────────────────
+      const STYLES = {
+        _escapeRegExp(s) {
+          return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        },
 
-    _ensureHeadwordSpan(word, html) {
-        if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html)) return html;
-        const w = (word || '').trim();
-        if (!w) return html;
-        const escaped = STYLES._escapeRegExp(w);
+        _ensureHeadwordSpan(word, html) {
+          if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html))
+            return html;
+          const w = (word || "").trim();
+          if (!w) return html;
+          const escaped = STYLES._escapeRegExp(w);
 
-        // Convert a leading <h2>...</h2> block into canonical span/b headword form.
-        const h2Match = html.match(/^\s*<h2\b[^>]*>([\s\S]*?)<\/h2>\s*/i);
-        if (h2Match) {
-            const plain = h2Match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, 'i');
+          // Convert a leading <h2>...</h2> block into canonical span/b headword form.
+          const h2Match = html.match(/^\s*<h2\b[^>]*>([\s\S]*?)<\/h2>\s*/i);
+          if (h2Match) {
+            const plain = h2Match[1]
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, "i");
             if (reLeadWord.test(plain)) {
-                const tail = plain.replace(new RegExp(`^${escaped}\\s*`, 'i'), '').trim();
-                const rest = html.slice(h2Match[0].length);
-                return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ''}${rest ? ` ${rest}` : ''}`.trim();
+              const tail = plain
+                .replace(new RegExp(`^${escaped}\\s*`, "i"), "")
+                .trim();
+              const rest = html.slice(h2Match[0].length);
+              return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ""}${rest ? ` ${rest}` : ""}`.trim();
             }
-        }
+          }
 
-        // Fallback: replace leading plain-word occurrence.
-        const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, 'i');
-        if (leadRe.test(html)) {
+          // Fallback: replace leading plain-word occurrence.
+          const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, "i");
+          if (leadRe.test(html)) {
             return html.replace(leadRe, `<span><b>${w}</b></span> `);
-        }
-        return html;
-    },
+          }
+          return html;
+        },
 
-    none(word, pHtml) {
-        return pHtml;
-    },
+        none(word, pHtml) {
+          return pHtml;
+        },
 
-    clean(word, pHtml) {
-        // Strip width attribute and all inline styles; keep semantics
-        return pHtml
-            .replace(/ width="[^"]*"/gi, '')
-            .replace(/ style="[^"]*"/gi, '');
-    },
+        clean(word, pHtml) {
+          // Strip width attribute and all inline styles; keep semantics
+          return pHtml
+            .replace(/ width="[^"]*"/gi, "")
+            .replace(/ style="[^"]*"/gi, "");
+        },
 
-    nice(word, pHtml) {
-        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
-        // Colour POS tags inside <i>
-        let body = pHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<span style="color:#c0392b;font-weight:bold">$1</span>')
+        nice(word, pHtml) {
+          pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+          // Colour POS tags inside <i>
+          let body = pHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<span style="color:#c0392b;font-weight:bold">$1</span>',
+            )
             // bold sense numbers
-            .replace(/\b(<b>(\d+)\.<\/b>)/g,
-                     '<span style="color:#2980b9;font-weight:bold">$1</span>');
-        // Replace the first <span><b>word</b></span> with a styled headword
-        body = body.replace(
+            .replace(
+              /\b(<b>(\d+)\.<\/b>)/g,
+              '<span style="color:#2980b9;font-weight:bold">$1</span>',
+            );
+          // Replace the first <span><b>word</b></span> with a styled headword
+          body = body.replace(
             /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
-            `<span><b style="font-size:1.15em;color:#003d82">$2</b></span>`
-        );
-        return body;
-    },
+            `<span><b style="font-size:1.15em;color:#003d82">$2</b></span>`,
+          );
+          return body;
+        },
 
-    eink(word, pHtml) {
-        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
-        const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
-        const ipa  = ipaM ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>` : '';
-        let body = ipaM ? pHtml.replace(ipaM[0], '') : pHtml;
+        eink(word, pHtml) {
+          pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+          const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
+          const ipa = ipaM
+            ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>`
+            : "";
+          let body = ipaM ? pHtml.replace(ipaM[0], "") : pHtml;
 
-        body = body
-            .replace(/<b>(\d+)\.<\/b>/g, '<b>$1.</b>')
-            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, '<small>$1</small>')
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>');
+          body = body
+            .replace(/<b>(\d+)\.<\/b>/g, "<b>$1.</b>")
+            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, "<small>$1</small>")
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              "<b>$1</b>",
+            );
 
-        let seenHeadword = false;
-        body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-            if (!seenHeadword) {
+          let seenHeadword = false;
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHeadword) {
                 seenHeadword = true;
-                return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px">`
-                     + `<b style="font-size:1.18em">${inner}</b>${ipa}</span>`;
-            }
-            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' ')) {
+                return (
+                  `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px">` +
+                  `<b style="font-size:1.18em">${inner}</b>${ipa}</span>`
+                );
+              }
+              const plain = inner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (
+                plain.length >= 3 &&
+                plain.length <= 80 &&
+                plain.includes(" ")
+              ) {
                 return `<span><b style="text-decoration:underline">${inner}</b></span>`;
-            }
-            return m;
-        });
-        return body;
-    },
+              }
+              return m;
+            },
+          );
+          return body;
+        },
 
-    rich(word, pHtml) {
-        pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
-        const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
-        const ipa  = ipaM
+        rich(word, pHtml) {
+          pHtml = STYLES._ensureHeadwordSpan(word, pHtml);
+          const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
+          const ipa = ipaM
             ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
-            : '';
-        let body = ipaM
-            ? pHtml.replace(ipaM[0], '')   // remove the matched IPA from body so it doesn't appear twice
+            : "";
+          let body = ipaM
+            ? pHtml.replace(ipaM[0], "") // remove the matched IPA from body so it doesn't appear twice
             : pHtml;
-        body = body
+          body = body
             // POS tags red
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<b style="color:#e74c3c">$1</b>')
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<b style="color:#e74c3c">$1</b>',
+            )
             // Sense numbers blue - only match <b>N.</b> to avoid injecting tags inside HTML attributes
             .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
             // Domain labels (fin. biz. etc.) violet + small
-            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
-                     '<span style="color:#7c3aed;font-size:.83em">$1</span>');
+            .replace(
+              /(<i>(?:[a-z]{2,5})\.<\/i>)/g,
+              '<span style="color:#7c3aed;font-size:.83em">$1</span>',
+            );
 
-        // Style span-headwords in one pass: first is the main headword, later multi-word spans are sub-phrases.
-        let seenHeadword = false;
-        body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-            if (!seenHeadword) {
+          // Style span-headwords in one pass: first is the main headword, later multi-word spans are sub-phrases.
+          let seenHeadword = false;
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHeadword) {
                 seenHeadword = true;
-                return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">`
-                     + `<b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`;
-            }
-            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' ')) {
+                return (
+                  `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px">` +
+                  `<b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`
+                );
+              }
+              const plain = inner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (
+                plain.length >= 3 &&
+                plain.length <= 80 &&
+                plain.includes(" ")
+              ) {
                 return `<span><b style="color:#5c4b00">${inner}</b></span>`;
-            }
-            return m;
-        });
-        return body;
-    }
-};
+              }
+              return m;
+            },
+          );
+          return body;
+        },
+      };
 
-// Live preview using a fake entry
-const PREVIEW_HTML = `<p> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
-function updateStylePreview() {
-    const fn = STYLES[document.getElementById('styleSelect').value] || STYLES.nice;
-    document.getElementById('stylePreview').innerHTML = fn('download', PREVIEW_HTML);
-}
-document.getElementById('styleSelect').addEventListener('change', updateStylePreview);
-updateStylePreview();
+      // Live preview using a fake entry
+      const PREVIEW_HTML = `<p> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
+      function updateStylePreview() {
+        const fn =
+          STYLES[document.getElementById("styleSelect").value] || STYLES.nice;
+        document.getElementById("stylePreview").innerHTML = fn(
+          "download",
+          PREVIEW_HTML,
+        );
+      }
+      document
+        .getElementById("styleSelect")
+        .addEventListener("change", updateStylePreview);
+      updateStylePreview();
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Logging
-// ─────────────────────────────────────────────────────────────────────────────
-const logEl = document.getElementById('log');
-function addLog(msg) {
-    logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Logging
+      // ─────────────────────────────────────────────────────────────────────────────
+      const logEl = document.getElementById("log");
+      function addLog(msg) {
+        logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// File I/O
-// ─────────────────────────────────────────────────────────────────────────────
-let globalBuffer = null;
-const fileInput = document.getElementById('fileInput');
-document.getElementById('dropZone').onclick = () => fileInput.click();
-fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById('fileNameDisplay').textContent = `📁 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-    globalBuffer = await file.arrayBuffer();
-    document.getElementById('startBtn').disabled = false;
-    addLog(`File loaded: ${file.name}`);
-});
+      // ─────────────────────────────────────────────────────────────────────────────
+      // File I/O
+      // ─────────────────────────────────────────────────────────────────────────────
+      let globalBuffer = null;
+      const fileInput = document.getElementById("fileInput");
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById("fileNameDisplay").textContent =
+          `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        globalBuffer = await file.arrayBuffer();
+        document.getElementById("startBtn").disabled = false;
+        addLog(`File loaded: ${file.name}`);
+      });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @@include(src/huffcdic-core.js)
-// ─────────────────────────────────────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/huffcdic-core.js)
+      // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main converter class
-// ─────────────────────────────────────────────────────────────────────────────
-// @@include(src/kf8-converter.js)
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Main converter class
+      // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/kf8-converter.js)
 
-// ─────────────────────────────────────────────────────────────────────────────
-// StarDict output
-// ─────────────────────────────────────────────────────────────────────────────
-// @@include(src/stardict-validator-core.js)
-// @@include(src/stardict-output-kf8.js)
+      // ─────────────────────────────────────────────────────────────────────────────
+      // StarDict output
+      // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/stardict-validator-core.js)
+      // @@include(src/stardict-output-kf8.js)
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Button handler
-// ─────────────────────────────────────────────────────────────────────────────
-document.getElementById('startBtn').onclick = () => {
-    const btn = document.getElementById('startBtn');
-    btn.disabled = true;
-    btn.textContent = 'WORKING...';
+      // ─────────────────────────────────────────────────────────────────────────────
+      // Button handler
+      // ─────────────────────────────────────────────────────────────────────────────
+      document.getElementById("startBtn").onclick = () => {
+        const btn = document.getElementById("startBtn");
+        btn.disabled = true;
+        btn.textContent = "WORKING...";
 
-    const options = {
-        style:       document.getElementById('styleSelect').value,
-        generateSyn: true,
-    };
+        const options = {
+          style: document.getElementById("styleSelect").value,
+          generateSyn: true,
+        };
 
-    const conv = new KF8Converter(globalBuffer, options);
+        const conv = new KF8Converter(globalBuffer, options);
 
-    setTimeout(async () => {
-        try {
+        setTimeout(async () => {
+          try {
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
-                renderOutput(finalMap, synMap, true);
-                btn.textContent = '✅ DONE';
+              renderOutput(finalMap, synMap, true);
+              btn.textContent = "✅ DONE";
             } else {
-                addLog('⚠️ No entries extracted. Check log for details.');
-                btn.disabled = false;
-                btn.textContent = 'RETRY';
+              addLog("⚠️ No entries extracted. Check log for details.");
+              btn.disabled = false;
+              btn.textContent = "RETRY";
             }
-        } catch (err) {
-            addLog('FATAL ERROR: ' + err.message + '\n' + err.stack);
+          } catch (err) {
+            addLog("FATAL ERROR: " + err.message + "\n" + err.stack);
             btn.disabled = false;
-            btn.textContent = 'ERROR – Retry';
-        }
-    }, 150);
-};
+            btn.textContent = "ERROR – Retry";
+          }
+        }, 150);
+      };
 
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N = {
-    en: {
-        title:       'MOBI/KF8 → StarDict (HUFF/CDIC Decoder)',
-        desc:        'Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>',
-        dropzone:    '📁 Click or drag your .mobi file here',
-        styleLabel:  '🎨 Entry Style:',
-        styleNone:   'Original - original HTML pass-through',
-        styleClean:  'Clean - semantic, no inline styles',
-        styleNice:   'Nice - headword + phonetics styled',
-        styleEink:   'E-ink mono - high contrast, no color styling',
-        styleRich:   'Rich Color - full color-coded sections',
-        startBtn:    'START CONVERSION',
-        logIdle:     'Status: Idle. Waiting for file...',
-        doneTitle:   '✅ Done! Download StarDict Files:',
-        previewTitle:'🧩 Sample Entries',
-        validatorTitle:'🔎 Search Generated Dictionary',
-        validatorSearchPh: '🔍 Search generated dictionary...',
-    },
-    pl: {
-        title:       'MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)',
-        desc:        'Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>',
-        dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
-        styleLabel:  '🎨 Styl wpisów:',
-        styleNone:   'Oryginalny - oryginalny HTML bez stylowania',
-        styleClean:  'Czysty - semantyczny, bez stylów inline',
-        styleNice:   'Ładny - nagłówek + fonetyka ze stylem',
-        styleEink:   'E-ink mono - wysoki kontrast, bez kolorowania',
-        styleRich:   'Kolorowy - pełne kolorowanie sekcji',
-        startBtn:    'ROZPOCZNIJ KONWERSJĘ',
-        logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
-        doneTitle:   '✅ Gotowe! Pobierz pliki StarDict:',
-        previewTitle:'🧩 Przykładowe wpisy',
-        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
-        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
-    }
-};
-// @@include(src/i18n-core.js)
-</script>
-</body>
+      // ── i18n ──────────────────────────────────────────────────────────────────────
+      const I18N = {
+        en: {
+          title: "MOBI/KF8 → StarDict (HUFF/CDIC Decoder)",
+          desc: "Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>",
+          dropzone: "📁 Click or drag your .mobi file here",
+          styleLabel: "🎨 Entry Style:",
+          styleNone: "Original - original HTML pass-through",
+          styleClean: "Clean - semantic, no inline styles",
+          styleNice: "Nice - headword + phonetics styled",
+          styleEink: "E-ink mono - high contrast, no color styling",
+          styleRich: "Rich Color - full color-coded sections",
+          startBtn: "START CONVERSION",
+          logIdle: "Status: Idle. Waiting for file...",
+          doneTitle: "✅ Done! Download StarDict Files:",
+          previewTitle: "🧩 Sample Entries",
+          validatorTitle: "🔎 Search Generated Dictionary",
+          validatorSearchPh: "🔍 Search generated dictionary...",
+        },
+        pl: {
+          title: "MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)",
+          desc: "Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>",
+          dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
+          styleLabel: "🎨 Styl wpisów:",
+          styleNone: "Oryginalny - oryginalny HTML bez stylowania",
+          styleClean: "Czysty - semantyczny, bez stylów inline",
+          styleNice: "Ładny - nagłówek + fonetyka ze stylem",
+          styleEink: "E-ink mono - wysoki kontrast, bez kolorowania",
+          styleRich: "Kolorowy - pełne kolorowanie sekcji",
+          startBtn: "ROZPOCZNIJ KONWERSJĘ",
+          logIdle: "Status: Bezczynny. Oczekiwanie na plik...",
+          doneTitle: "✅ Gotowe! Pobierz pliki StarDict:",
+          previewTitle: "🧩 Przykładowe wpisy",
+          validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
+          validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+        },
+      };
+      // @@include(src/i18n-core.js)
+    </script>
+  </body>
 </html>
-

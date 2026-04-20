@@ -1,339 +1,584 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOBI Raw Text Inspector</title>
     <style>
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1100px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; }
-        .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); margin-bottom: 20px; }
-        h2 { color: #007bff; margin-top: 0; }
-        .upload-section { border: 3px dashed #007bff; background: #f8fbff; padding: 20px; text-align: center; cursor: pointer; border-radius: 12px; margin-bottom: 15px; }
-        #log { background: #1c1e21; color: #a5d6a7; padding: 15px; font-family: monospace; height: 200px; overflow-y: auto; border-radius: 8px; font-size: 12px; white-space: pre-wrap; }
-        .btn { background: #007bff; color: white; border: none; padding: 10px 24px; font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 4px; }
-        .btn:disabled { background: #6c757d; cursor: not-allowed; }
-        .btn-sm { font-size: 12px; padding: 5px 12px; border-radius: 5px; }
-        #controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-        #rawOutput { background: #1c1e21; color: #e8e8e8; padding: 15px; font-family: monospace; height: 420px; overflow-y: auto; border-radius: 8px; font-size: 12px; white-space: pre-wrap; border: 1px solid #30363d; }
-        #renderedOutput { background: white; padding: 15px; height: 420px; overflow-y: auto; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; }
-        .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
-        .tab { padding: 6px 16px; border-radius: 6px 6px 0 0; cursor: pointer; background: #e9ecef; border: 1px solid #dee2e6; border-bottom: none; font-size: 13px; }
-        .tab.active { background: white; font-weight: bold; color: #007bff; }
-        .pane { display: none; }
-        .pane.active { display: block; }
-        label { font-size: 13px; }
-        input[type=number] { width: 70px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px; }
-        .badge { background: #28a745; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; }
-        #searchRow { display:none; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
-        #searchRow input[type=text] { flex:1; min-width:160px; padding:6px 10px; border-radius:6px; border:2px solid #007bff; font-size:14px; }
-        #searchHits { font-size:12px; color:#555; }
-        mark { background:#ffe066; border-radius:2px; }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1100px;
+        margin: 30px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+      }
+      .card {
+        background: white;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        margin-bottom: 20px;
+      }
+      h2 {
+        color: #007bff;
+        margin-top: 0;
+      }
+      .upload-section {
+        border: 3px dashed #007bff;
+        background: #f8fbff;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-bottom: 15px;
+      }
+      #log {
+        background: #1c1e21;
+        color: #a5d6a7;
+        padding: 15px;
+        font-family: monospace;
+        height: 200px;
+        overflow-y: auto;
+        border-radius: 8px;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        font-size: 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        margin: 4px;
+      }
+      .btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .btn-sm {
+        font-size: 12px;
+        padding: 5px 12px;
+        border-radius: 5px;
+      }
+      #controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      #rawOutput {
+        background: #1c1e21;
+        color: #e8e8e8;
+        padding: 15px;
+        font-family: monospace;
+        height: 420px;
+        overflow-y: auto;
+        border-radius: 8px;
+        font-size: 12px;
+        white-space: pre-wrap;
+        border: 1px solid #30363d;
+      }
+      #renderedOutput {
+        background: white;
+        padding: 15px;
+        height: 420px;
+        overflow-y: auto;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 13px;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+      .tab {
+        padding: 6px 16px;
+        border-radius: 6px 6px 0 0;
+        cursor: pointer;
+        background: #e9ecef;
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+        font-size: 13px;
+      }
+      .tab.active {
+        background: white;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .pane {
+        display: none;
+      }
+      .pane.active {
+        display: block;
+      }
+      label {
+        font-size: 13px;
+      }
+      input[type="number"] {
+        width: 70px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+      }
+      .badge {
+        background: #28a745;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+      #searchRow {
+        display: none;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      #searchRow input[type="text"] {
+        flex: 1;
+        min-width: 160px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        font-size: 14px;
+      }
+      #searchHits {
+        font-size: 12px;
+        color: #555;
+      }
+      mark {
+        background: #ffe066;
+        border-radius: 2px;
+      }
     </style>
-</head>
-<body>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
-<div class="card">
-    <h2 data-i18n="title"></h2>
-    <div class="upload-section" id="dropZone">
+  </head>
+  <body>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
+    <div class="card">
+      <h2 data-i18n="title"></h2>
+      <div class="upload-section" id="dropZone">
         <span id="fileNameDisplay" data-i18n="dropzone"></span>
-        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
-    </div>
-    <div id="controls">
-        <label><span data-i18n="recordLabel"></span> <input type="number" id="recFrom" value="1" min="1"> <span data-i18n="toLabel"></span> <input type="number" id="recTo" value="5" min="1"></label>
-        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn"></button>
-        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn"></button>
-        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn"></button>
-        <span id="recInfo" style="font-size:12px;color:#666;"></span>
-    </div>
-    <div id="searchRow">
-        <input type="text" id="wordSearch" placeholder="🔍 Search word in all records…">
+        <input
+          type="file"
+          id="fileInput"
+          accept=".mobi,.azw,.azw3"
+          style="display: none"
+        />
+      </div>
+      <div id="controls">
+        <label
+          ><span data-i18n="recordLabel"></span>
+          <input type="number" id="recFrom" value="1" min="1" />
+          <span data-i18n="toLabel"></span>
+          <input type="number" id="recTo" value="5" min="1"
+        /></label>
+        <button
+          class="btn"
+          id="decodeBtn"
+          disabled
+          data-i18n="decodeBtn"
+        ></button>
+        <button
+          class="btn btn-sm"
+          id="prevBtn"
+          disabled
+          data-i18n="prevBtn"
+        ></button>
+        <button
+          class="btn btn-sm"
+          id="nextBtn"
+          disabled
+          data-i18n="nextBtn"
+        ></button>
+        <span id="recInfo" style="font-size: 12px; color: #666"></span>
+      </div>
+      <div id="searchRow">
+        <input
+          type="text"
+          id="wordSearch"
+          placeholder="🔍 Search word in all records…"
+        />
         <button class="btn btn-sm" id="searchBtn">Find</button>
         <button class="btn btn-sm" id="searchPrev" disabled>◀</button>
         <button class="btn btn-sm" id="searchNext" disabled>▶</button>
         <span id="searchHits"></span>
+      </div>
+      <div id="log" data-i18n="logIdle"></div>
     </div>
-    <div id="log" data-i18n="logIdle"></div>
-</div>
 
-<div class="card" id="outputCard" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <b><span data-i18n="outputLabel"></span> <span id="bytesBadge" class="badge"></span></b>
+    <div class="card" id="outputCard" style="display: none">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        "
+      >
+        <b
+          ><span data-i18n="outputLabel"></span>
+          <span id="bytesBadge" class="badge"></span
+        ></b>
         <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn"></button>
-    </div>
-    <div class="tabs">
+      </div>
+      <div class="tabs">
         <div class="tab active" data-tab="raw" data-i18n="tabRaw"></div>
         <div class="tab" data-tab="rendered" data-i18n="tabRendered"></div>
+      </div>
+      <div class="pane active" id="rawPane"><div id="rawOutput"></div></div>
+      <div class="pane" id="renderedPane"><div id="renderedOutput"></div></div>
     </div>
-    <div class="pane active" id="rawPane"><div id="rawOutput"></div></div>
-    <div class="pane" id="renderedPane"><div id="renderedOutput"></div></div>
-</div>
 
-<script>
-// ── Logging ──────────────────────────────────────────────────────────────────
-const logEl = document.getElementById('log');
-function addLog(msg) {
-    logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
+    <script>
+      // ── Logging ──────────────────────────────────────────────────────────────────
+      const logEl = document.getElementById("log");
+      function addLog(msg) {
+        logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
 
-// ── File I/O ─────────────────────────────────────────────────────────────────
-let globalBuffer = null;
-const fileInput = document.getElementById('fileInput');
-document.getElementById('dropZone').onclick = () => fileInput.click();
-fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById('fileNameDisplay').textContent = `📁 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-    globalBuffer = await file.arrayBuffer();
-    addLog(`File loaded: ${file.name}`);
-    initConverter();
-});
+      // ── File I/O ─────────────────────────────────────────────────────────────────
+      let globalBuffer = null;
+      const fileInput = document.getElementById("fileInput");
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById("fileNameDisplay").textContent =
+          `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        globalBuffer = await file.arrayBuffer();
+        addLog(`File loaded: ${file.name}`);
+        initConverter();
+      });
 
-// ── Tab switching ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab + 'Pane').classList.add('active');
-    });
-});
+      // ── Tab switching ─────────────────────────────────────────────────────────────
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".pane")
+            .forEach((p) => p.classList.remove("active"));
+          tab.classList.add("active");
+          document
+            .getElementById(tab.dataset.tab + "Pane")
+            .classList.add("active");
+        });
+      });
 
-// ── Copy button ───────────────────────────────────────────────────────────────
-document.getElementById('copyBtn').onclick = () => {
-    navigator.clipboard.writeText(document.getElementById('rawOutput').textContent);
-};
+      // ── Copy button ───────────────────────────────────────────────────────────────
+      document.getElementById("copyBtn").onclick = () => {
+        navigator.clipboard.writeText(
+          document.getElementById("rawOutput").textContent,
+        );
+      };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @@include(src/huffcdic-core.js)
-// ─────────────────────────────────────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/huffcdic-core.js)
+      // ─────────────────────────────────────────────────────────────────────────────
 
-// ── KF8Decoder: thin wrapper around HuffCdicBase for the inspector UI ─────────
-class KF8Decoder extends HuffCdicBase {
-    constructor(buffer) {
-        super(buffer);
-        this.huffIdx    = -1;
-        this.textRecordMax = 0;
-        this.extraFlags = 1;
-        this.decodedCache = new Map();
-        this.lowerCache   = new Map();
-    }
+      // ── KF8Decoder: thin wrapper around HuffCdicBase for the inspector UI ─────────
+      class KF8Decoder extends HuffCdicBase {
+        constructor(buffer) {
+          super(buffer);
+          this.huffIdx = -1;
+          this.textRecordMax = 0;
+          this.extraFlags = 1;
+          this.decodedCache = new Map();
+          this.lowerCache = new Map();
+        }
 
-    init() {
-        this.buildRecords();
-        addLog(`PDB records: ${this.recs.length}`);
-        this.extraFlags = this.findExtraDataFlags();
+        init() {
+          this.buildRecords();
+          addLog(`PDB records: ${this.recs.length}`);
+          this.extraFlags = this.findExtraDataFlags();
 
-        for (let i = 0; i < this.recs.length; i++) {
+          for (let i = 0; i < this.recs.length; i++) {
             const o = this.recs[i];
-            if (this.raw[o]===72 && this.raw[o+1]===85 && this.raw[o+2]===70 && this.raw[o+3]===70) {
-                this.huffIdx = i; break;
+            if (
+              this.raw[o] === 72 &&
+              this.raw[o + 1] === 85 &&
+              this.raw[o + 2] === 70 &&
+              this.raw[o + 3] === 70
+            ) {
+              this.huffIdx = i;
+              break;
             }
+          }
+          if (this.huffIdx === -1) {
+            addLog("ERROR: No HUFF record found.");
+            return false;
+          }
+          this.textRecordMax = this.getTextRecordMax(this.huffIdx);
+          addLog(
+            `HUFF record index: ${this.huffIdx}  (text records: 1–${this.textRecordMax})`,
+          );
+
+          this.loadHuff(this.recs[this.huffIdx]);
+          this.loadAllCdic(this.huffIdx);
+          addLog(`${this.dict.length} symbols loaded.`);
+          return true;
         }
-        if (this.huffIdx === -1) { addLog('ERROR: No HUFF record found.'); return false; }
-        this.textRecordMax = this.getTextRecordMax(this.huffIdx);
-        addLog(`HUFF record index: ${this.huffIdx}  (text records: 1–${this.textRecordMax})`);
 
-        this.loadHuff(this.recs[this.huffIdx]);
-        this.loadAllCdic(this.huffIdx);
-        addLog(`${this.dict.length} symbols loaded.`);
-        return true;
-    }
+        decodeRecord(idx) {
+          if (this.decodedCache.has(idx)) return this.decodedCache.get(idx);
+          const start = this.recs[idx];
+          const end =
+            idx + 1 < this.recs.length
+              ? this.recs[idx + 1]
+              : this.buffer.byteLength;
+          let data = this.raw.slice(start, end);
+          data = this.stripTrailing(data, this.extraFlags);
+          const dec = this.decompress(data);
+          const out = {
+            text: new TextDecoder("utf-8", { fatal: false }).decode(dec),
+            compressedBytes: data.length,
+            decompressedBytes: dec.length,
+          };
+          this.decodedCache.set(idx, out);
+          return out;
+        }
 
-    decodeRecord(idx) {
-        if (this.decodedCache.has(idx)) return this.decodedCache.get(idx);
-        const start = this.recs[idx];
-        const end   = (idx + 1 < this.recs.length) ? this.recs[idx + 1] : this.buffer.byteLength;
-        let data = this.raw.slice(start, end);
-        data = this.stripTrailing(data, this.extraFlags);
-        const dec = this.decompress(data);
-        const out = { text: new TextDecoder('utf-8', { fatal: false }).decode(dec), compressedBytes: data.length, decompressedBytes: dec.length };
-        this.decodedCache.set(idx, out);
-        return out;
-    }
+        getRecordLowerText(idx) {
+          if (this.lowerCache.has(idx)) return this.lowerCache.get(idx);
+          const lower = this.decodeRecord(idx).text.toLowerCase();
+          this.lowerCache.set(idx, lower);
+          return lower;
+        }
+      }
 
-    getRecordLowerText(idx) {
-        if (this.lowerCache.has(idx)) return this.lowerCache.get(idx);
-        const lower = this.decodeRecord(idx).text.toLowerCase();
-        this.lowerCache.set(idx, lower);
-        return lower;
-    }
-}
+      // ── UI state ──────────────────────────────────────────────────────────────────
+      let decoder = null;
 
-// ── UI state ──────────────────────────────────────────────────────────────────
-let decoder = null;
+      function initConverter() {
+        decoder = new KF8Decoder(globalBuffer);
+        searchCache = new Map();
+        const ok = decoder.init();
+        if (!ok) return;
+        const maxRec = decoder.textRecordMax;
+        document.getElementById("recFrom").max = maxRec;
+        document.getElementById("recTo").max = maxRec;
+        document.getElementById("recTo").value = Math.min(5, maxRec);
+        document.getElementById("decodeBtn").disabled = false;
+        document.getElementById("prevBtn").disabled = false;
+        document.getElementById("nextBtn").disabled = false;
+        document.getElementById("searchRow").style.display = "flex";
+        addLog(
+          `Ready. Text records: 1–${maxRec}. Use controls above to inspect.`,
+        );
+      }
 
-function initConverter() {
-    decoder = new KF8Decoder(globalBuffer);
-    searchCache = new Map();
-    const ok = decoder.init();
-    if (!ok) return;
-    const maxRec = decoder.textRecordMax;
-    document.getElementById('recFrom').max = maxRec;
-    document.getElementById('recTo').max   = maxRec;
-    document.getElementById('recTo').value = Math.min(5, maxRec);
-    document.getElementById('decodeBtn').disabled = false;
-    document.getElementById('prevBtn').disabled = false;
-    document.getElementById('nextBtn').disabled = false;
-    document.getElementById('searchRow').style.display = 'flex';
-    addLog(`Ready. Text records: 1–${maxRec}. Use controls above to inspect.`);
-}
+      document.getElementById("searchBtn").onclick = searchWord;
+      document.getElementById("wordSearch").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") searchWord();
+      });
+      document.getElementById("searchPrev").onclick = () => navigateSearch(-1);
+      document.getElementById("searchNext").onclick = () => navigateSearch(+1);
 
-document.getElementById('searchBtn').onclick = searchWord;
-document.getElementById('wordSearch').addEventListener('keydown', e => { if (e.key === 'Enter') searchWord(); });
-document.getElementById('searchPrev').onclick = () => navigateSearch(-1);
-document.getElementById('searchNext').onclick = () => navigateSearch(+1);
+      let searchResults = [];
+      let searchCursor = 0;
+      let searchCache = new Map();
 
-let searchResults = [];
-let searchCursor  = 0;
-let searchCache   = new Map();
+      function showSearchResult(idx) {
+        const max = decoder.textRecordMax;
+        const rec = searchResults[idx];
+        document.getElementById("recFrom").value = Math.max(1, rec - 1);
+        document.getElementById("recTo").value = Math.min(max, rec + 1);
+        decodeSelected();
 
-function showSearchResult(idx) {
-    const max = decoder.textRecordMax;
-    const rec = searchResults[idx];
-    document.getElementById('recFrom').value = Math.max(1, rec - 1);
-    document.getElementById('recTo').value   = Math.min(max, rec + 1);
-    decodeSelected();
+        const q = document.getElementById("wordSearch").value.trim();
+        const raw = document.getElementById("rawOutput");
+        const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+        raw.innerHTML = raw.textContent
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(re, (m) => `<mark>${m}</mark>`);
+        // Scroll first highlight into view
+        const first = raw.querySelector("mark");
+        if (first) first.scrollIntoView({ block: "center" });
 
-    const q   = document.getElementById('wordSearch').value.trim();
-    const raw = document.getElementById('rawOutput');
-    const re  = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    raw.innerHTML = raw.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(re, m => `<mark>${m}</mark>`);
-    // Scroll first highlight into view
-    const first = raw.querySelector('mark');
-    if (first) first.scrollIntoView({ block: 'center' });
+        document.getElementById("searchHits").textContent =
+          `Result ${idx + 1} / ${searchResults.length}  (record #${rec})`;
+        document.getElementById("searchPrev").disabled = idx === 0;
+        document.getElementById("searchNext").disabled =
+          idx === searchResults.length - 1;
+      }
 
-    document.getElementById('searchHits').textContent =
-        `Result ${idx + 1} / ${searchResults.length}  (record #${rec})`;
-    document.getElementById('searchPrev').disabled = idx === 0;
-    document.getElementById('searchNext').disabled = idx === searchResults.length - 1;
-}
+      function navigateSearch(dir) {
+        const next = searchCursor + dir;
+        if (next < 0 || next >= searchResults.length) return;
+        searchCursor = next;
+        showSearchResult(searchCursor);
+      }
 
-function navigateSearch(dir) {
-    const next = searchCursor + dir;
-    if (next < 0 || next >= searchResults.length) return;
-    searchCursor = next;
-    showSearchResult(searchCursor);
-}
+      function searchWord() {
+        if (!decoder) return;
+        const q = document
+          .getElementById("wordSearch")
+          .value.trim()
+          .toLowerCase();
+        if (!q) return;
+        const hitsEl = document.getElementById("searchHits");
+        hitsEl.textContent = "Scanning…";
+        document.getElementById("searchPrev").disabled = true;
+        document.getElementById("searchNext").disabled = true;
 
-function searchWord() {
-    if (!decoder) return;
-    const q = document.getElementById('wordSearch').value.trim().toLowerCase();
-    if (!q) return;
-    const hitsEl = document.getElementById('searchHits');
-    hitsEl.textContent = 'Scanning…';
-    document.getElementById('searchPrev').disabled = true;
-    document.getElementById('searchNext').disabled = true;
-
-    const max = decoder.textRecordMax;
-    const scanHits = () => {
-        const hits = [];
-        for (let i = 1; i <= max; i++) {
+        const max = decoder.textRecordMax;
+        const scanHits = () => {
+          const hits = [];
+          for (let i = 1; i <= max; i++) {
             try {
-                if (decoder.getRecordLowerText(i).includes(q)) hits.push(i);
-            } catch(e) { /* skip */ }
+              if (decoder.getRecordLowerText(i).includes(q)) hits.push(i);
+            } catch (e) {
+              /* skip */
+            }
+          }
+          return hits;
+        };
+
+        if (searchCache.has(q)) {
+          searchResults = searchCache.get(q).slice();
+        } else {
+          searchResults = scanHits();
+          searchCache.set(q, searchResults.slice());
         }
-        return hits;
-    };
 
-    if (searchCache.has(q)) {
-        searchResults = searchCache.get(q).slice();
-    } else {
-        searchResults = scanHits();
-        searchCache.set(q, searchResults.slice());
-    }
+        if (searchResults.length === 0) {
+          hitsEl.textContent = `No records found for "${q}".`;
+          return;
+        }
 
-    if (searchResults.length === 0) {
-        hitsEl.textContent = `No records found for "${q}".`;
-        return;
-    }
+        searchCursor = 0;
+        addLog(
+          `Search "${q}": ${searchResults.length} hit(s) in records [${searchResults.join(", ")}]`,
+        );
+        showSearchResult(0);
+      }
 
-    searchCursor = 0;
-    addLog(`Search "${q}": ${searchResults.length} hit(s) in records [${searchResults.join(', ')}]`);
-    showSearchResult(0);
-}
+      document.getElementById("decodeBtn").onclick = decodeSelected;
+      document.getElementById("prevBtn").onclick = () => shiftRange(-1);
+      document.getElementById("nextBtn").onclick = () => shiftRange(+1);
 
-document.getElementById('decodeBtn').onclick = decodeSelected;
-document.getElementById('prevBtn').onclick = () => shiftRange(-1);
-document.getElementById('nextBtn').onclick = () => shiftRange(+1);
+      function shiftRange(dir) {
+        const from = parseInt(document.getElementById("recFrom").value);
+        const to = parseInt(document.getElementById("recTo").value);
+        const span = to - from;
+        const max = decoder ? decoder.textRecordMax : 9999;
+        const newFrom = Math.max(
+          1,
+          Math.min(max - span, from + dir * (span + 1)),
+        );
+        document.getElementById("recFrom").value = newFrom;
+        document.getElementById("recTo").value = Math.min(max, newFrom + span);
+        decodeSelected();
+      }
 
-function shiftRange(dir) {
-    const from = parseInt(document.getElementById('recFrom').value);
-    const to   = parseInt(document.getElementById('recTo').value);
-    const span = to - from;
-    const max  = decoder ? decoder.textRecordMax : 9999;
-    const newFrom = Math.max(1, Math.min(max - span, from + dir * (span + 1)));
-    document.getElementById('recFrom').value = newFrom;
-    document.getElementById('recTo').value   = Math.min(max, newFrom + span);
-    decodeSelected();
-}
+      function decodeSelected() {
+        if (!decoder) return;
+        const from = parseInt(document.getElementById("recFrom").value);
+        const to = Math.min(
+          parseInt(document.getElementById("recTo").value),
+          decoder.textRecordMax,
+        );
+        const max = decoder.textRecordMax;
+        document.getElementById("recInfo").textContent =
+          `(max text record: ${max})`;
 
-function decodeSelected() {
-    if (!decoder) return;
-    const from = parseInt(document.getElementById('recFrom').value);
-    const to   = Math.min(parseInt(document.getElementById('recTo').value), decoder.textRecordMax);
-    const max  = decoder.textRecordMax;
-    document.getElementById('recInfo').textContent = `(max text record: ${max})`;
-
-    let markers = '';
-    let combined = '';
-    let renderedCombined = '';
-    let totalComp = 0, totalDecomp = 0;
-    for (let i = from; i <= to; i++) {
-        try {
-            const { text, compressedBytes, decompressedBytes } = decoder.decodeRecord(i);
+        let markers = "";
+        let combined = "";
+        let renderedCombined = "";
+        let totalComp = 0,
+          totalDecomp = 0;
+        for (let i = from; i <= to; i++) {
+          try {
+            const { text, compressedBytes, decompressedBytes } =
+              decoder.decodeRecord(i);
             markers += `<!-- ═══ RECORD ${i} | ${compressedBytes}b → ${decompressedBytes}b ═══ -->\n`;
             combined += text;
             renderedCombined += text;
-            totalComp += compressedBytes; totalDecomp += decompressedBytes;
-        } catch(e) {
+            totalComp += compressedBytes;
+            totalDecomp += decompressedBytes;
+          } catch (e) {
             markers += `<!-- RECORD ${i}: ERROR: ${e.message} -->\n`;
+          }
         }
-    }
 
-    document.getElementById('bytesBadge').textContent = `${totalComp}b → ${totalDecomp}b`;
-    document.getElementById('rawOutput').textContent = `${markers}\n${combined}`;
-    document.getElementById('renderedOutput').innerHTML = renderedCombined;
-    document.getElementById('outputCard').style.display = 'block';
-    addLog(`Decoded records ${from}–${to}: ${totalComp} → ${totalDecomp} bytes`);
-}
+        document.getElementById("bytesBadge").textContent =
+          `${totalComp}b → ${totalDecomp}b`;
+        document.getElementById("rawOutput").textContent =
+          `${markers}\n${combined}`;
+        document.getElementById("renderedOutput").innerHTML = renderedCombined;
+        document.getElementById("outputCard").style.display = "block";
+        addLog(
+          `Decoded records ${from}–${to}: ${totalComp} → ${totalDecomp} bytes`,
+        );
+      }
 
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N = {
-    en: {
-        title:       '🔬 MOBI Raw Text Inspector',
-        dropzone:    '📁 Click or drag your .mobi file here',
-        recordLabel: 'Record:',
-        toLabel:     'to',
-        decodeBtn:   'DECODE RECORDS',
-        prevBtn:     '◀ Prev',
-        nextBtn:     'Next ▶',
-        logIdle:     'Status: Idle. Load a .mobi file to begin.',
-        outputLabel: 'Decoded Output',
-        copyBtn:     '📋 Copy raw text',
-        tabRaw:      'Raw HTML source',
-        tabRendered: 'Rendered HTML',
-    },
-    pl: {
-        title:       '🔬 Inspektor tekstu MOBI',
-        dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
-        recordLabel: 'Rekord:',
-        toLabel:     'do',
-        decodeBtn:   'DEKODUJ REKORDY',
-        prevBtn:     '◀ Poprz.',
-        nextBtn:     'Nast. ▶',
-        logIdle:     'Status: Bezczynny. Wczytaj plik .mobi, aby rozpocząć.',
-        outputLabel: 'Zdekodowane dane',
-        copyBtn:     '📋 Kopiuj tekst',
-        tabRaw:      'Źródło HTML',
-        tabRendered: 'Podgląd HTML',
-    }
-};
-// @@include(src/i18n-core.js)
-</script>
-</body>
+      // ── i18n ──────────────────────────────────────────────────────────────────────
+      const I18N = {
+        en: {
+          title: "🔬 MOBI Raw Text Inspector",
+          dropzone: "📁 Click or drag your .mobi file here",
+          recordLabel: "Record:",
+          toLabel: "to",
+          decodeBtn: "DECODE RECORDS",
+          prevBtn: "◀ Prev",
+          nextBtn: "Next ▶",
+          logIdle: "Status: Idle. Load a .mobi file to begin.",
+          outputLabel: "Decoded Output",
+          copyBtn: "📋 Copy raw text",
+          tabRaw: "Raw HTML source",
+          tabRendered: "Rendered HTML",
+        },
+        pl: {
+          title: "🔬 Inspektor tekstu MOBI",
+          dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
+          recordLabel: "Rekord:",
+          toLabel: "do",
+          decodeBtn: "DEKODUJ REKORDY",
+          prevBtn: "◀ Poprz.",
+          nextBtn: "Nast. ▶",
+          logIdle: "Status: Bezczynny. Wczytaj plik .mobi, aby rozpocząć.",
+          outputLabel: "Zdekodowane dane",
+          copyBtn: "📋 Kopiuj tekst",
+          tabRaw: "Źródło HTML",
+          tabRendered: "Podgląd HTML",
+        },
+      };
+      // @@include(src/i18n-core.js)
+    </script>
+  </body>
 </html>
-

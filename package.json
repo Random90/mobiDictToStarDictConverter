@@ -1,0 +1,23 @@
+{
+  "name": "mobiconverter",
+  "version": "1.0.0",
+  "description": "Kindle Mobi to StarDict Converter + Tools",
+  "main": "index.html",
+  "scripts": {
+    "activate-hooks": "git config core.hooksPath .githooks",
+    "build": "node build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Random90/mobiDictToStarDictConverter.git"
+  },
+  "author": "Grzegorz Czernatowicz",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Random90/mobiDictToStarDictConverter/issues"
+  },
+  "homepage": "https://github.com/Random90/mobiDictToStarDictConverter#readme",
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
+}

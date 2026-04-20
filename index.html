@@ -1,314 +1,419 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mobi Dictionary → StarDict Converter</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobi Dictionary → StarDict Converter</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --accent: #6c8ef5;
-      --accent2: #a78bfa;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --border: #2d3148;
-      --radius: 14px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.4);
-    }
+      :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --accent: #6c8ef5;
+        --accent2: #a78bfa;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --border: #2d3148;
+        --radius: 14px;
+        --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
 
-    html { scroll-behavior: smooth; }
+      html {
+        scroll-behavior: smooth;
+      }
 
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-      min-height: 100vh;
-    }
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+        min-height: 100vh;
+      }
 
-    /* ── LANG TOGGLE ── */
-    .floating-controls {
-      position: fixed;
-      top: 14px;
-      right: 18px;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .floating-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 5px 14px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      transition: border-color 0.2s, color 0.2s;
-      box-shadow: var(--shadow);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .floating-btn:hover { border-color: var(--accent); color: var(--accent); }
+      /* ── LANG TOGGLE ── */
+      .floating-controls {
+        position: fixed;
+        top: 14px;
+        right: 18px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .floating-btn {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+        box-shadow: var(--shadow);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .floating-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
 
-    #langToggle {
-      cursor: pointer;
-    }
+      #langToggle {
+        cursor: pointer;
+      }
 
-    #githubFloat svg {
-      width: 14px;
-      height: 14px;
-    }
+      #githubFloat svg {
+        width: 14px;
+        height: 14px;
+      }
 
-    /* ── HERO ── */
-    .hero {
-      background: linear-gradient(135deg, #12162b 0%, #1e1040 60%, #0f1117 100%);
-      padding: 80px 24px 64px;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(108,142,245,0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
-    .hero h1 {
-      font-size: clamp(1.8rem, 5vw, 3rem);
-      font-weight: 700;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 16px;
-    }
-    .hero p {
-      font-size: clamp(1rem, 2.5vw, 1.2rem);
-      color: var(--muted);
-      max-width: 60%;
-      margin: 0 auto 12px;
-    }
-    .badge {
-      display: inline-block;
-      background: rgba(108,142,245,0.15);
-      border: 1px solid rgba(108,142,245,0.4);
-      color: var(--accent);
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      padding: 4px 14px;
-      margin-top: 8px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
+      /* ── HERO ── */
+      .hero {
+        background: linear-gradient(
+          135deg,
+          #12162b 0%,
+          #1e1040 60%,
+          #0f1117 100%
+        );
+        padding: 80px 24px 64px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 70% 60% at 50% 0%,
+          rgba(108, 142, 245, 0.15) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+      .hero-icon {
+        font-size: 3.5rem;
+        margin-bottom: 16px;
+        display: block;
+      }
+      .hero h1 {
+        font-size: clamp(1.8rem, 5vw, 3rem);
+        font-weight: 700;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+      }
+      .hero p {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        color: var(--muted);
+        max-width: 60%;
+        margin: 0 auto 12px;
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(108, 142, 245, 0.15);
+        border: 1px solid rgba(108, 142, 245, 0.4);
+        color: var(--accent);
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 4px 14px;
+        margin-top: 8px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
 
-    /* ── LAYOUT ── */
-    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+      /* ── LAYOUT ── */
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
 
-    section { padding: 56px 0; }
-    section + section { border-top: 1px solid var(--border); }
+      section {
+        padding: 56px 0;
+      }
+      section + section {
+        border-top: 1px solid var(--border);
+      }
 
-    h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-    p:not(.thm-preview) { color: var(--muted); margin-bottom: 12px; }
-    p:last-child { margin-bottom: 0; }
+      p:not(.thm-preview) {
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
 
-    /* ── CARDS ── */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-    }
+      /* ── CARDS ── */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px 24px;
-      box-shadow: var(--shadow);
-      transition: border-color 0.2s, transform 0.2s;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .card:hover { border-color: var(--accent); transform: translateY(-3px); }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px 24px;
+        box-shadow: var(--shadow);
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .card:hover {
+        border-color: var(--accent);
+        transform: translateY(-3px);
+      }
 
-    .card-icon { font-size: 2rem; }
-    .card h3 { font-size: 1.1rem; font-weight: 600; }
-    .card p { font-size: 0.9rem; flex: 1; }
+      .card-icon {
+        font-size: 2rem;
+      }
+      .card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      .card p {
+        font-size: 0.9rem;
+        flex: 1;
+      }
 
-    .tag {
-      display: inline-block;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 2px 10px;
-      color: var(--accent2);
-      letter-spacing: 0.04em;
-    }
+      .tag {
+        display: inline-block;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 2px 10px;
+        color: var(--accent2);
+        letter-spacing: 0.04em;
+      }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      text-decoration: none;
-      margin-top: 4px;
-      transition: opacity 0.2s, transform 0.15s;
-      align-self: flex-start;
-    }
-    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-top: 4px;
+        transition:
+          opacity 0.2s,
+          transform 0.15s;
+        align-self: flex-start;
+      }
+      .btn:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+      }
+      .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
 
-    /* ── STEPS ── */
-    .steps { display: flex; flex-direction: column; gap: 16px; }
-    .step {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-    .step-num {
-      flex-shrink: 0;
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.95rem;
-    }
-    .step-body h4 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-    .step-body p { font-size: 0.9rem; margin: 0; }
+      /* ── STEPS ── */
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .step {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .step-num {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      .step-body h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .step-body p {
+        font-size: 0.9rem;
+        margin: 0;
+      }
 
-    /* ── TOOLS ── */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
+      /* ── TOOLS ── */
+      .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
 
-    /* ── THEME SHOWCASE ── */
-    .theme-showcase {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      margin-top: 20px;
-    }
-    .theme-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-    .theme-controls label {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .theme-controls select {
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 0.9rem;
-    }
-    .theme-preview {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      background: #fff;
-      color: #1c1e21;
-      min-height: 72px;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    .tool-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .tool-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
-    .tool-card h4 { font-size: 0.95rem; font-weight: 600; }
-    .tool-card p { font-size: 0.85rem; flex: 1; }
-    .tool-card a {
-      font-size: 0.85rem;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .tool-card a:hover { text-decoration: underline; }
+      /* ── THEME SHOWCASE ── */
+      .theme-showcase {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        margin-top: 20px;
+      }
+      .theme-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .theme-controls label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .theme-controls select {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface2);
+        color: var(--text);
+        font-size: 0.9rem;
+      }
+      .theme-preview {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        background: #fff;
+        color: #1c1e21;
+        min-height: 72px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      .tool-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .tool-card:hover {
+        border-color: var(--accent2);
+        transform: translateY(-2px);
+      }
+      .tool-card h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .tool-card p {
+        font-size: 0.85rem;
+        flex: 1;
+      }
+      .tool-card a {
+        font-size: 0.85rem;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .tool-card a:hover {
+        text-decoration: underline;
+      }
 
-    /* ── DISCLAIMER ── */
-    .disclaimer {
-      background: var(--surface);
-      border: 1px solid #3d2a00;
-      border-left: 4px solid #f59e0b;
-      border-radius: var(--radius);
-      padding: 20px 24px;
-      font-size: 0.9rem;
-    }
-    .disclaimer p { color: #fcd34d; }
-    .disclaimer p + p { color: var(--muted); margin-top: 8px; }
+      /* ── DISCLAIMER ── */
+      .disclaimer {
+        background: var(--surface);
+        border: 1px solid #3d2a00;
+        border-left: 4px solid #f59e0b;
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        font-size: 0.9rem;
+      }
+      .disclaimer p {
+        color: #fcd34d;
+      }
+      .disclaimer p + p {
+        color: var(--muted);
+        margin-top: 8px;
+      }
 
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 24px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 24px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
 
-    @media (max-width: 480px) {
-      .hero { padding: 56px 20px 48px; }
-      section { padding: 40px 0; }
-      .card-grid, .tools-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
+      @media (max-width: 480px) {
+        .hero {
+          padding: 56px 20px 48px;
+        }
+        section {
+          padding: 40px 0;
+        }
+        .card-grid,
+        .tools-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
 <noscript>
 <style>body>*:not(noscript){display:none!important}</style>
 <div style="font-family:'Segoe UI',sans-serif;max-width:480px;margin:80px auto;padding:28px;background:#fff3cd;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:10px;color:#1c1e21;">
@@ -317,398 +422,489 @@
   <small style="color:#666">JavaScript jest wymagany do działania tej strony.</small>
 </div>
 </noscript>
-
-<div class="floating-controls">
-  <a
-    id="githubFloat"
-    class="floating-btn"
-    href="https://github.com/random90/mobiDictToStarDictConverter"
-    target="_blank"
-    rel="noopener"
-    title="Open GitHub repository"
-    aria-label="Open GitHub repository"
-  >
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
-    <span>GitHub</span>
-  </a>
-  <button id="langToggle" class="floating-btn" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
-</div>
-
-<!-- HERO -->
-<header class="hero">
-  <span class="hero-icon">📖</span>
-  <h1 data-i18n="hero.title"></h1>
-  <p data-i18n-html="hero.desc"></p>
-  <span class="badge" data-i18n="hero.badge"></span>
-</header>
-
-<main class="container">
-
-  <!-- THEME SHOWCASE -->
-  <section>
-    <h2 data-i18n="theme.heading"></h2>
-    <p data-i18n="theme.desc"></p>
-    <div class="theme-showcase">
-      <div class="theme-controls">
-        <label for="themeStyleSelect" data-i18n="theme.label"></label>
-        <select id="themeStyleSelect">
-          <option value="clean" data-i18n="theme.clean"></option>
-          <option value="nice" data-i18n="theme.nice"></option>
-          <option value="eink" data-i18n="theme.eink"></option>
-          <option value="rich" data-i18n="theme.rich"></option>
-        </select>
-      </div>
-      <div class="theme-preview" id="themePreview"></div>
-    </div>
-  </section>
-
-  <!-- CONVERTERS -->
-  <section>
-    <h2 data-i18n="conv.heading"></h2>
-    <p data-i18n="conv.desc"></p>
-
-    <div class="card-grid" style="margin-top:24px;">
-      <div class="card">
-        <div class="card-icon">⚡</div>
-        <span class="tag" data-i18n="kf8.tag"></span>
-        <h3 data-i18n="kf8.title"></h3>
-        <p data-i18n="kf8.desc"></p>
-        <a class="btn" href="mobiKF8HuffConverter.html" data-i18n="kf8.btn"></a>
-      </div>
-
-      <div class="card">
-        <div class="card-icon">📜</div>
-        <span class="tag" data-i18n="palm.tag"></span>
-        <h3 data-i18n="palm.title"></h3>
-        <p data-i18n="palm.desc"></p>
-        <a class="btn" href="mobi7PalmDocConverter.html" data-i18n="palm.btn"></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section>
-    <h2 data-i18n="how.heading"></h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <h4 data-i18n="s1.title"></h4>
-          <p data-i18n="s1.desc"></p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <h4 data-i18n="s2.title"></h4>
-          <p data-i18n-html="s2.desc"></p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <h4 data-i18n="s3.title"></h4>
-          <p data-i18n-html="s3.desc"></p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <h4 data-i18n="s4.title"></h4>
-          <p data-i18n-html="s4.desc"></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TOOLS -->
-  <section>
-    <h2 data-i18n="tools.heading"></h2>
-    <p data-i18n-html="tools.desc"></p>
-
-    <div class="tools-grid" style="margin-top:24px;">
-      <div class="tool-card">
-        <div style="font-size:1.4rem;">🔍</div>
-        <h4 data-i18n="vt.title"></h4>
-        <p data-i18n="vt.desc"></p>
-        <a href="Tools/versionTester.html" data-i18n="tool.link"></a>
-      </div>
-
-      <div class="tool-card">
-        <div style="font-size:1.4rem;">📄</div>
-        <h4 data-i18n="mr.kf8.title"></h4>
-        <p data-i18n="mr.kf8.desc"></p>
-        <a href="Tools/MobiReader-Huff-KF8.html" data-i18n="tool.link"></a>
-      </div>
-
-      <div class="tool-card">
-        <div style="font-size:1.4rem;">📄</div>
-        <h4 data-i18n="mr.palm.title"></h4>
-        <p data-i18n="mr.palm.desc"></p>
-        <a href="Tools/MobiReader-PalmDoc.html" data-i18n="tool.link"></a>
-      </div>
-
-      <div class="tool-card">
-        <div style="font-size:1.4rem;">✅</div>
-        <h4 data-i18n="sd.title"></h4>
-        <p data-i18n="sd.desc"></p>
-        <a href="Tools/StarDictReaderValidator.html" data-i18n="tool.link"></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ABOUT -->
-  <section>
-    <h2 data-i18n="about.heading"></h2>
-    <p data-i18n-html="about.p1"></p>
-    <p data-i18n-html="about.p2"></p>
-    <p data-i18n-html="about.p3"></p>
-
-    <div style="margin-top:20px;">
-      <a class="btn btn-ghost" href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        <span data-i18n="about.btn"></span>
+    
+    <div class="floating-controls">
+      <a
+        id="githubFloat"
+        class="floating-btn"
+        href="https://github.com/random90/mobiDictToStarDictConverter"
+        target="_blank"
+        rel="noopener"
+        title="Open GitHub repository"
+        aria-label="Open GitHub repository"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"
+          />
+        </svg>
+        <span>GitHub</span>
       </a>
+      <button
+        id="langToggle"
+        class="floating-btn"
+        onclick="toggleLang()"
+        title="Switch language / Zmień język"
+      >
+        🇵🇱 PL
+      </button>
     </div>
-  </section>
 
-  <!-- DISCLAIMER -->
-  <section>
-    <h2 data-i18n="disc.heading"></h2>
-    <div class="disclaimer">
-      <p data-i18n-html="disc.p1"></p>
-      <p data-i18n="disc.p2"></p>
-    </div>
-  </section>
+    <!-- HERO -->
+    <header class="hero">
+      <span class="hero-icon">📖</span>
+      <h1 data-i18n="hero.title"></h1>
+      <p data-i18n-html="hero.desc"></p>
+      <span class="badge" data-i18n="hero.badge"></span>
+    </header>
 
-</main>
+    <main class="container">
+      <!-- THEME SHOWCASE -->
+      <section>
+        <h2 data-i18n="theme.heading"></h2>
+        <p data-i18n="theme.desc"></p>
+        <div class="theme-showcase">
+          <div class="theme-controls">
+            <label for="themeStyleSelect" data-i18n="theme.label"></label>
+            <select id="themeStyleSelect">
+              <option value="clean" data-i18n="theme.clean"></option>
+              <option value="nice" data-i18n="theme.nice"></option>
+              <option value="eink" data-i18n="theme.eink"></option>
+              <option value="rich" data-i18n="theme.rich"></option>
+            </select>
+          </div>
+          <div class="theme-preview" id="themePreview"></div>
+        </div>
+      </section>
 
-<footer>
-  <div class="container">
-    <p data-i18n-html="footer.text"></p>
-  </div>
-</footer>
+      <!-- CONVERTERS -->
+      <section>
+        <h2 data-i18n="conv.heading"></h2>
+        <p data-i18n="conv.desc"></p>
 
-<script>
-const THEME_PREVIEW_HTML = `<p class="thm-preview"> <span><b>roll call</b></span> /rəʊl kɔːl/ <i>n</i> <b>1.</b> sprawdzanie obecności <b>2.</b> <i>milit.</i> apel <br/> <span><b>vote by roll call</b></span> <i>am.</i> głosowanie imienne </p>`;
+        <div class="card-grid" style="margin-top: 24px">
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <span class="tag" data-i18n="kf8.tag"></span>
+            <h3 data-i18n="kf8.title"></h3>
+            <p data-i18n="kf8.desc"></p>
+            <a
+              class="btn"
+              href="mobiKF8HuffConverter.html"
+              data-i18n="kf8.btn"
+            ></a>
+          </div>
 
-const THEME_STYLES = {
-  none(word, html) {
-    return html;
-  },
-  clean(word, html) {
-    return html.replace(/ width="[^"]*"/gi, '').replace(/ style="[^"]*"/gi, '');
-  },
-  nice(word, html) {
-    let body = html
-      .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-               '<span style="color:#c0392b;font-weight:bold">$1</span>')
-      .replace(/\b(<b>(\d+)\.<\/b>)/g,
-               '<span style="color:#2980b9;font-weight:bold">$1</span>');
-    body = body.replace(
-      /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
-      `<span><b style="font-size:1.08em;color:#003d82">$2</b></span>`
-    );
-    return body;
-  },
-  rich(word, html) {
-    const ipaM = html.match(/(?<!<)\/([^/<]{2,60})\//);
-    const ipa = ipaM
-      ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
-      : '';
-    let body = ipaM ? html.replace(ipaM[0], '') : html;
-    body = body
-      .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-               '<b style="color:#e74c3c">$1</b>')
-      .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
-      .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
-               '<span style="color:#7c3aed;font-size:.83em">$1</span>');
+          <div class="card">
+            <div class="card-icon">📜</div>
+            <span class="tag" data-i18n="palm.tag"></span>
+            <h3 data-i18n="palm.title"></h3>
+            <p data-i18n="palm.desc"></p>
+            <a
+              class="btn"
+              href="mobi7PalmDocConverter.html"
+              data-i18n="palm.btn"
+            ></a>
+          </div>
+        </div>
+      </section>
 
-    let seenHead = false;
-    body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-      if (!seenHead) {
-        seenHead = true;
-        return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px"><b style="font-size:1.15em;color:#1a237e">${inner}</b>${ipa}</span>`;
+      <!-- HOW IT WORKS -->
+      <section>
+        <h2 data-i18n="how.heading"></h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4 data-i18n="s1.title"></h4>
+              <p data-i18n="s1.desc"></p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4 data-i18n="s2.title"></h4>
+              <p data-i18n-html="s2.desc"></p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4 data-i18n="s3.title"></h4>
+              <p data-i18n-html="s3.desc"></p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4 data-i18n="s4.title"></h4>
+              <p data-i18n-html="s4.desc"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TOOLS -->
+      <section>
+        <h2 data-i18n="tools.heading"></h2>
+        <p data-i18n-html="tools.desc"></p>
+
+        <div class="tools-grid" style="margin-top: 24px">
+          <div class="tool-card">
+            <div style="font-size: 1.4rem">🔍</div>
+            <h4 data-i18n="vt.title"></h4>
+            <p data-i18n="vt.desc"></p>
+            <a href="Tools/versionTester.html" data-i18n="tool.link"></a>
+          </div>
+
+          <div class="tool-card">
+            <div style="font-size: 1.4rem">📄</div>
+            <h4 data-i18n="mr.kf8.title"></h4>
+            <p data-i18n="mr.kf8.desc"></p>
+            <a href="Tools/MobiReader-Huff-KF8.html" data-i18n="tool.link"></a>
+          </div>
+
+          <div class="tool-card">
+            <div style="font-size: 1.4rem">📄</div>
+            <h4 data-i18n="mr.palm.title"></h4>
+            <p data-i18n="mr.palm.desc"></p>
+            <a href="Tools/MobiReader-PalmDoc.html" data-i18n="tool.link"></a>
+          </div>
+
+          <div class="tool-card">
+            <div style="font-size: 1.4rem">✅</div>
+            <h4 data-i18n="sd.title"></h4>
+            <p data-i18n="sd.desc"></p>
+            <a
+              href="Tools/StarDictReaderValidator.html"
+              data-i18n="tool.link"
+            ></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section>
+        <h2 data-i18n="about.heading"></h2>
+        <p data-i18n-html="about.p1"></p>
+        <p data-i18n-html="about.p2"></p>
+        <p data-i18n-html="about.p3"></p>
+
+        <div style="margin-top: 20px">
+          <a
+            class="btn btn-ghost"
+            href="https://github.com/random90/mobiDictToStarDictConverter"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"
+              />
+            </svg>
+            <span data-i18n="about.btn"></span>
+          </a>
+        </div>
+      </section>
+
+      <!-- DISCLAIMER -->
+      <section>
+        <h2 data-i18n="disc.heading"></h2>
+        <div class="disclaimer">
+          <p data-i18n-html="disc.p1"></p>
+          <p data-i18n="disc.p2"></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p data-i18n-html="footer.text"></p>
+      </div>
+    </footer>
+
+    <script>
+      const THEME_PREVIEW_HTML = `<p class="thm-preview"> <span><b>roll call</b></span> /rəʊl kɔːl/ <i>n</i> <b>1.</b> sprawdzanie obecności <b>2.</b> <i>milit.</i> apel <br/> <span><b>vote by roll call</b></span> <i>am.</i> głosowanie imienne </p>`;
+
+      const THEME_STYLES = {
+        none(word, html) {
+          return html;
+        },
+        clean(word, html) {
+          return html
+            .replace(/ width="[^"]*"/gi, "")
+            .replace(/ style="[^"]*"/gi, "");
+        },
+        nice(word, html) {
+          let body = html
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<span style="color:#c0392b;font-weight:bold">$1</span>',
+            )
+            .replace(
+              /\b(<b>(\d+)\.<\/b>)/g,
+              '<span style="color:#2980b9;font-weight:bold">$1</span>',
+            );
+          body = body.replace(
+            /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
+            `<span><b style="font-size:1.08em;color:#003d82">$2</b></span>`,
+          );
+          return body;
+        },
+        rich(word, html) {
+          const ipaM = html.match(/(?<!<)\/([^/<]{2,60})\//);
+          const ipa = ipaM
+            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
+            : "";
+          let body = ipaM ? html.replace(ipaM[0], "") : html;
+          body = body
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<b style="color:#e74c3c">$1</b>',
+            )
+            .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
+            .replace(
+              /(<i>(?:[a-z]{2,5})\.<\/i>)/g,
+              '<span style="color:#7c3aed;font-size:.83em">$1</span>',
+            );
+
+          let seenHead = false;
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHead) {
+                seenHead = true;
+                return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px"><b style="font-size:1.15em;color:#1a237e">${inner}</b>${ipa}</span>`;
+              }
+              return `<span><b style="color:#5c4b00">${inner}</b></span>`;
+            },
+          );
+          return body;
+        },
+        eink(word, html) {
+          const ipaM = html.match(/(?<!<)\/([^/<]{2,60})\//);
+          const ipa = ipaM
+            ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>`
+            : "";
+          let body = ipaM ? html.replace(ipaM[0], "") : html;
+          body = body
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              "<b>$1</b>",
+            )
+            .replace(/<b>(\d+)\.<\/b>/g, "<b>$1.</b>")
+            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, "<small>$1</small>");
+
+          let seenHead = false;
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHead) {
+                seenHead = true;
+                return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px"><b style="font-size:1.15em">${inner}</b>${ipa}</span>`;
+              }
+              return `<span><b style="text-decoration:underline">${inner}</b></span>`;
+            },
+          );
+          return body;
+        },
+      };
+
+      function updateThemePreview() {
+        const select = document.getElementById("themeStyleSelect");
+        const pane = document.getElementById("themePreview");
+        if (!select || !pane) return;
+        const fn = THEME_STYLES[select.value] || THEME_STYLES.nice;
+        pane.innerHTML = fn("roll call", THEME_PREVIEW_HTML);
       }
-      return `<span><b style="color:#5c4b00">${inner}</b></span>`;
-    });
-    return body;
-  },
-  eink(word, html) {
-    const ipaM = html.match(/(?<!<)\/([^/<]{2,60})\//);
-    const ipa = ipaM
-      ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>`
-      : '';
-    let body = ipaM ? html.replace(ipaM[0], '') : html;
-    body = body
-      .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>')
-      .replace(/<b>(\d+)\.<\/b>/g, '<b>$1.</b>')
-      .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, '<small>$1</small>');
 
-    let seenHead = false;
-    body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-      if (!seenHead) {
-        seenHead = true;
-        return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px"><b style="font-size:1.15em">${inner}</b>${ipa}</span>`;
+      function initThemeShowcase() {
+        const select = document.getElementById("themeStyleSelect");
+        if (!select) return;
+        select.value = "nice";
+        select.addEventListener("change", updateThemePreview);
+        updateThemePreview();
       }
-      return `<span><b style="text-decoration:underline">${inner}</b></span>`;
-    });
-    return body;
-  }
-};
 
-function updateThemePreview() {
-  const select = document.getElementById('themeStyleSelect');
-  const pane = document.getElementById('themePreview');
-  if (!select || !pane) return;
-  const fn = THEME_STYLES[select.value] || THEME_STYLES.nice;
-  pane.innerHTML = fn('roll call', THEME_PREVIEW_HTML);
-}
+      const I18N = {
+        en: {
+          "hero.title": "Mobi Dictionary → StarDict Converter",
+          "hero.desc":
+            'Converter for Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> dictionaries to <strong>StarDict</strong> format I\'ve designed with converting the "Wielki Slownik Angielsko Polski" dictionary to the StarDict format used on other e-readers in mind, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app. Just download the .html file (or use the link below), choose your dictionary, and convert it.',
+          "hero.badge": "✨ 100% client-side code",
+          "conv.heading": "🔄 Converters",
+          "conv.desc":
+            'Two converters are available depending on the .mobi file format. If you are not sure which one to choose, start with the KF8 converter or use the version tester below. The converters may work with other dictionaries, but I tested them only with "Wielki Slownik Angielsko Polski".',
+          "kf8.tag": "KF8 · Newer editions",
+          "kf8.title": "KF8 / Huff Converter",
+          "kf8.desc":
+            "For dictionaries in the modern KF8 format with HUFF/CDIC compression. Works with the 2023 edition and newer ones (including the April 2026 update), released outside the Amazon store.",
+          "kf8.btn": "Open Converter →",
+          "palm.tag": "Mobi 7 · Older editions",
+          "palm.title": "PalmDoc Converter",
+          "palm.desc":
+            "For older Mobi 7 dictionaries with PalmDoc compression. Works with the 2014 edition and newer updates that were available in the Amazon store.",
+          "palm.btn": "Open Converter →",
+          "theme.heading": "🎨 Style Showcase",
+          "theme.desc":
+            "You can choose additional entry styles beyond the original dictionary formatting to improve readability on e-ink devices.",
+          "theme.label": "Preview style:",
+          "theme.clean": "Original - original HTML",
+          "theme.nice": "Nice - headword + phonetics styled",
+          "theme.eink": "E-ink mono - high contrast, no color styling",
+          "theme.rich": "Rich Color - full color-coded sections",
+          "how.heading": "🚀 How to use",
+          "s1.title": "Pick the right converter",
+          "s1.desc":
+            "Choose KF8 for newer editions or PalmDoc for older ones. If you are unsure, start with KF8 or use the version tester below.",
+          "s2.title": "Open the converter & select your file",
+          "s2.desc":
+            "Click <em>Open Converter</em>, then choose your purchased <code>.mobi</code> dictionary file from your device.",
+          "s3.title": "Choose entry style & convert",
+          "s3.desc":
+            "Choose the StarDict entry style you prefer and click <strong>Start conversion</strong>.",
+          "s4.title": "Download & install",
+          "s4.desc":
+            "Download the generated files and place them together in a new folder inside <code>/dict</code> on your e-reader (on Onyx Boox; it may differ on other readers).",
+          "tools.heading": "🧰 Additional tools",
+          "tools.desc":
+            "Helper tools for inspecting and validating <code>.mobi</code> files and converted StarDict dictionaries. Useful for debugging and understanding file structure.",
+          "vt.title": "Version Tester",
+          "vt.desc":
+            "Detect the format and version of a .mobi file and display its internal metadata.",
+          "tool.link": "Open tool →",
+          "mr.kf8.title": "Mobi Reader - KF8",
+          "mr.kf8.desc":
+            "Browse the contents of a KF8 .mobi file. Shows raw HTML and rendered view side by side.",
+          "mr.palm.title": "Mobi Reader - PalmDoc",
+          "mr.palm.desc":
+            "The same reader for older PalmDoc .mobi files. Inspect entries and internal structure.",
+          "sd.title": "StarDict Validator",
+          "sd.desc":
+            "Load converted StarDict files, search entries, and verify the conversion result.",
+          "about.heading": "💡 About the project",
+          "about.p1":
+            "The main motivation for this project was to build a simple tool I would use once for myself, then delete and forget. But I decided to have some fun, quickly build a page, and share it on GitHub. The goal is to make the excellent <strong>Wielki Slownik Angielsko-Polski</strong>, available only on Kindle and PocketBook, usable on other e-readers as well, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app, all of which support the StarDict format.",
+          "about.p2":
+            'The decompression algorithm is inspired by <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> and ported to JavaScript so it can run in a browser, including when opening the HTML file offline.',
+          "about.p3":
+            "The repository contains only conversion tools. The dictionary must be <strong>purchased separately</strong>. This project does not distribute or bypass any DRM protections - it only reads content you legally own.",
+          "about.btn": "View on GitHub",
+          "disc.heading": "⚠️ Disclaimer",
+          "disc.p1":
+            "⚠️ <strong>No DRM removal.</strong> The tool reads and converts only content from files you legally own.",
+          "disc.p2":
+            'This project is provided "as is" without any warranties. Conversion may not be perfect and may result in some loss of formatting. It is not intended for commercial use. You use it at your own risk.',
+          "footer.text":
+            'Made with 🥤 · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">GitHub Repository</a>',
+        },
+        pl: {
+          "hero.title": "Konwerter słowników Mobi → StarDict",
+          "hero.desc":
+            'Konwerter dla słowników Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> do formatu <strong>StarDict</strong>, który zaprojektowałem z myślą o przekonwertowaniu „Wielkiego Słownika Angielsko Polskiego” do formatu StarDict używanego na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>.  Wystarczy pobrać plik .html (lub użyć linka poniżej), wybrać swój słownik i przekonwertować. ',
+          "hero.badge": "✨ Kod 100% działający po stronie użytkownika",
+          "conv.heading": "🔄 Konwertery",
+          "conv.desc":
+            "Dostępne są dwa konwertery w zależności od formatu pliku .mobi. Jeśli nie wiesz, który wybrać, zacznij od konwertera KF8 lub użyj testera wersji poniżej. Konwertery mogą zadziałać z innymi słownikami, ale testowałem je tylko z „Wielkim Słownikiem Angielsko Polskim”.",
+          "kf8.tag": "KF8 · Nowsze wydania",
+          "kf8.title": "Konwerter KF8 / Huff",
+          "kf8.desc":
+            "Dla słowników w nowoczesnym formacie KF8 z kompresją HUFF/CDIC. Działa z wydaniem 2023 i nowszymi (również ta z kwietnia 2026), które były wydane już poza sklepem Amazon.",
+          "kf8.btn": "Otwórz konwerter →",
+          "palm.tag": "Mobi 7 · Starsze wydania",
+          "palm.title": "Konwerter PalmDoc",
+          "palm.desc":
+            "Dla starszych słowników Mobi 7 z kompresją PalmDoc. Działa z wydaniem 2014 i nowszymi aktualizacjami, które były dostępne w sklepie Amazon.",
+          "palm.btn": "Otwórz konwerter →",
+          "theme.heading": "🎨 Podgląd stylów",
+          "theme.desc":
+            "Możesz wybrać dodatkowe style wpisów poza oryginalnym formatowaniem słownika, aby poprawić czytelność na urządzeniach e-ink.",
+          "theme.label": "Styl podglądu:",
+          "theme.clean": "Oryginalny - oryginalny HTML",
+          "theme.nice": "Ładny - nagłówek + fonetyka ze stylem",
+          "theme.eink": "E-ink mono - wysoki kontrast, bez kolorowania",
+          "theme.rich": "Kolorowy - pełne kolorowanie sekcji",
+          "how.heading": "🚀 Jak używać",
+          "s1.title": "Wybierz odpowiedni konwerter",
+          "s1.desc":
+            "Wybierz KF8 dla nowszych wydań lub PalmDoc dla starszych. W razie wątpliwości zacznij od KF8 lub użyj testera wersji poniżej.",
+          "s2.title": "Otwórz konwerter i wybierz plik",
+          "s2.desc":
+            "Kliknij <em>Otwórz konwerter</em>, następnie wybierz zakupiony plik słownika <code>.mobi</code> ze swojego urządzenia.",
+          "s3.title": "Wybierz styl wpisów i konwertuj",
+          "s3.desc":
+            "Wybierz styl wpisów StarDict który ci odpowiada i kliknij <strong>Rozpocznij konwersję</strong>.",
+          "s4.title": "Pobierz i zainstaluj",
+          "s4.desc":
+            "Pobierz wygenerowane pliki, umieść je razem w nowym folderze wewnątrz <code>/dict</code> na czytniku (na Onyx Boox, na innych czytnikach może być inaczej).",
+          "tools.heading": "🧰 Dodatkowe narzędzia",
+          "tools.desc":
+            "Narzędzia pomocnicze do inspekcji i walidacji plików <code>.mobi</code> oraz skonwertowanych słowników StarDict. Przydatne do debugowania i zrozumienia struktury plików.",
+          "vt.title": "Tester wersji",
+          "vt.desc":
+            "Wykryj format i wersję pliku .mobi oraz wyświetl jego wewnętrzne metadane.",
+          "tool.link": "Otwórz narzędzie →",
+          "mr.kf8.title": "Przeglądarka Mobi - KF8",
+          "mr.kf8.desc":
+            "Przeglądaj zawartość pliku KF8 .mobi. Wyświetla widok HTML i podgląd renderowania obok siebie.",
+          "mr.palm.title": "Przeglądarka Mobi - PalmDoc",
+          "mr.palm.desc":
+            "Ta sama przeglądarka dla starszych plików PalmDoc .mobi. Sprawdź wpisy i strukturę wewnętrzną.",
+          "sd.title": "Walidator StarDict",
+          "sd.desc":
+            "Wczytaj skonwertowane pliki StarDict, przeszukuj wpisy i weryfikuj wynik konwersji.",
+          "about.heading": "💡 O projekcie",
+          "about.p1":
+            "Główną motywacją projektu było zbudowanie prostego narzędzia, którego użyję raz sam dla siebie, usunę i zapomnę. Postanowiłem z czasem się jednak się trochę pobawić, stworzyć na szybko stronę i udostępnić kod na github. Celem jest umożliwienie korzystania z doskonałego <strong>Wielkiego Słownika Angielsko-Polskiego</strong> dostępnego wyłącznie na Kindle i PocketBook, również na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>, obsługujących format StarDict.",
+          "about.p2":
+            'Algorytm dekompresji inspirowany jest projektem <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> i przeportowany do JavaScript, aby działał w przeglądarce, również po otwarciu pliku HTML bez dostępu do sieci.',
+          "about.p3":
+            "Repozytorium zawiera tylko narzędzia do konwersji. Słownik należy <strong>zakupić osobno</strong>. Projekt nie dystrybuuje ani nie obchodzi żadnych zabezpieczeń DRM - odczytuje wyłącznie treści, które legalnie posiadasz.",
+          "about.btn": "Zobacz na GitHub",
+          "disc.heading": "⚠️ Zastrzeżenie",
+          "disc.p1":
+            "⚠️ <strong>Brak usuwania DRM.</strong> Narzędzie odczytuje i konwertuje tylko treści z plików, które legalnie posiadasz.",
+          "disc.p2":
+            'Projekt jest udostępniony „tak jak jest" bez żadnych gwarancji. Konwersja może nie być doskonała i może skutkować utratą części formatowania. Nie jest przeznaczony do użytku komercyjnego. Używasz na własne ryzyko.',
+          "footer.text":
+            'Zrobione z 🥤 · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">Repozytorium GitHub</a>',
+        },
+      };
 
-function initThemeShowcase() {
-  const select = document.getElementById('themeStyleSelect');
-  if (!select) return;
-  select.value = 'nice';
-  select.addEventListener('change', updateThemePreview);
-  updateThemePreview();
-}
+      (function () {
+        var stored = localStorage.getItem("lang");
+        var auto =
+          navigator.language && navigator.language.startsWith("pl")
+            ? "pl"
+            : "en";
+        window.LANG = stored || auto;
+        document.documentElement.lang = window.LANG;
+      })();
 
-const I18N = {
-  en: {
-    'hero.title':    'Mobi Dictionary → StarDict Converter',
-    'hero.desc':     'Converter for Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> dictionaries to <strong>StarDict</strong> format I\'ve designed with converting the "Wielki Slownik Angielsko Polski" dictionary to the StarDict format used on other e-readers in mind, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app. Just download the .html file (or use the link below), choose your dictionary, and convert it.',
-    'hero.badge':    '✨ 100% client-side code',
-    'conv.heading':  '🔄 Converters',
-    'conv.desc':     'Two converters are available depending on the .mobi file format. If you are not sure which one to choose, start with the KF8 converter or use the version tester below. The converters may work with other dictionaries, but I tested them only with "Wielki Slownik Angielsko Polski".',
-    'kf8.tag':       'KF8 · Newer editions',
-    'kf8.title':     'KF8 / Huff Converter',
-    'kf8.desc':      'For dictionaries in the modern KF8 format with HUFF/CDIC compression. Works with the 2023 edition and newer ones (including the April 2026 update), released outside the Amazon store.',
-    'kf8.btn':       'Open Converter →',
-    'palm.tag':      'Mobi 7 · Older editions',
-    'palm.title':    'PalmDoc Converter',
-    'palm.desc':     'For older Mobi 7 dictionaries with PalmDoc compression. Works with the 2014 edition and newer updates that were available in the Amazon store.',
-    'palm.btn':      'Open Converter →',
-    'theme.heading': '🎨 Style Showcase',
-    'theme.desc':    'You can choose additional entry styles beyond the original dictionary formatting to improve readability on e-ink devices.',
-    'theme.label':   'Preview style:',
-    'theme.clean':   'Original - original HTML',
-    'theme.nice':    'Nice - headword + phonetics styled',
-    'theme.eink':    'E-ink mono - high contrast, no color styling',
-    'theme.rich':    'Rich Color - full color-coded sections',
-    'how.heading':   '🚀 How to use',
-    's1.title':      'Pick the right converter',
-    's1.desc':       'Choose KF8 for newer editions or PalmDoc for older ones. If you are unsure, start with KF8 or use the version tester below.',
-    's2.title':      'Open the converter & select your file',
-    's2.desc':       'Click <em>Open Converter</em>, then choose your purchased <code>.mobi</code> dictionary file from your device.',
-    's3.title':      'Choose entry style & convert',
-    's3.desc':       'Choose the StarDict entry style you prefer and click <strong>Start conversion</strong>.',
-    's4.title':      'Download & install',
-    's4.desc':       'Download the generated files and place them together in a new folder inside <code>/dict</code> on your e-reader (on Onyx Boox; it may differ on other readers).',
-    'tools.heading': '🧰 Additional tools',
-    'tools.desc':    'Helper tools for inspecting and validating <code>.mobi</code> files and converted StarDict dictionaries. Useful for debugging and understanding file structure.',
-    'vt.title':      'Version Tester',
-    'vt.desc':       'Detect the format and version of a .mobi file and display its internal metadata.',
-    'tool.link':     'Open tool →',
-    'mr.kf8.title':  'Mobi Reader - KF8',
-    'mr.kf8.desc':   'Browse the contents of a KF8 .mobi file. Shows raw HTML and rendered view side by side.',
-    'mr.palm.title': 'Mobi Reader - PalmDoc',
-    'mr.palm.desc':  'The same reader for older PalmDoc .mobi files. Inspect entries and internal structure.',
-    'sd.title':      'StarDict Validator',
-    'sd.desc':       'Load converted StarDict files, search entries, and verify the conversion result.',
-    'about.heading': '💡 About the project',
-    'about.p1':      'The main motivation for this project was to build a simple tool I would use once for myself, then delete and forget. But I decided to have some fun, quickly build a page, and share it on GitHub. The goal is to make the excellent <strong>Wielki Slownik Angielsko-Polski</strong>, available only on Kindle and PocketBook, usable on other e-readers as well, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app, all of which support the StarDict format.',
-    'about.p2':      'The decompression algorithm is inspired by <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> and ported to JavaScript so it can run in a browser, including when opening the HTML file offline.',
-    'about.p3':      'The repository contains only conversion tools. The dictionary must be <strong>purchased separately</strong>. This project does not distribute or bypass any DRM protections - it only reads content you legally own.',
-    'about.btn':     'View on GitHub',
-    'disc.heading':  '⚠️ Disclaimer',
-    'disc.p1':       '⚠️ <strong>No DRM removal.</strong> The tool reads and converts only content from files you legally own.',
-    'disc.p2':       'This project is provided "as is" without any warranties. Conversion may not be perfect and may result in some loss of formatting. It is not intended for commercial use. You use it at your own risk.',
-    'footer.text':   'Made with 🥤 · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">GitHub Repository</a>',
-  },
-  pl: {
-    'hero.title':    'Konwerter słowników Mobi → StarDict',
-    'hero.desc':     'Konwerter dla słowników Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> do formatu <strong>StarDict</strong>, który zaprojektowałem z myślą o przekonwertowaniu „Wielkiego Słownika Angielsko Polskiego” do formatu StarDict używanego na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>.  Wystarczy pobrać plik .html (lub użyć linka poniżej), wybrać swój słownik i przekonwertować. ',
-    'hero.badge':    '✨ Kod 100% działający po stronie użytkownika',
-    'conv.heading':  '🔄 Konwertery',
-    'conv.desc':     'Dostępne są dwa konwertery w zależności od formatu pliku .mobi. Jeśli nie wiesz, który wybrać, zacznij od konwertera KF8 lub użyj testera wersji poniżej. Konwertery mogą zadziałać z innymi słownikami, ale testowałem je tylko z „Wielkim Słownikiem Angielsko Polskim”.',
-    'kf8.tag':       'KF8 · Nowsze wydania',
-    'kf8.title':     'Konwerter KF8 / Huff',
-    'kf8.desc':      'Dla słowników w nowoczesnym formacie KF8 z kompresją HUFF/CDIC. Działa z wydaniem 2023 i nowszymi (również ta z kwietnia 2026), które były wydane już poza sklepem Amazon.',
-    'kf8.btn':       'Otwórz konwerter →',
-    'palm.tag':      'Mobi 7 · Starsze wydania',
-    'palm.title':    'Konwerter PalmDoc',
-    'palm.desc':     'Dla starszych słowników Mobi 7 z kompresją PalmDoc. Działa z wydaniem 2014 i nowszymi aktualizacjami, które były dostępne w sklepie Amazon.',
-    'palm.btn':      'Otwórz konwerter →',
-    'theme.heading': '🎨 Podgląd stylów',
-    'theme.desc':    'Możesz wybrać dodatkowe style wpisów poza oryginalnym formatowaniem słownika, aby poprawić czytelność na urządzeniach e-ink.',
-    'theme.label':   'Styl podglądu:',
-    'theme.clean':   'Oryginalny - oryginalny HTML',
-    'theme.nice':    'Ładny - nagłówek + fonetyka ze stylem',
-    'theme.eink':    'E-ink mono - wysoki kontrast, bez kolorowania',
-    'theme.rich':    'Kolorowy - pełne kolorowanie sekcji',
-    'how.heading':   '🚀 Jak używać',
-    's1.title':      'Wybierz odpowiedni konwerter',
-    's1.desc':       'Wybierz KF8 dla nowszych wydań lub PalmDoc dla starszych. W razie wątpliwości zacznij od KF8 lub użyj testera wersji poniżej.',
-    's2.title':      'Otwórz konwerter i wybierz plik',
-    's2.desc':       'Kliknij <em>Otwórz konwerter</em>, następnie wybierz zakupiony plik słownika <code>.mobi</code> ze swojego urządzenia.',
-    's3.title':      'Wybierz styl wpisów i konwertuj',
-    's3.desc':       'Wybierz styl wpisów StarDict który ci odpowiada i kliknij <strong>Rozpocznij konwersję</strong>.',
-    's4.title':      'Pobierz i zainstaluj',
-    's4.desc':       'Pobierz wygenerowane pliki, umieść je razem w nowym folderze wewnątrz <code>/dict</code> na czytniku (na Onyx Boox, na innych czytnikach może być inaczej).',
-    'tools.heading': '🧰 Dodatkowe narzędzia',
-    'tools.desc':    'Narzędzia pomocnicze do inspekcji i walidacji plików <code>.mobi</code> oraz skonwertowanych słowników StarDict. Przydatne do debugowania i zrozumienia struktury plików.',
-    'vt.title':      'Tester wersji',
-    'vt.desc':       'Wykryj format i wersję pliku .mobi oraz wyświetl jego wewnętrzne metadane.',
-    'tool.link':     'Otwórz narzędzie →',
-    'mr.kf8.title':  'Przeglądarka Mobi - KF8',
-    'mr.kf8.desc':   'Przeglądaj zawartość pliku KF8 .mobi. Wyświetla widok HTML i podgląd renderowania obok siebie.',
-    'mr.palm.title': 'Przeglądarka Mobi - PalmDoc',
-    'mr.palm.desc':  'Ta sama przeglądarka dla starszych plików PalmDoc .mobi. Sprawdź wpisy i strukturę wewnętrzną.',
-    'sd.title':      'Walidator StarDict',
-    'sd.desc':       'Wczytaj skonwertowane pliki StarDict, przeszukuj wpisy i weryfikuj wynik konwersji.',
-    'about.heading': '💡 O projekcie',
-    'about.p1':      'Główną motywacją projektu było zbudowanie prostego narzędzia, którego użyję raz sam dla siebie, usunę i zapomnę. Postanowiłem z czasem się jednak się trochę pobawić, stworzyć na szybko stronę i udostępnić kod na github. Celem jest umożliwienie korzystania z doskonałego <strong>Wielkiego Słownika Angielsko-Polskiego</strong> dostępnego wyłącznie na Kindle i PocketBook, również na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>, obsługujących format StarDict.',
-    'about.p2':      'Algorytm dekompresji inspirowany jest projektem <a style="color:var(--accent);text-decoration:none;" href="https://github.com/kevinhendricks/KindleUnpack">KindleUnpack</a> i przeportowany do JavaScript, aby działał w przeglądarce, również po otwarciu pliku HTML bez dostępu do sieci.',
-    'about.p3':      'Repozytorium zawiera tylko narzędzia do konwersji. Słownik należy <strong>zakupić osobno</strong>. Projekt nie dystrybuuje ani nie obchodzi żadnych zabezpieczeń DRM - odczytuje wyłącznie treści, które legalnie posiadasz.',
-    'about.btn':     'Zobacz na GitHub',
-    'disc.heading':  '⚠️ Zastrzeżenie',
-    'disc.p1':       '⚠️ <strong>Brak usuwania DRM.</strong> Narzędzie odczytuje i konwertuje tylko treści z plików, które legalnie posiadasz.',
-    'disc.p2':       'Projekt jest udostępniony „tak jak jest" bez żadnych gwarancji. Konwersja może nie być doskonała i może skutkować utratą części formatowania. Nie jest przeznaczony do użytku komercyjnego. Używasz na własne ryzyko.',
-    'footer.text':   'Zrobione z 🥤 · <a href="https://github.com/random90/mobiDictToStarDictConverter" target="_blank" rel="noopener">Repozytorium GitHub</a>',
-  }
-};
+      function applyI18n() {
+        var t = I18N[window.LANG] || I18N.en;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n")];
+          if (v !== undefined) el.textContent = v;
+        });
+        document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-html")];
+          if (v !== undefined) el.innerHTML = v;
+        });
+        var btn = document.getElementById("langToggle");
+        if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";
+      }
 
-(function () {
-    var stored = localStorage.getItem('lang');
-    var auto   = navigator.language && navigator.language.startsWith('pl') ? 'pl' : 'en';
-    window.LANG = stored || auto;
-    document.documentElement.lang = window.LANG;
-})();
+      function toggleLang() {
+        window.LANG = window.LANG === "pl" ? "en" : "pl";
+        localStorage.setItem("lang", window.LANG);
+        document.documentElement.lang = window.LANG;
+        applyI18n();
+      }
 
-function applyI18n() {
-    var t = I18N[window.LANG] || I18N.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n')];
-        if (v !== undefined) el.textContent = v;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-html')];
-        if (v !== undefined) el.innerHTML = v;
-    });
-    var btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
-}
-
-function toggleLang() {
-    window.LANG = window.LANG === 'pl' ? 'en' : 'pl';
-    localStorage.setItem('lang', window.LANG);
-    document.documentElement.lang = window.LANG;
-    applyI18n();
-}
-
-// Run immediately (script is at end of body — DOM is ready, no flash)
-initThemeShowcase();
-applyI18n();
-</script>
-</body>
+      // Run immediately (script is at end of body — DOM is ready, no flash)
+      initThemeShowcase();
+      applyI18n();
+    </script>
+  </body>
 </html>

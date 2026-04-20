@@ -4,35 +4,161 @@
   To make changes, edit the template and/or shared files from src/*.js,
   then run:  node build.js
 -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>StarDict Binary Validator</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1100px; margin: 20px auto; background: #f0f2f5; color: #1c1e21; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); margin-bottom: 16px; }
-        .file-inputs { display: grid; gap: 8px; background: #f8f9fa; padding: 14px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; }
-        .file-inputs label { display: flex; align-items: center; gap: 8px; }
-        #searchBox { width: 100%; padding: 12px; font-size: 18px; margin-top: 16px; border-radius: 6px; border: 2px solid #007bff; display: none; box-sizing: border-box; }
-        .status { font-size: 13px; color: #666; margin-top: 8px; }
-        #resultCard { display: none; margin-top: 8px; }
-        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
-        .result-title { font-weight: 700; font-size: 15px; color: #333; }
-        .badge { background: #007bff; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: bold; }
-        .btn-copy { padding: 5px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        .btn-copy:hover { background: #e0e0e0; }
-        .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
-        .pane-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 5px; }
-        .pane-rendered { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; min-height: 160px; font-size: 13px; overflow-x: auto; }
-        .pane-raw { background: #1c1e21; color: #e8e8e8; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', monospace; font-size: 11px; white-space: pre-wrap; min-height: 80px; overflow-x: auto; overflow-y: auto; }
-        .syn-info { font-size: 12px; color: #6f42c1; background: #f5f0ff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1100px;
+        margin: 20px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        margin-bottom: 16px;
+      }
+      .file-inputs {
+        display: grid;
+        gap: 8px;
+        background: #f8f9fa;
+        padding: 14px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 13px;
+      }
+      .file-inputs label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #searchBox {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        margin-top: 16px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        display: none;
+        box-sizing: border-box;
+      }
+      .status {
+        font-size: 13px;
+        color: #666;
+        margin-top: 8px;
+      }
+      #resultCard {
+        display: none;
+        margin-top: 8px;
+      }
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .result-title {
+        font-weight: 700;
+        font-size: 15px;
+        color: #333;
+      }
+      .badge {
+        background: #007bff;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+      .btn-copy {
+        padding: 5px 12px;
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .btn-copy:hover {
+        background: #e0e0e0;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 700px) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+      .pane-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #888;
+        margin-bottom: 5px;
+      }
+      .pane-rendered {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 14px;
+        min-height: 160px;
+        font-size: 13px;
+        overflow-x: auto;
+      }
+      .pane-raw {
+        background: #1c1e21;
+        color: #e8e8e8;
+        border-radius: 8px;
+        padding: 14px;
+        font-family: "Cascadia Code", monospace;
+        font-size: 11px;
+        white-space: pre-wrap;
+        min-height: 80px;
+        overflow-x: auto;
+        overflow-y: auto;
+      }
+      .syn-info {
+        font-size: 12px;
+        color: #6f42c1;
+        background: #f5f0ff;
+        border: 1px solid #d8b4fe;
+        border-radius: 6px;
+        padding: 6px 12px;
+        margin-top: 8px;
+        display: none;
+      }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
 <noscript>
 <style>body>*:not(noscript){display:none!important}</style>
 <div style="font-family:'Segoe UI',sans-serif;max-width:480px;margin:80px auto;padding:28px;background:#fff3cd;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:10px;color:#1c1e21;">
@@ -41,250 +167,303 @@
   <small style="color:#666">JavaScript jest wymagany do działania tej strony.</small>
 </div>
 </noscript>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
-<div class="card">
-    <h2 data-i18n="title">StarDict Local Validator</h2>
-    <p data-i18n="desc">Upload your converted files to test them before moving to Onyx Boox.</p>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
+    <div class="card">
+      <h2 data-i18n="title">StarDict Local Validator</h2>
+      <p data-i18n="desc">
+        Upload your converted files to test them before moving to Onyx Boox.
+      </p>
 
-    <div class="file-inputs">
-        <label>1. <b>dictionary.ifo</b> <input type="file" id="ifoFile" accept=".ifo"></label>
-        <label>2. <b>dictionary.idx</b> <input type="file" id="idxFile" accept=".idx"></label>
-        <label>3. <b>dictionary.dict</b> <input type="file" id="dictFile" accept=".dict"></label>
-        <label>4. <b>dictionary.syn</b> <input type="file" id="synFile" accept=".syn"> <span style="color:#888;font-size:11px" data-i18n="optional">(optional)</span></label>
+      <div class="file-inputs">
+        <label
+          >1. <b>dictionary.ifo</b>
+          <input type="file" id="ifoFile" accept=".ifo"
+        /></label>
+        <label
+          >2. <b>dictionary.idx</b>
+          <input type="file" id="idxFile" accept=".idx"
+        /></label>
+        <label
+          >3. <b>dictionary.dict</b>
+          <input type="file" id="dictFile" accept=".dict"
+        /></label>
+        <label
+          >4. <b>dictionary.syn</b>
+          <input type="file" id="synFile" accept=".syn" />
+          <span style="color: #888; font-size: 11px" data-i18n="optional"
+            >(optional)</span
+          ></label
+        >
+      </div>
+
+      <div id="status" class="status" data-i18n="waiting">
+        Waiting for files (ifo + idx + dict required)…
+      </div>
+      <input
+        type="text"
+        id="searchBox"
+        data-i18n-ph="searchPh"
+        placeholder="🔍 Type a word to search…"
+      />
     </div>
 
-    <div id="status" class="status" data-i18n="waiting">Waiting for files (ifo + idx + dict required)…</div>
-    <input type="text" id="searchBox" data-i18n-ph="searchPh" placeholder="🔍 Type a word to search…">
-</div>
-
-<div class="card" id="resultCard">
-    <div class="result-header">
+    <div class="card" id="resultCard">
+      <div class="result-header">
         <span class="result-title" id="resultWord"></span>
-        <div style="display:flex;gap:6px;align-items:center">
-            <span class="badge" id="byteBadge"></span>
-            <button class="btn-copy" id="copyBtn" data-i18n="copyBtn">📋 Copy HTML</button>
+        <div style="display: flex; gap: 6px; align-items: center">
+          <span class="badge" id="byteBadge"></span>
+          <button class="btn-copy" id="copyBtn" data-i18n="copyBtn">
+            📋 Copy HTML
+          </button>
         </div>
-    </div>
-    <div class="syn-info" id="synInfo"></div>
-    <div class="split">
+      </div>
+      <div class="syn-info" id="synInfo"></div>
+      <div class="split">
         <div>
-            <div class="pane-label" data-i18n="rendered">Rendered</div>
-            <div class="pane-rendered" id="paneRendered"></div>
+          <div class="pane-label" data-i18n="rendered">Rendered</div>
+          <div class="pane-rendered" id="paneRendered"></div>
         </div>
         <div>
-            <div class="pane-label" data-i18n="rawSource">Raw HTML source</div>
-            <div class="pane-raw" id="paneRaw"></div>
+          <div class="pane-label" data-i18n="rawSource">Raw HTML source</div>
+          <div class="pane-raw" id="paneRaw"></div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-// Shared StarDict validator logic used by converter and standalone validator tool.
-(function () {
-    function create(config) {
-        const ids = config.ids || {};
-        const el = {
-            status:      document.getElementById(ids.status),
-            search:      document.getElementById(ids.search),
-            resultCard:  document.getElementById(ids.resultCard),
-            resultWord:  document.getElementById(ids.resultWord),
-            byteBadge:   document.getElementById(ids.byteBadge),
-            synInfo:     document.getElementById(ids.synInfo),
-            paneRendered:document.getElementById(ids.paneRendered),
-            paneRaw:     document.getElementById(ids.paneRaw),
-            copyBtn:     document.getElementById(ids.copyBtn),
-        };
+    <script>
+      // Shared StarDict validator logic used by converter and standalone validator tool.
+      (function () {
+        function create(config) {
+          const ids = config.ids || {};
+          const el = {
+            status: document.getElementById(ids.status),
+            search: document.getElementById(ids.search),
+            resultCard: document.getElementById(ids.resultCard),
+            resultWord: document.getElementById(ids.resultWord),
+            byteBadge: document.getElementById(ids.byteBadge),
+            synInfo: document.getElementById(ids.synInfo),
+            paneRendered: document.getElementById(ids.paneRendered),
+            paneRaw: document.getElementById(ids.paneRaw),
+            copyBtn: document.getElementById(ids.copyBtn),
+          };
 
-        let idxData = null;
-        let dictData = null;
-        let wordMap = new Map();
-        let synMap = new Map();
-        let ordinalToKey = [];
-        let rawHtml = '';
+          let idxData = null;
+          let dictData = null;
+          let wordMap = new Map();
+          let synMap = new Map();
+          let ordinalToKey = [];
+          let rawHtml = "";
 
-        const dec = new TextDecoder('utf-8');
+          const dec = new TextDecoder("utf-8");
 
-        function setStatus(msg) {
+          function setStatus(msg) {
             if (el.status) el.status.textContent = msg;
-        }
+          }
 
-        function parseIdx(buffer) {
+          function parseIdx(buffer) {
             idxData = new DataView(buffer);
             wordMap.clear();
             ordinalToKey = [];
             let offset = 0;
             while (offset < idxData.byteLength) {
-                const start = offset;
-                while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0) offset++;
-                const word = dec.decode(new Uint8Array(idxData.buffer, start, offset - start));
+              const start = offset;
+              while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0)
                 offset++;
-                if (offset + 8 > idxData.byteLength) break;
-                const dataOffset = idxData.getUint32(offset, false);
-                const dataSize   = idxData.getUint32(offset + 4, false);
-                const lc = word.toLowerCase();
-                ordinalToKey.push(lc);
-                const entry = { off: dataOffset, sz: dataSize, original: word };
-                if (wordMap.has(lc)) wordMap.get(lc).push(entry);
-                else wordMap.set(lc, [entry]);
-                offset += 8;
+              const word = dec.decode(
+                new Uint8Array(idxData.buffer, start, offset - start),
+              );
+              offset++;
+              if (offset + 8 > idxData.byteLength) break;
+              const dataOffset = idxData.getUint32(offset, false);
+              const dataSize = idxData.getUint32(offset + 4, false);
+              const lc = word.toLowerCase();
+              ordinalToKey.push(lc);
+              const entry = { off: dataOffset, sz: dataSize, original: word };
+              if (wordMap.has(lc)) wordMap.get(lc).push(entry);
+              else wordMap.set(lc, [entry]);
+              offset += 8;
             }
-        }
+          }
 
-        function parseSyn(buffer) {
+          function parseSyn(buffer) {
             synMap.clear();
             if (!buffer) return;
             const synView = new DataView(buffer);
             let so = 0;
             while (so < synView.byteLength) {
-                const ss = so;
-                while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
-                const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
-                so++;
-                if (so + 4 > synView.byteLength) break;
-                const ordinal = synView.getUint32(so, false);
-                so += 4;
-                if (ordinal < ordinalToKey.length) synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
+              const ss = so;
+              while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
+              const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
+              so++;
+              if (so + 4 > synView.byteLength) break;
+              const ordinal = synView.getUint32(so, false);
+              so += 4;
+              if (ordinal < ordinalToKey.length)
+                synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
             }
-        }
+          }
 
-        function showEntry(lowerKey, matchInfo) {
+          function showEntry(lowerKey, matchInfo) {
             const entries = wordMap.get(lowerKey);
             if (!entries) return;
 
-            rawHtml = entries.map(e => dec.decode(new Uint8Array(dictData, e.off, e.sz))).join('');
+            rawHtml = entries
+              .map((e) => dec.decode(new Uint8Array(dictData, e.off, e.sz)))
+              .join("");
             const first = entries[0];
 
             if (el.resultWord) el.resultWord.textContent = first.original;
             if (el.byteBadge) {
-                el.byteBadge.textContent = entries.length > 1
-                    ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
-                    : `${first.sz} bytes`;
+              el.byteBadge.textContent =
+                entries.length > 1
+                  ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
+                  : `${first.sz} bytes`;
             }
 
             if (el.synInfo) {
-                if (matchInfo && matchInfo.mode === 'synonym') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else if (matchInfo && matchInfo.mode === 'fallback-word') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else if (matchInfo && matchInfo.mode === 'fallback-synonym') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else {
-                    el.synInfo.style.display = 'none';
-                }
+              if (matchInfo && matchInfo.mode === "synonym") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else if (matchInfo && matchInfo.mode === "fallback-word") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else if (matchInfo && matchInfo.mode === "fallback-synonym") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else {
+                el.synInfo.style.display = "none";
+              }
             }
 
             if (el.paneRendered) el.paneRendered.innerHTML = rawHtml;
             if (el.paneRaw) el.paneRaw.textContent = rawHtml;
-            if (el.resultCard) el.resultCard.style.display = 'block';
-        }
+            if (el.resultCard) el.resultCard.style.display = "block";
+          }
 
-        function bindSearch() {
+          function bindSearch() {
             if (!el.search) return;
 
             const candidateBases = (q) => {
-                const out = new Set();
-                const w = (q || '').toLowerCase();
-                if (!w) return out;
-                out.add(w);
-                if (w.endsWith('ies') && w.length > 4) out.add(w.slice(0, -3) + 'y');
-                if (w.endsWith('es') && w.length > 3) out.add(w.slice(0, -2));
-                if (w.endsWith('s') && w.length > 2) out.add(w.slice(0, -1));
-                if (w.endsWith('ing') && w.length > 5) {
-                    out.add(w.slice(0, -3));
-                    out.add(w.slice(0, -3) + 'e');
-                }
-                if (w.endsWith('ed') && w.length > 4) {
-                    out.add(w.slice(0, -2));
-                    out.add(w.slice(0, -1));
-                }
-                return out;
+              const out = new Set();
+              const w = (q || "").toLowerCase();
+              if (!w) return out;
+              out.add(w);
+              if (w.endsWith("ies") && w.length > 4) out.add(w.slice(0, -3) + "y");
+              if (w.endsWith("es") && w.length > 3) out.add(w.slice(0, -2));
+              if (w.endsWith("s") && w.length > 2) out.add(w.slice(0, -1));
+              if (w.endsWith("ing") && w.length > 5) {
+                out.add(w.slice(0, -3));
+                out.add(w.slice(0, -3) + "e");
+              }
+              if (w.endsWith("ed") && w.length > 4) {
+                out.add(w.slice(0, -2));
+                out.add(w.slice(0, -1));
+              }
+              return out;
             };
 
             const resolveKey = (queryLower) => {
-                if (wordMap.has(queryLower)) {
-                    return { key: queryLower, mode: 'exact' };
-                }
-                if (synMap.has(queryLower)) {
-                    return { key: synMap.get(queryLower), mode: 'synonym' };
-                }
+              if (wordMap.has(queryLower)) {
+                return { key: queryLower, mode: "exact" };
+              }
+              if (synMap.has(queryLower)) {
+                return { key: synMap.get(queryLower), mode: "synonym" };
+              }
 
-                for (const base of candidateBases(queryLower)) {
-                    if (base === queryLower) continue;
-                    if (wordMap.has(base)) {
-                        return { key: base, mode: 'fallback-word' };
-                    }
-                    if (synMap.has(base)) {
-                        return { key: synMap.get(base), mode: 'fallback-synonym' };
-                    }
+              for (const base of candidateBases(queryLower)) {
+                if (base === queryLower) continue;
+                if (wordMap.has(base)) {
+                  return { key: base, mode: "fallback-word" };
                 }
-                return null;
+                if (synMap.has(base)) {
+                  return { key: synMap.get(base), mode: "fallback-synonym" };
+                }
+              }
+              return null;
             };
 
-            el.search.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-                const lower = query.toLowerCase();
-                if (!query) {
-                    if (el.resultCard) el.resultCard.style.display = 'none';
-                    return;
-                }
+            el.search.addEventListener("input", (e) => {
+              const query = e.target.value.trim();
+              const lower = query.toLowerCase();
+              if (!query) {
+                if (el.resultCard) el.resultCard.style.display = "none";
+                return;
+              }
 
-                const resolved = resolveKey(lower);
-                const matchKey = resolved ? resolved.key : null;
+              const resolved = resolveKey(lower);
+              const matchKey = resolved ? resolved.key : null;
 
-                if (!matchKey) {
-                    if (el.resultCard) el.resultCard.style.display = 'none';
-                    return;
-                }
-                showEntry(matchKey, resolved && resolved.mode !== 'exact'
-                    ? { mode: resolved.mode, query }
-                    : null);
+              if (!matchKey) {
+                if (el.resultCard) el.resultCard.style.display = "none";
+                return;
+              }
+              showEntry(
+                matchKey,
+                resolved && resolved.mode !== "exact"
+                  ? { mode: resolved.mode, query }
+                  : null,
+              );
             });
-        }
+          }
 
-        function bindCopy() {
+          function bindCopy() {
             if (!el.copyBtn) return;
-            el.copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(rawHtml).then(() => {
-                    const copied = config.getCopiedLabel ? config.getCopiedLabel() : 'Copied';
-                    const copy = config.getCopyLabel ? config.getCopyLabel() : 'Copy HTML';
-                    el.copyBtn.textContent = copied;
-                    setTimeout(() => { el.copyBtn.textContent = copy; }, 1200);
-                });
+            el.copyBtn.addEventListener("click", () => {
+              navigator.clipboard.writeText(rawHtml).then(() => {
+                const copied = config.getCopiedLabel
+                  ? config.getCopiedLabel()
+                  : "Copied";
+                const copy = config.getCopyLabel
+                  ? config.getCopyLabel()
+                  : "Copy HTML";
+                el.copyBtn.textContent = copied;
+                setTimeout(() => {
+                  el.copyBtn.textContent = copy;
+                }, 1200);
+              });
             });
-        }
+          }
 
-        async function loadFromFiles(files) {
+          async function loadFromFiles(files) {
             if (!files.idx || !files.dict) return;
 
             const idxBuffer = await files.idx.arrayBuffer();
             const dictBuffer = await files.dict.arrayBuffer();
             const synBuffer = files.syn ? await files.syn.arrayBuffer() : null;
-            const ifoText = files.ifo ? dec.decode(await files.ifo.arrayBuffer()) : '';
+            const ifoText = files.ifo
+              ? dec.decode(await files.ifo.arrayBuffer())
+              : "";
 
             loadFromBuffers({ idxBuffer, dictBuffer, synBuffer, ifoText });
-        }
+          }
 
-        function loadFromBuffers(data) {
+          function loadFromBuffers(data) {
             parseIdx(data.idxBuffer);
             dictData = data.dictBuffer;
             parseSyn(data.synBuffer || null);
 
-            const ifoText = data.ifoText || '';
-            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || '?';
-            const syncount  = (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
+            const ifoText = data.ifoText || "";
+            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || "?";
+            const syncount =
+              (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
 
             setStatus(
-                `Ready: ${wordMap.size} entries` +
-                (synMap.size ? ` · ${synMap.size} synonyms` : '') +
-                (ifoText ? ` (ifo: wordcount=${wordcount}${syncount !== '0' ? ', synwordcount=' + syncount : ''})` : '')
+              `Ready: ${wordMap.size} entries` +
+                (synMap.size ? ` · ${synMap.size} synonyms` : "") +
+                (ifoText
+                  ? ` (ifo: wordcount=${wordcount}${syncount !== "0" ? ", synwordcount=" + syncount : ""})`
+                  : ""),
             );
-            if (el.search) el.search.style.display = 'block';
-        }
+            if (el.search) el.search.style.display = "block";
+          }
 
-        function attachFileInputs(fileInputIds) {
+          function attachFileInputs(fileInputIds) {
             const idsMap = fileInputIds || {};
             const ifoEl = document.getElementById(idsMap.ifo);
             const idxEl = document.getElementById(idsMap.idx);
@@ -292,122 +471,127 @@
             const synEl = document.getElementById(idsMap.syn);
 
             const triggerLoad = () => {
-                loadFromFiles({
-                    ifo: ifoEl ? ifoEl.files[0] : null,
-                    idx: idxEl ? idxEl.files[0] : null,
-                    dict: dictEl ? dictEl.files[0] : null,
-                    syn: synEl ? synEl.files[0] : null,
-                });
+              loadFromFiles({
+                ifo: ifoEl ? ifoEl.files[0] : null,
+                idx: idxEl ? idxEl.files[0] : null,
+                dict: dictEl ? dictEl.files[0] : null,
+                syn: synEl ? synEl.files[0] : null,
+              });
             };
 
-            [ifoEl, idxEl, dictEl, synEl].forEach(node => {
-                if (node) node.addEventListener('change', triggerLoad);
+            [ifoEl, idxEl, dictEl, synEl].forEach((node) => {
+              if (node) node.addEventListener("change", triggerLoad);
             });
-        }
+          }
 
-        bindSearch();
-        bindCopy();
+          bindSearch();
+          bindCopy();
 
-        return {
+          return {
             loadFromBuffers,
             loadFromFiles,
             attachFileInputs,
             getRawHtml: () => rawHtml,
-        };
-    }
+          };
+        }
 
-    window.StarDictValidator = {
-        create,
-        initFromFiles(config) {
+        window.StarDictValidator = {
+          create,
+          initFromFiles(config) {
             const api = create(config);
             api.attachFileInputs(config.fileInputIds || {});
             return api;
+          },
+        };
+      })();
+
+
+      let validatorApi = null;
+
+      const I18N = {
+        en: {
+          title: "StarDict Local Validator",
+          desc: "Upload your converted files to test them before moving to Onyx Boox.",
+          optional: "(optional)",
+          waiting: "Waiting for files (ifo + idx + dict required)…",
+          searchPh: "🔍 Type a word to search…",
+          copyBtn: "📋 Copy HTML",
+          copied: "✅ Copied!",
+          rendered: "Rendered",
+          rawSource: "Raw HTML source",
         },
-    };
-})();
-
-
-
-let validatorApi = null;
-
-const I18N = {
-    en: {
-        title:    'StarDict Local Validator',
-        desc:     'Upload your converted files to test them before moving to Onyx Boox.',
-        optional: '(optional)',
-        waiting:  'Waiting for files (ifo + idx + dict required)…',
-        searchPh: '🔍 Type a word to search…',
-        copyBtn:  '📋 Copy HTML',
-        copied:   '✅ Copied!',
-        rendered: 'Rendered',
-        rawSource:'Raw HTML source',
-    },
-    pl: {
-        title:    'Lokalny walidator StarDict',
-        desc:     'Wczytaj skonwertowane pliki, aby sprawdzić je przed przeniesieniem na Onyx Boox.',
-        optional: '(opcjonalny)',
-        waiting:  'Oczekiwanie na pliki (wymagane: ifo + idx + dict)…',
-        searchPh: '🔍 Wpisz szukane słowo…',
-        copyBtn:  '📋 Kopiuj HTML',
-        copied:   '✅ Skopiowano!',
-        rendered: 'Podgląd',
-        rawSource:'Źródło HTML',
-    }
-};
-
-(function () {
-    var stored = localStorage.getItem('lang');
-    var auto   = navigator.language && navigator.language.startsWith('pl') ? 'pl' : 'en';
-    window.LANG = stored || auto;
-    document.documentElement.lang = window.LANG;
-})();
-
-function applyI18n() {
-    var t = I18N[window.LANG] || I18N.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n')];
-        if (v !== undefined) el.textContent = v;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-ph')];
-        if (v !== undefined) el.placeholder = v;
-    });
-    var btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
-}
-
-function toggleLang() {
-    window.LANG = window.LANG === 'pl' ? 'en' : 'pl';
-    localStorage.setItem('lang', window.LANG);
-    document.documentElement.lang = window.LANG;
-    applyI18n();
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    applyI18n();
-    validatorApi = window.StarDictValidator.initFromFiles({
-        ids: {
-            status: 'status',
-            search: 'searchBox',
-            resultCard: 'resultCard',
-            resultWord: 'resultWord',
-            byteBadge: 'byteBadge',
-            synInfo: 'synInfo',
-            paneRendered: 'paneRendered',
-            paneRaw: 'paneRaw',
-            copyBtn: 'copyBtn',
+        pl: {
+          title: "Lokalny walidator StarDict",
+          desc: "Wczytaj skonwertowane pliki, aby sprawdzić je przed przeniesieniem na Onyx Boox.",
+          optional: "(opcjonalny)",
+          waiting: "Oczekiwanie na pliki (wymagane: ifo + idx + dict)…",
+          searchPh: "🔍 Wpisz szukane słowo…",
+          copyBtn: "📋 Kopiuj HTML",
+          copied: "✅ Skopiowano!",
+          rendered: "Podgląd",
+          rawSource: "Źródło HTML",
         },
-        fileInputIds: {
-            ifo: 'ifoFile',
-            idx: 'idxFile',
-            dict: 'dictFile',
-            syn: 'synFile',
-        },
-        getCopyLabel: function () { return (I18N[window.LANG] || I18N.en).copyBtn; },
-        getCopiedLabel: function () { return (I18N[window.LANG] || I18N.en).copied; },
-    });
-});
-</script>
-</body>
+      };
+
+      (function () {
+        var stored = localStorage.getItem("lang");
+        var auto =
+          navigator.language && navigator.language.startsWith("pl")
+            ? "pl"
+            : "en";
+        window.LANG = stored || auto;
+        document.documentElement.lang = window.LANG;
+      })();
+
+      function applyI18n() {
+        var t = I18N[window.LANG] || I18N.en;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n")];
+          if (v !== undefined) el.textContent = v;
+        });
+        document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-ph")];
+          if (v !== undefined) el.placeholder = v;
+        });
+        var btn = document.getElementById("langToggle");
+        if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";
+      }
+
+      function toggleLang() {
+        window.LANG = window.LANG === "pl" ? "en" : "pl";
+        localStorage.setItem("lang", window.LANG);
+        document.documentElement.lang = window.LANG;
+        applyI18n();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        applyI18n();
+        validatorApi = window.StarDictValidator.initFromFiles({
+          ids: {
+            status: "status",
+            search: "searchBox",
+            resultCard: "resultCard",
+            resultWord: "resultWord",
+            byteBadge: "byteBadge",
+            synInfo: "synInfo",
+            paneRendered: "paneRendered",
+            paneRaw: "paneRaw",
+            copyBtn: "copyBtn",
+          },
+          fileInputIds: {
+            ifo: "ifoFile",
+            idx: "idxFile",
+            dict: "dictFile",
+            syn: "synFile",
+          },
+          getCopyLabel: function () {
+            return (I18N[window.LANG] || I18N.en).copyBtn;
+          },
+          getCopiedLabel: function () {
+            return (I18N[window.LANG] || I18N.en).copied;
+          },
+        });
+      });
+    </script>
+  </body>
 </html>
-

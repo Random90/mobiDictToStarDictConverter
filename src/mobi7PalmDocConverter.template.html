@@ -1,286 +1,565 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOBI to StarDict</title>
     <style>
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; line-height: 1.6; }
-        .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
-        .controls { background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #dee2e6; }
-        .upload-section { border: 3px dashed #007bff; background: #f8fbff; padding: 30px; text-align: center; cursor: pointer; border-radius: 12px; margin-bottom: 20px; transition: 0.3s; }
-        #log { background: #1c1e21; color: #a5d6a7; padding: 15px; font-family: 'Cascadia Code', monospace; height: 280px; overflow-y: auto; border-radius: 8px; margin-top: 20px; font-size: 12px; border: 1px solid #30363d; white-space: pre-wrap; }
-        .option-box { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-        .option-row label { font-weight: 600; min-width: 130px; }
-        .option-row select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; width: 100%; text-overflow: ellipsis; }
-        .option-row .hint { font-size: 12px; color: #888; }
-        .check-item { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 8px; border-radius: 5px; transition: 0.2s; }
-        .check-item:hover { background: #f0f7ff; }
-        .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
-        .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
-        .btn-main.processing { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { background-color: #007bff; } 50% { background-color: #0056b3; } 100% { background-color: #007bff; } }
-        .preview-area { margin-top: 25px; display: none; }
-        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
-        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
-        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
-        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
-        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
-        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
-        .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .badge-syn { background: #6f42c1; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; }
-        .style-preview { border: 1px solid #ddd; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; background: #fafafa; min-height: 36px; }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1000px;
+        margin: 30px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+        line-height: 1.6;
+      }
+      .card {
+        background: white;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+      h2 {
+        color: #007bff;
+        margin-top: 0;
+        border-bottom: 2px solid #e1e4e8;
+        padding-bottom: 10px;
+      }
+      .controls {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+      }
+      .upload-section {
+        border: 3px dashed #007bff;
+        background: #f8fbff;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        transition: 0.3s;
+      }
+      #log {
+        background: #1c1e21;
+        color: #a5d6a7;
+        padding: 15px;
+        font-family: "Cascadia Code", monospace;
+        height: 280px;
+        overflow-y: auto;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 12px;
+        border: 1px solid #30363d;
+        white-space: pre-wrap;
+      }
+      .option-box {
+        background: white;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+      .option-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .option-row label {
+        font-weight: 600;
+        min-width: 130px;
+      }
+      .option-row select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        text-overflow: ellipsis;
+      }
+      .option-row .hint {
+        font-size: 12px;
+        color: #888;
+      }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 5px;
+        transition: 0.2s;
+      }
+      .check-item:hover {
+        background: #f0f7ff;
+      }
+      .btn-main {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .btn-main:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .btn-main.processing {
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          background-color: #007bff;
+        }
+        50% {
+          background-color: #0056b3;
+        }
+        100% {
+          background-color: #007bff;
+        }
+      }
+      .preview-area {
+        margin-top: 25px;
+        display: none;
+      }
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .preview-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .validator-search {
+        width: 100%;
+        padding: 11px;
+        font-size: 16px;
+        margin-top: 12px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        box-sizing: border-box;
+        display: none;
+      }
+      .validator-status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 7px;
+      }
+      .validator-card {
+        display: none;
+        margin-top: 10px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .validator-split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .validator-pane {
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 10px;
+        max-height: 560px;
+        overflow: auto;
+      }
+      .btn-dl {
+        display: inline-block;
+        margin: 5px;
+        padding: 10px 15px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+      .badge-syn {
+        background: #6f42c1;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 6px;
+      }
+      .style-preview {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-top: 8px;
+        font-size: 12px;
+        background: #fafafa;
+        min-height: 36px;
+      }
     </style>
-</head>
-<body>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
+  </head>
+  <body>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
 
-<div class="card">
-    <h2 data-i18n="title"></h2>
-    <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
+    <div class="card">
+      <h2 data-i18n="title"></h2>
+      <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
 
-    <div class="controls">
+      <div class="controls">
         <label data-i18n="step1"></label>
         <div class="upload-section" id="dropZone">
-            <span id="fileNameDisplay" data-i18n="dropzone"></span>
-            <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
+          <span id="fileNameDisplay" data-i18n="dropzone"></span>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".mobi,.azw,.azw3"
+            style="display: none"
+          />
         </div>
 
         <label data-i18n="step2"></label>
         <div class="option-box">
-            <div class="option-row">
-                <label data-i18n="styleLabel"></label>
-                <select id="styleSelect">
-                    <option value="none" data-i18n="styleNone"></option>
-                    <option value="clean" data-i18n="styleClean"></option>
-                    <option value="nice" selected data-i18n="styleNice"></option>
-                    <option value="eink" data-i18n="styleEink"></option>
-                    <option value="rich" data-i18n="styleRich"></option>
-                </select>
-            </div>
-            <div class="style-preview" id="stylePreview"></div>
-
+          <div class="option-row">
+            <label data-i18n="styleLabel"></label>
+            <select id="styleSelect">
+              <option value="none" data-i18n="styleNone"></option>
+              <option value="clean" data-i18n="styleClean"></option>
+              <option value="nice" selected data-i18n="styleNice"></option>
+              <option value="eink" data-i18n="styleEink"></option>
+              <option value="rich" data-i18n="styleRich"></option>
+            </select>
+          </div>
+          <div class="style-preview" id="stylePreview"></div>
         </div>
 
-        <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
-    </div>
+        <button
+          id="startBtn"
+          class="btn-main"
+          disabled
+          data-i18n="startBtn"
+        ></button>
+      </div>
 
-    <div id="log" data-i18n="logIdle"></div>
+      <div id="log" data-i18n="logIdle"></div>
 
-    <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border: 1px solid #b7eb8f;">
+      <div
+        id="downloadArea"
+        style="
+          display: none;
+          margin-top: 25px;
+          padding: 20px;
+          background: #e6ffed;
+          border-radius: 8px;
+          border: 1px solid #b7eb8f;
+        "
+      >
         <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
-    </div>
+      </div>
 
-    <div id="previewArea" class="preview-area">
+      <div id="previewArea" class="preview-area">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
-        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
-        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <h4
+          data-i18n="validatorTitle"
+          style="margin: 14px 0 6px; color: #5b6570"
+        ></h4>
+        <input
+          type="text"
+          id="validatorSearchBox"
+          class="validator-search"
+          data-i18n-ph="validatorSearchPh"
+          placeholder="Search in generated StarDict..."
+        />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-                <b id="validatorResultWord"></b>
-                <div style="display:flex;gap:6px;align-items:center;">
-                    <span id="validatorByteBadge" class="badge-syn"></span>
-                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
-                </div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            "
+          >
+            <b id="validatorResultWord"></b>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <span id="validatorByteBadge" class="badge-syn"></span>
+              <button
+                id="validatorCopyBtn"
+                class="btn-dl"
+                style="padding: 6px 10px; background: #6c757d"
+              >
+                Copy HTML
+              </button>
             </div>
-            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
-            <div class="validator-split">
-                <div id="validatorPaneRendered" class="validator-pane"></div>
-            </div>
+          </div>
+          <div
+            id="validatorSynInfo"
+            style="
+              display: none;
+              color: #6f42c1;
+              font-size: 12px;
+              margin-top: 6px;
+            "
+          ></div>
+          <div class="validator-split">
+            <div id="validatorPaneRendered" class="validator-pane"></div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-// ── Style engines ─────────────────────────────────────────────────────────────
-const STYLES = {
-    none(word, phonetics, rawH2Html, contentHtml) {
-        return rawH2Html + contentHtml;
-    },
+    <script>
+      // ── Style engines ─────────────────────────────────────────────────────────────
+      const STYLES = {
+        none(word, phonetics, rawH2Html, contentHtml) {
+          return rawH2Html + contentHtml;
+        },
 
-    clean(word, phonetics, rawH2Html, contentHtml) {
-        // Strip inline styles, keep semantic structure
-        const clean = (h) => h.replace(/ style="[^"]*"/g, '');
-        const ph = phonetics ? ` <em>${phonetics}</em>` : '';
-        return `<b>${word}</b>${ph}<br>${clean(contentHtml)}`;
-    },
+        clean(word, phonetics, rawH2Html, contentHtml) {
+          // Strip inline styles, keep semantic structure
+          const clean = (h) => h.replace(/ style="[^"]*"/g, "");
+          const ph = phonetics ? ` <em>${phonetics}</em>` : "";
+          return `<b>${word}</b>${ph}<br>${clean(contentHtml)}`;
+        },
 
-    nice(word, phonetics, rawH2Html, contentHtml) {
-        const ph = phonetics
-            ? ` <span style="color:#666;font-size:.88em;font-style:italic">${phonetics}</span>` : '';
-        let content = contentHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\b.*?<\/i>)/g,
-                     '<span style="color:#c0392b;font-weight:bold">$1</span>')
-            .replace(/(<b>(?:\d+)\.?<\/b>)/g,
-                     '<span style="color:#2980b9;font-weight:bold">$1</span>');
-        return `<div style="margin-bottom:6px"><b style="font-size:1.15em;color:#003d82">${word}</b>${ph}</div>${content}`;
-    },
+        nice(word, phonetics, rawH2Html, contentHtml) {
+          const ph = phonetics
+            ? ` <span style="color:#666;font-size:.88em;font-style:italic">${phonetics}</span>`
+            : "";
+          let content = contentHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\b.*?<\/i>)/g,
+              '<span style="color:#c0392b;font-weight:bold">$1</span>',
+            )
+            .replace(
+              /(<b>(?:\d+)\.?<\/b>)/g,
+              '<span style="color:#2980b9;font-weight:bold">$1</span>',
+            );
+          return `<div style="margin-bottom:6px"><b style="font-size:1.15em;color:#003d82">${word}</b>${ph}</div>${content}`;
+        },
 
-    rich(word, phonetics, rawH2Html, contentHtml) {
-        const ph = phonetics
-            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.85em">${phonetics}</span>` : '';
-        // Color POS tags (n, v, adj, adv…)
-        let content = contentHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<b style="color:#e74c3c">$1</b>')
+        rich(word, phonetics, rawH2Html, contentHtml) {
+          const ph = phonetics
+            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.85em">${phonetics}</span>`
+            : "";
+          // Color POS tags (n, v, adj, adv…)
+          let content = contentHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<b style="color:#e74c3c">$1</b>',
+            )
             // Number sense labels: bold + colored
             .replace(/\b(\d+)\./g, '<b style="color:#1565c0">$1.</b>')
             // italic domain labels like <i>fin.</i> <i>biz.</i> etc.
-            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g,
-                     '<span style="color:#7c3aed;font-size:.85em">$1</span>')
+            .replace(
+              /(<i>[a-z]{2,5}\.<\/i>)/g,
+              '<span style="color:#7c3aed;font-size:.85em">$1</span>',
+            )
             // sub-phrase entries: bold olive
-            .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
-                     '<b style="color:#5c4b00">$2</b>');
-        return `<div style="margin-bottom:6px;padding:4px 0;border-left:3px solid #2980b9;padding-left:8px">`
-             + `<b style="font-size:1.2em;color:#1a237e">${word}</b>${ph}`
-             + `</div>${content}`;
-    },
+            .replace(
+              /(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+              '<b style="color:#5c4b00">$2</b>',
+            );
+          return (
+            `<div style="margin-bottom:6px;padding:4px 0;border-left:3px solid #2980b9;padding-left:8px">` +
+            `<b style="font-size:1.2em;color:#1a237e">${word}</b>${ph}` +
+            `</div>${content}`
+          );
+        },
 
-    eink(word, phonetics, rawH2Html, contentHtml) {
-        const ph = phonetics
-            ? ` <span style="font-size:.9em;font-style:italic">${phonetics}</span>` : '';
-        let content = contentHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<b>$1</b>')
-            .replace(/\b(\d+)\./g, '<b>$1.</b>')
-            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, '<small>$1</small>')
-            .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
-                     '<b style="text-decoration:underline">$2</b>');
-        return `<div style="margin-bottom:6px;padding:4px 0;border-left:2px solid #000;padding-left:8px">`
-             + `<b style="font-size:1.2em">${word}</b>${ph}`
-             + `</div>${content}`;
-    }
-};
+        eink(word, phonetics, rawH2Html, contentHtml) {
+          const ph = phonetics
+            ? ` <span style="font-size:.9em;font-style:italic">${phonetics}</span>`
+            : "";
+          let content = contentHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              "<b>$1</b>",
+            )
+            .replace(/\b(\d+)\./g, "<b>$1.</b>")
+            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, "<small>$1</small>")
+            .replace(
+              /(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+              '<b style="text-decoration:underline">$2</b>',
+            );
+          return (
+            `<div style="margin-bottom:6px;padding:4px 0;border-left:2px solid #000;padding-left:8px">` +
+            `<b style="font-size:1.2em">${word}</b>${ph}` +
+            `</div>${content}`
+          );
+        },
+      };
 
-// Preview sample
-const PREVIEW_ENTRY = {
-    word: 'download',
-    phonetics: '/ˌdaʊnˈləʊd/',
-    rawH2Html: '<h2>download [/ˌdaʊnˈləʊd/]</h2>',
-    contentHtml: '<p><i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <b>2.</b> <i>n</i> plik do pobrania</p>'
-};
+      // Preview sample
+      const PREVIEW_ENTRY = {
+        word: "download",
+        phonetics: "/ˌdaʊnˈləʊd/",
+        rawH2Html: "<h2>download [/ˌdaʊnˈləʊd/]</h2>",
+        contentHtml:
+          "<p><i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <b>2.</b> <i>n</i> plik do pobrania</p>",
+      };
 
-function updateStylePreview() {
-    const style = document.getElementById('styleSelect').value;
-    const fn = STYLES[style];
-    document.getElementById('stylePreview').innerHTML =
-        fn(PREVIEW_ENTRY.word, PREVIEW_ENTRY.phonetics,
-           PREVIEW_ENTRY.rawH2Html, PREVIEW_ENTRY.contentHtml);
-}
-document.getElementById('styleSelect').addEventListener('change', updateStylePreview);
-updateStylePreview();
+      function updateStylePreview() {
+        const style = document.getElementById("styleSelect").value;
+        const fn = STYLES[style];
+        document.getElementById("stylePreview").innerHTML = fn(
+          PREVIEW_ENTRY.word,
+          PREVIEW_ENTRY.phonetics,
+          PREVIEW_ENTRY.rawH2Html,
+          PREVIEW_ENTRY.contentHtml,
+        );
+      }
+      document
+        .getElementById("styleSelect")
+        .addEventListener("change", updateStylePreview);
+      updateStylePreview();
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @@include(src/palmdoc-core.js)
-// ─────────────────────────────────────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/palmdoc-core.js)
+      // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Converter: extends PalmDocBase with dictionary extraction logic ────────
-// @@include(src/palmdoc-converter.js)
+      // ── Converter: extends PalmDocBase with dictionary extraction logic ────────
+      // @@include(src/palmdoc-converter.js)
 
-// ── UI ────────────────────────────────────────────────────────────────────────
-const fileInput = document.getElementById('fileInput');
-const startBtn  = document.getElementById('startBtn');
-const logEl     = document.getElementById('log');
-let globalBuffer = null;
+      // ── UI ────────────────────────────────────────────────────────────────────────
+      const fileInput = document.getElementById("fileInput");
+      const startBtn = document.getElementById("startBtn");
+      const logEl = document.getElementById("log");
+      let globalBuffer = null;
 
-function addLog(msg) {
-    logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
+      function addLog(msg) {
+        logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
 
-document.getElementById('dropZone').onclick = () => fileInput.click();
-fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        document.getElementById('fileNameDisplay').textContent = `📁 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-        globalBuffer = await file.arrayBuffer();
-        startBtn.disabled = false;
-        addLog("File loaded. Ready.");
-    }
-});
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          document.getElementById("fileNameDisplay").textContent =
+            `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+          globalBuffer = await file.arrayBuffer();
+          startBtn.disabled = false;
+          addLog("File loaded. Ready.");
+        }
+      });
 
-startBtn.onclick = () => {
-    startBtn.disabled = true;
-    startBtn.classList.add('processing');
-    startBtn.textContent = "WORKING...";
+      startBtn.onclick = () => {
+        startBtn.disabled = true;
+        startBtn.classList.add("processing");
+        startBtn.textContent = "WORKING...";
 
-    const options = {
-        style:       document.getElementById('styleSelect').value,
-        merge:       true,
-        generateSyn: true,
-    };
+        const options = {
+          style: document.getElementById("styleSelect").value,
+          merge: true,
+          generateSyn: true,
+        };
 
-    const converter = new Converter(globalBuffer, options, addLog);
-    setTimeout(async () => {
-        try {
+        const converter = new Converter(globalBuffer, options, addLog);
+        setTimeout(async () => {
+          try {
             const { finalMap } = await converter.run();
             renderOutput(finalMap, converter.encoder, true);
-            startBtn.classList.remove('processing');
+            startBtn.classList.remove("processing");
             startBtn.textContent = "✅ DONE";
-        } catch (err) {
-            addLog("ERROR: " + err.message + '\n' + err.stack);
+          } catch (err) {
+            addLog("ERROR: " + err.message + "\n" + err.stack);
             startBtn.disabled = false;
-            startBtn.classList.remove('processing');
+            startBtn.classList.remove("processing");
             startBtn.textContent = "RETRY";
-        }
-    }, 100);
-};
+          }
+        }, 100);
+      };
 
-// ── Output ────────────────────────────────────────────────────────────────────
-// @@include(src/stardict-validator-core.js)
-// @@include(src/stardict-output-palmdoc.js)
+      // ── Output ────────────────────────────────────────────────────────────────────
+      // @@include(src/stardict-validator-core.js)
+      // @@include(src/stardict-output-palmdoc.js)
 
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N = {
-    en: {
-        title:       'MOBI to StarDict',
-        subtitle:    'Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries',
-        step1:       'Step 1: Select Dictionary File',
-        dropzone:    '📁 Select .mobi file or drag it here',
-        step2:       'Step 2: Options',
-        styleLabel:  '🎨 Entry Style:',
-        styleNone:   'None – raw HTML passthrough',
-        styleClean:  'Clean – semantic, no inline styles',
-        styleNice:   'Nice Theme – headword + phonetics styled',
-        styleEink:   'E-ink mono – high contrast, no color styling',
-        styleRich:   'Rich Color – full color-coded sections',
-        startBtn:    'START CONVERSION',
-        logIdle:     'Status: Idle. Waiting for file...',
-        previewTitle:'🧩 Processed Entries Preview',
-        validatorTitle:'🔎 Search Generated Dictionary',
-        validatorSearchPh: '🔍 Search generated dictionary...',
-        doneTitle:   '✅ Done! Download Files:',
-    },
-    pl: {
-        title:       'MOBI do StarDict',
-        subtitle:    'Zaprojektowany dla Wielki Słownik Ang-Pol 2014 i innych starszych słowników Mobi7/PalmDoc',
-        step1:       'Krok 1: Wybierz plik słownika',
-        dropzone:    '📁 Wybierz plik .mobi lub przeciągnij go tutaj',
-        step2:       'Krok 2: Opcje',
-        styleLabel:  '🎨 Styl wpisów:',
-        styleNone:   'Brak – oryginalny HTML bez zmian',
-        styleClean:  'Czysty – semantyczny, bez stylów inline',
-        styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
-        styleEink:   'E-ink mono – wysoki kontrast, bez kolorowania',
-        styleRich:   'Kolorowy – pełne kolorowanie sekcji',
-        startBtn:    'ROZPOCZNIJ KONWERSJĘ',
-        logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
-        previewTitle:'🧩 Podgląd przetworzonych wpisów',
-        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
-        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
-        doneTitle:   '✅ Gotowe! Pobierz pliki:',
-    }
-};
-// @@include(src/i18n-core.js)
-</script>
-</body>
+      // ── i18n ──────────────────────────────────────────────────────────────────────
+      const I18N = {
+        en: {
+          title: "MOBI to StarDict",
+          subtitle:
+            "Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries",
+          step1: "Step 1: Select Dictionary File",
+          dropzone: "📁 Select .mobi file or drag it here",
+          step2: "Step 2: Options",
+          styleLabel: "🎨 Entry Style:",
+          styleNone: "None – raw HTML passthrough",
+          styleClean: "Clean – semantic, no inline styles",
+          styleNice: "Nice Theme – headword + phonetics styled",
+          styleEink: "E-ink mono – high contrast, no color styling",
+          styleRich: "Rich Color – full color-coded sections",
+          startBtn: "START CONVERSION",
+          logIdle: "Status: Idle. Waiting for file...",
+          previewTitle: "🧩 Processed Entries Preview",
+          validatorTitle: "🔎 Search Generated Dictionary",
+          validatorSearchPh: "🔍 Search generated dictionary...",
+          doneTitle: "✅ Done! Download Files:",
+        },
+        pl: {
+          title: "MOBI do StarDict",
+          subtitle:
+            "Zaprojektowany dla Wielki Słownik Ang-Pol 2014 i innych starszych słowników Mobi7/PalmDoc",
+          step1: "Krok 1: Wybierz plik słownika",
+          dropzone: "📁 Wybierz plik .mobi lub przeciągnij go tutaj",
+          step2: "Krok 2: Opcje",
+          styleLabel: "🎨 Styl wpisów:",
+          styleNone: "Brak – oryginalny HTML bez zmian",
+          styleClean: "Czysty – semantyczny, bez stylów inline",
+          styleNice: "Ładny – nagłówek + fonetyka ze stylem",
+          styleEink: "E-ink mono – wysoki kontrast, bez kolorowania",
+          styleRich: "Kolorowy – pełne kolorowanie sekcji",
+          startBtn: "ROZPOCZNIJ KONWERSJĘ",
+          logIdle: "Status: Bezczynny. Oczekiwanie na plik...",
+          previewTitle: "🧩 Podgląd przetworzonych wpisów",
+          validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
+          validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+          doneTitle: "✅ Gotowe! Pobierz pliki:",
+        },
+      };
+      // @@include(src/i18n-core.js)
+    </script>
+  </body>
 </html>
-

@@ -4,46 +4,240 @@
   To make changes, edit the template and/or shared files from src/*.js,
   then run:  node build.js
 -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOBI to StarDict</title>
     <style>
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 30px auto; background: #f0f2f5; color: #1c1e21; line-height: 1.6; }
-        .card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
-        .controls { background: #f8f9fa; padding: 25px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #dee2e6; }
-        .upload-section { border: 3px dashed #007bff; background: #f8fbff; padding: 30px; text-align: center; cursor: pointer; border-radius: 12px; margin-bottom: 20px; transition: 0.3s; }
-        #log { background: #1c1e21; color: #a5d6a7; padding: 15px; font-family: 'Cascadia Code', monospace; height: 280px; overflow-y: auto; border-radius: 8px; margin-top: 20px; font-size: 12px; border: 1px solid #30363d; white-space: pre-wrap; }
-        .option-box { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-        .option-row label { font-weight: 600; min-width: 130px; }
-        .option-row select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; cursor: pointer; width: 100%; text-overflow: ellipsis; }
-        .option-row .hint { font-size: 12px; color: #888; }
-        .check-item { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 8px; border-radius: 5px; transition: 0.2s; }
-        .check-item:hover { background: #f0f7ff; }
-        .btn-main { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; }
-        .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
-        .btn-main.processing { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { background-color: #007bff; } 50% { background-color: #0056b3; } 100% { background-color: #007bff; } }
-        .preview-area { margin-top: 25px; display: none; }
-        .preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-        .preview-item { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 11px; max-height: 220px; overflow-y: auto; }
-        .validator-search { width: 100%; padding: 11px; font-size: 16px; margin-top: 12px; border-radius: 6px; border: 2px solid #007bff; box-sizing: border-box; display: none; }
-        .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
-        .validator-card { display:none; margin-top: 10px; padding: 12px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
-        .validator-split { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
-        .validator-pane { border: 1px solid #ddd; border-radius: 7px; padding: 10px; max-height: 560px; overflow: auto; }
-        .btn-dl { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .badge-syn { background: #6f42c1; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; margin-left: 6px; }
-        .style-preview { border: 1px solid #ddd; border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; background: #fafafa; min-height: 36px; }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1000px;
+        margin: 30px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+        line-height: 1.6;
+      }
+      .card {
+        background: white;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+      h2 {
+        color: #007bff;
+        margin-top: 0;
+        border-bottom: 2px solid #e1e4e8;
+        padding-bottom: 10px;
+      }
+      .controls {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+      }
+      .upload-section {
+        border: 3px dashed #007bff;
+        background: #f8fbff;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        transition: 0.3s;
+      }
+      #log {
+        background: #1c1e21;
+        color: #a5d6a7;
+        padding: 15px;
+        font-family: "Cascadia Code", monospace;
+        height: 280px;
+        overflow-y: auto;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 12px;
+        border: 1px solid #30363d;
+        white-space: pre-wrap;
+      }
+      .option-box {
+        background: white;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+      .option-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .option-row label {
+        font-weight: 600;
+        min-width: 130px;
+      }
+      .option-row select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        text-overflow: ellipsis;
+      }
+      .option-row .hint {
+        font-size: 12px;
+        color: #888;
+      }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 5px;
+        transition: 0.2s;
+      }
+      .check-item:hover {
+        background: #f0f7ff;
+      }
+      .btn-main {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+      .btn-main:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .btn-main.processing {
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          background-color: #007bff;
+        }
+        50% {
+          background-color: #0056b3;
+        }
+        100% {
+          background-color: #007bff;
+        }
+      }
+      .preview-area {
+        margin-top: 25px;
+        display: none;
+      }
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .preview-item {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .validator-search {
+        width: 100%;
+        padding: 11px;
+        font-size: 16px;
+        margin-top: 12px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        box-sizing: border-box;
+        display: none;
+      }
+      .validator-status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 7px;
+      }
+      .validator-card {
+        display: none;
+        margin-top: 10px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .validator-split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .validator-pane {
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 10px;
+        max-height: 560px;
+        overflow: auto;
+      }
+      .btn-dl {
+        display: inline-block;
+        margin: 5px;
+        padding: 10px 15px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+      .badge-syn {
+        background: #6f42c1;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 6px;
+      }
+      .style-preview {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-top: 8px;
+        font-size: 12px;
+        background: #fafafa;
+        min-height: 36px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
 <noscript>
 <style>body>*:not(noscript){display:none!important}</style>
 <div style="font-family:'Segoe UI',sans-serif;max-width:480px;margin:80px auto;padding:28px;background:#fff3cd;border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:10px;color:#1c1e21;">
@@ -52,602 +246,723 @@
   <small style="color:#666">JavaScript jest wymagany do działania tej strony.</small>
 </div>
 </noscript>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
 
-<div class="card">
-    <h2 data-i18n="title"></h2>
-    <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
+    <div class="card">
+      <h2 data-i18n="title"></h2>
+      <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
 
-    <div class="controls">
+      <div class="controls">
         <label data-i18n="step1"></label>
         <div class="upload-section" id="dropZone">
-            <span id="fileNameDisplay" data-i18n="dropzone"></span>
-            <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
+          <span id="fileNameDisplay" data-i18n="dropzone"></span>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".mobi,.azw,.azw3"
+            style="display: none"
+          />
         </div>
 
         <label data-i18n="step2"></label>
         <div class="option-box">
-            <div class="option-row">
-                <label data-i18n="styleLabel"></label>
-                <select id="styleSelect">
-                    <option value="none" data-i18n="styleNone"></option>
-                    <option value="clean" data-i18n="styleClean"></option>
-                    <option value="nice" selected data-i18n="styleNice"></option>
-                    <option value="eink" data-i18n="styleEink"></option>
-                    <option value="rich" data-i18n="styleRich"></option>
-                </select>
-            </div>
-            <div class="style-preview" id="stylePreview"></div>
-
+          <div class="option-row">
+            <label data-i18n="styleLabel"></label>
+            <select id="styleSelect">
+              <option value="none" data-i18n="styleNone"></option>
+              <option value="clean" data-i18n="styleClean"></option>
+              <option value="nice" selected data-i18n="styleNice"></option>
+              <option value="eink" data-i18n="styleEink"></option>
+              <option value="rich" data-i18n="styleRich"></option>
+            </select>
+          </div>
+          <div class="style-preview" id="stylePreview"></div>
         </div>
 
-        <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
-    </div>
+        <button
+          id="startBtn"
+          class="btn-main"
+          disabled
+          data-i18n="startBtn"
+        ></button>
+      </div>
 
-    <div id="log" data-i18n="logIdle"></div>
+      <div id="log" data-i18n="logIdle"></div>
 
-    <div id="downloadArea" style="display:none; margin-top:25px; padding:20px; background:#e6ffed; border-radius:8px; border: 1px solid #b7eb8f;">
+      <div
+        id="downloadArea"
+        style="
+          display: none;
+          margin-top: 25px;
+          padding: 20px;
+          background: #e6ffed;
+          border-radius: 8px;
+          border: 1px solid #b7eb8f;
+        "
+      >
         <h3 data-i18n="doneTitle"></h3>
         <div id="links"></div>
-    </div>
+      </div>
 
-    <div id="previewArea" class="preview-area">
+      <div id="previewArea" class="preview-area">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
-        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px; color:#5b6570;"></h4>
-        <input type="text" id="validatorSearchBox" class="validator-search" data-i18n-ph="validatorSearchPh" placeholder="Search in generated StarDict...">
+        <h4
+          data-i18n="validatorTitle"
+          style="margin: 14px 0 6px; color: #5b6570"
+        ></h4>
+        <input
+          type="text"
+          id="validatorSearchBox"
+          class="validator-search"
+          data-i18n-ph="validatorSearchPh"
+          placeholder="Search in generated StarDict..."
+        />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-                <b id="validatorResultWord"></b>
-                <div style="display:flex;gap:6px;align-items:center;">
-                    <span id="validatorByteBadge" class="badge-syn"></span>
-                    <button id="validatorCopyBtn" class="btn-dl" style="padding:6px 10px;background:#6c757d">Copy HTML</button>
-                </div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            "
+          >
+            <b id="validatorResultWord"></b>
+            <div style="display: flex; gap: 6px; align-items: center">
+              <span id="validatorByteBadge" class="badge-syn"></span>
+              <button
+                id="validatorCopyBtn"
+                class="btn-dl"
+                style="padding: 6px 10px; background: #6c757d"
+              >
+                Copy HTML
+              </button>
             </div>
-            <div id="validatorSynInfo" style="display:none;color:#6f42c1;font-size:12px;margin-top:6px"></div>
-            <div class="validator-split">
-                <div id="validatorPaneRendered" class="validator-pane"></div>
-            </div>
+          </div>
+          <div
+            id="validatorSynInfo"
+            style="
+              display: none;
+              color: #6f42c1;
+              font-size: 12px;
+              margin-top: 6px;
+            "
+          ></div>
+          <div class="validator-split">
+            <div id="validatorPaneRendered" class="validator-pane"></div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-// ── Style engines ─────────────────────────────────────────────────────────────
-const STYLES = {
-    none(word, phonetics, rawH2Html, contentHtml) {
-        return rawH2Html + contentHtml;
-    },
+    <script>
+      // ── Style engines ─────────────────────────────────────────────────────────────
+      const STYLES = {
+        none(word, phonetics, rawH2Html, contentHtml) {
+          return rawH2Html + contentHtml;
+        },
 
-    clean(word, phonetics, rawH2Html, contentHtml) {
-        // Strip inline styles, keep semantic structure
-        const clean = (h) => h.replace(/ style="[^"]*"/g, '');
-        const ph = phonetics ? ` <em>${phonetics}</em>` : '';
-        return `<b>${word}</b>${ph}<br>${clean(contentHtml)}`;
-    },
+        clean(word, phonetics, rawH2Html, contentHtml) {
+          // Strip inline styles, keep semantic structure
+          const clean = (h) => h.replace(/ style="[^"]*"/g, "");
+          const ph = phonetics ? ` <em>${phonetics}</em>` : "";
+          return `<b>${word}</b>${ph}<br>${clean(contentHtml)}`;
+        },
 
-    nice(word, phonetics, rawH2Html, contentHtml) {
-        const ph = phonetics
-            ? ` <span style="color:#666;font-size:.88em;font-style:italic">${phonetics}</span>` : '';
-        let content = contentHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\b.*?<\/i>)/g,
-                     '<span style="color:#c0392b;font-weight:bold">$1</span>')
-            .replace(/(<b>(?:\d+)\.?<\/b>)/g,
-                     '<span style="color:#2980b9;font-weight:bold">$1</span>');
-        return `<div style="margin-bottom:6px"><b style="font-size:1.15em;color:#003d82">${word}</b>${ph}</div>${content}`;
-    },
+        nice(word, phonetics, rawH2Html, contentHtml) {
+          const ph = phonetics
+            ? ` <span style="color:#666;font-size:.88em;font-style:italic">${phonetics}</span>`
+            : "";
+          let content = contentHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\b.*?<\/i>)/g,
+              '<span style="color:#c0392b;font-weight:bold">$1</span>',
+            )
+            .replace(
+              /(<b>(?:\d+)\.?<\/b>)/g,
+              '<span style="color:#2980b9;font-weight:bold">$1</span>',
+            );
+          return `<div style="margin-bottom:6px"><b style="font-size:1.15em;color:#003d82">${word}</b>${ph}</div>${content}`;
+        },
 
-    rich(word, phonetics, rawH2Html, contentHtml) {
-        const ph = phonetics
-            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.85em">${phonetics}</span>` : '';
-        // Color POS tags (n, v, adj, adv…)
-        let content = contentHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<b style="color:#e74c3c">$1</b>')
+        rich(word, phonetics, rawH2Html, contentHtml) {
+          const ph = phonetics
+            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.85em">${phonetics}</span>`
+            : "";
+          // Color POS tags (n, v, adj, adv…)
+          let content = contentHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<b style="color:#e74c3c">$1</b>',
+            )
             // Number sense labels: bold + colored
             .replace(/\b(\d+)\./g, '<b style="color:#1565c0">$1.</b>')
             // italic domain labels like <i>fin.</i> <i>biz.</i> etc.
-            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g,
-                     '<span style="color:#7c3aed;font-size:.85em">$1</span>')
+            .replace(
+              /(<i>[a-z]{2,5}\.<\/i>)/g,
+              '<span style="color:#7c3aed;font-size:.85em">$1</span>',
+            )
             // sub-phrase entries: bold olive
-            .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
-                     '<b style="color:#5c4b00">$2</b>');
-        return `<div style="margin-bottom:6px;padding:4px 0;border-left:3px solid #2980b9;padding-left:8px">`
-             + `<b style="font-size:1.2em;color:#1a237e">${word}</b>${ph}`
-             + `</div>${content}`;
-    },
+            .replace(
+              /(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+              '<b style="color:#5c4b00">$2</b>',
+            );
+          return (
+            `<div style="margin-bottom:6px;padding:4px 0;border-left:3px solid #2980b9;padding-left:8px">` +
+            `<b style="font-size:1.2em;color:#1a237e">${word}</b>${ph}` +
+            `</div>${content}`
+          );
+        },
 
-    eink(word, phonetics, rawH2Html, contentHtml) {
-        const ph = phonetics
-            ? ` <span style="font-size:.9em;font-style:italic">${phonetics}</span>` : '';
-        let content = contentHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                     '<b>$1</b>')
-            .replace(/\b(\d+)\./g, '<b>$1.</b>')
-            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, '<small>$1</small>')
-            .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
-                     '<b style="text-decoration:underline">$2</b>');
-        return `<div style="margin-bottom:6px;padding:4px 0;border-left:2px solid #000;padding-left:8px">`
-             + `<b style="font-size:1.2em">${word}</b>${ph}`
-             + `</div>${content}`;
-    }
-};
+        eink(word, phonetics, rawH2Html, contentHtml) {
+          const ph = phonetics
+            ? ` <span style="font-size:.9em;font-style:italic">${phonetics}</span>`
+            : "";
+          let content = contentHtml
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              "<b>$1</b>",
+            )
+            .replace(/\b(\d+)\./g, "<b>$1.</b>")
+            .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, "<small>$1</small>")
+            .replace(
+              /(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+              '<b style="text-decoration:underline">$2</b>',
+            );
+          return (
+            `<div style="margin-bottom:6px;padding:4px 0;border-left:2px solid #000;padding-left:8px">` +
+            `<b style="font-size:1.2em">${word}</b>${ph}` +
+            `</div>${content}`
+          );
+        },
+      };
 
-// Preview sample
-const PREVIEW_ENTRY = {
-    word: 'download',
-    phonetics: '/ˌdaʊnˈləʊd/',
-    rawH2Html: '<h2>download [/ˌdaʊnˈləʊd/]</h2>',
-    contentHtml: '<p><i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <b>2.</b> <i>n</i> plik do pobrania</p>'
-};
+      // Preview sample
+      const PREVIEW_ENTRY = {
+        word: "download",
+        phonetics: "/ˌdaʊnˈləʊd/",
+        rawH2Html: "<h2>download [/ˌdaʊnˈləʊd/]</h2>",
+        contentHtml:
+          "<p><i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <b>2.</b> <i>n</i> plik do pobrania</p>",
+      };
 
-function updateStylePreview() {
-    const style = document.getElementById('styleSelect').value;
-    const fn = STYLES[style];
-    document.getElementById('stylePreview').innerHTML =
-        fn(PREVIEW_ENTRY.word, PREVIEW_ENTRY.phonetics,
-           PREVIEW_ENTRY.rawH2Html, PREVIEW_ENTRY.contentHtml);
-}
-document.getElementById('styleSelect').addEventListener('change', updateStylePreview);
-updateStylePreview();
+      function updateStylePreview() {
+        const style = document.getElementById("styleSelect").value;
+        const fn = STYLES[style];
+        document.getElementById("stylePreview").innerHTML = fn(
+          PREVIEW_ENTRY.word,
+          PREVIEW_ENTRY.phonetics,
+          PREVIEW_ENTRY.rawH2Html,
+          PREVIEW_ENTRY.contentHtml,
+        );
+      }
+      document
+        .getElementById("styleSelect")
+        .addEventListener("change", updateStylePreview);
+      updateStylePreview();
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
-// PalmDocBase – shared PalmDoc decompression logic
-// Used by mobi7PalmDocConverter.html and Tools/MobiReader-PalmDoc.html
-// DO NOT edit the compiled HTML files directly – edit this file and the
-// templates, then run:  node build.js
-// ─────────────────────────────────────────────────────────────────────────────
-class PalmDocBase {
-    constructor(buffer) {
-        this.buffer  = buffer;
-        this.view    = new DataView(buffer);
-        this.records = [];      // array of { offset }
-        this.extraFlags = 0;
-    }
-
-    // ── Build record list and read ExtraDataFlags from MOBI header ────────────
-    buildRecords() {
-        const numRecords = this.view.getUint16(76);
-        this.records = [];
-        for (let i = 0; i < numRecords; i++)
-            this.records.push({ offset: this.view.getUint32(78 + i * 8) });
-        this.extraFlags = this.view.getUint16(this.records[0].offset + 0xF2);
-        return numRecords;
-    }
-
-    // ── Strip trailing bytes as specified by ExtraDataFlags ───────────────────
-    stripTrailing(data, flags) {
-        if (!flags || data.length === 0) return data;
-        let trim = 0;
-        for (let j = 0; j < 15; j++) {
-            if ((flags >> (j + 1)) & 1) {
-                let size = 0, pos = data.length - 1 - trim;
-                let v = data[pos], shift = 7;
-                size = v & 0x7F;
-                while ((v & 0x80) === 0 && pos > 0) {
-                    v = data[--pos];
-                    size |= (v & 0x7F) << shift;
-                    shift += 7;
-                }
-                trim += size;
-            }
+      // ─────────────────────────────────────────────────────────────────────────────
+      // ─────────────────────────────────────────────────────────────────────────────
+      // PalmDocBase – shared PalmDoc decompression logic
+      // Used by mobi7PalmDocConverter.html and Tools/MobiReader-PalmDoc.html
+      // DO NOT edit the compiled HTML files directly – edit this file and the
+      // templates, then run:  node build.js
+      // ─────────────────────────────────────────────────────────────────────────────
+      class PalmDocBase {
+        constructor(buffer) {
+          this.buffer = buffer;
+          this.view = new DataView(buffer);
+          this.records = []; // array of { offset }
+          this.extraFlags = 0;
         }
-        if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
-        return (trim > 0 && trim < data.length) ? data.slice(0, data.length - trim) : data;
-    }
 
-    // ── PalmDoc LZ77 decompression ────────────────────────────────────────────
-    decompressPalmDoc(data) {
-        let out = [];
-        for (let j = 0; j < data.length; j++) {
+        // ── Build record list and read ExtraDataFlags from MOBI header ────────────
+        buildRecords() {
+          const numRecords = this.view.getUint16(76);
+          this.records = [];
+          for (let i = 0; i < numRecords; i++)
+            this.records.push({ offset: this.view.getUint32(78 + i * 8) });
+          this.extraFlags = this.view.getUint16(this.records[0].offset + 0xf2);
+          return numRecords;
+        }
+
+        // ── Strip trailing bytes as specified by ExtraDataFlags ───────────────────
+        stripTrailing(data, flags) {
+          if (!flags || data.length === 0) return data;
+          let trim = 0;
+          for (let j = 0; j < 15; j++) {
+            if ((flags >> (j + 1)) & 1) {
+              let size = 0,
+                pos = data.length - 1 - trim;
+              let v = data[pos],
+                shift = 7;
+              size = v & 0x7f;
+              while ((v & 0x80) === 0 && pos > 0) {
+                v = data[--pos];
+                size |= (v & 0x7f) << shift;
+                shift += 7;
+              }
+              trim += size;
+            }
+          }
+          if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
+          return trim > 0 && trim < data.length
+            ? data.slice(0, data.length - trim)
+            : data;
+        }
+
+        // ── PalmDoc LZ77 decompression ────────────────────────────────────────────
+        decompressPalmDoc(data) {
+          let out = [];
+          for (let j = 0; j < data.length; j++) {
             let b = data[j];
             if (b >= 1 && b <= 8) {
-                for (let k = 0; k < b; k++) out.push(data[++j]);
+              for (let k = 0; k < b; k++) out.push(data[++j]);
             } else if (b <= 127) {
-                out.push(b);
+              out.push(b);
             } else if (b >= 192) {
-                out.push(32);
-                out.push(b ^ 128);
+              out.push(32);
+              out.push(b ^ 128);
             } else if (b >= 128 && b <= 191) {
-                let next = data[++j];
-                let dist = (((b << 8) | next) >> 3) & 0x7FF;
-                let len  = (next & 7) + 3;
-                let s    = out.length - dist;
-                if (s >= 0) for (let k = 0; k < len; k++) out.push(out[s + k]);
+              let next = data[++j];
+              let dist = (((b << 8) | next) >> 3) & 0x7ff;
+              let len = (next & 7) + 3;
+              let s = out.length - dist;
+              if (s >= 0) for (let k = 0; k < len; k++) out.push(out[s + k]);
             } else {
-                out.push(b);
+              out.push(b);
             }
+          }
+          return new Uint8Array(out);
         }
-        return new Uint8Array(out);
-    }
 
-    // ── Read, strip, and decompress a single record; return UTF-8 string ──────
-    getRecordText(idx) {
-        if (idx < 1 || idx >= this.records.length) return '';
-        const start = this.records[idx].offset;
-        const end   = this.records[idx + 1] ? this.records[idx + 1].offset : this.buffer.byteLength;
-        let data = new Uint8Array(this.buffer.slice(start, end));
-        data = this.stripTrailing(data, this.extraFlags);
-        const out = this.decompressPalmDoc(data);
-        return new TextDecoder('utf-8').decode(out);
-    }
-}
+        // ── Read, strip, and decompress a single record; return UTF-8 string ──────
+        getRecordText(idx) {
+          if (idx < 1 || idx >= this.records.length) return "";
+          const start = this.records[idx].offset;
+          const end = this.records[idx + 1]
+            ? this.records[idx + 1].offset
+            : this.buffer.byteLength;
+          let data = new Uint8Array(this.buffer.slice(start, end));
+          data = this.stripTrailing(data, this.extraFlags);
+          const out = this.decompressPalmDoc(data);
+          return new TextDecoder("utf-8").decode(out);
+        }
+      }
 
+      // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
+      // ── Converter: extends PalmDocBase with dictionary extraction logic ────────
+      // Converter: extends PalmDocBase with dictionary extraction logic.
+      class Converter extends PalmDocBase {
+        constructor(buffer, options, logFn) {
+          super(buffer);
+          this.options = options;
+          this.log = logFn;
+          this.encoder = new TextEncoder();
+          this.finalMap = new Map(); // word -> definition HTML
+          this.synMap = new Map(); // alternate_form -> canonical_word
+        }
 
-// ── Converter: extends PalmDocBase with dictionary extraction logic ────────
-// Converter: extends PalmDocBase with dictionary extraction logic.
-class Converter extends PalmDocBase {
-    constructor(buffer, options, logFn) {
-        super(buffer);
-        this.options  = options;
-        this.log      = logFn;
-        this.encoder  = new TextEncoder();
-        this.finalMap = new Map();     // word -> definition HTML
-        this.synMap   = new Map();     // alternate_form -> canonical_word
-    }
+        async run() {
+          const numRecords = this.buildRecords();
+          this.log(
+            `Source detected. Extra Data Flags: 0x${this.extraFlags.toString(16)}`,
+          );
+          this.log("Step 1: Extracting text from MOBI records...");
+          const html = await this.extractAsync(numRecords);
+          this.log("Step 2: Running extraction engines...");
+          this.parseDictionary(html);
+          return { finalMap: this.finalMap, synMap: this.synMap };
+        }
 
-    async run() {
-        const numRecords = this.buildRecords();
-        this.log(`Source detected. Extra Data Flags: 0x${this.extraFlags.toString(16)}`);
-        this.log('Step 1: Extracting text from MOBI records...');
-        const html = await this.extractAsync(numRecords);
-        this.log('Step 2: Running extraction engines...');
-        this.parseDictionary(html);
-        return { finalMap: this.finalMap, synMap: this.synMap };
-    }
-
-    extractAsync(numRecords) {
-        return new Promise(resolve => {
-            let fullHtml = '';
-            const decoder = new TextDecoder('utf-8');
+        extractAsync(numRecords) {
+          return new Promise((resolve) => {
+            let fullHtml = "";
+            const decoder = new TextDecoder("utf-8");
             let i = 1;
             const processChunk = () => {
-                const limit = Math.min(i + 1500, numRecords);
-                for (; i < limit; i++) {
-                    const start = this.records[i].offset;
-                    const end   = (i + 1 < numRecords) ? this.records[i + 1].offset : this.buffer.byteLength;
-                    let data = new Uint8Array(this.buffer.slice(start, end));
-                    data = this.stripTrailing(data, this.extraFlags);
-                    if (data.length === 0) continue;
-                    fullHtml += decoder.decode(this.decompressPalmDoc(data));
-                }
-                if (i < numRecords) {
-                    this.log(`Extracted ${i}/${numRecords} records...`);
-                    setTimeout(processChunk, 0);
-                } else {
-                    resolve(fullHtml);
-                }
+              const limit = Math.min(i + 1500, numRecords);
+              for (; i < limit; i++) {
+                const start = this.records[i].offset;
+                const end =
+                  i + 1 < numRecords
+                    ? this.records[i + 1].offset
+                    : this.buffer.byteLength;
+                let data = new Uint8Array(this.buffer.slice(start, end));
+                data = this.stripTrailing(data, this.extraFlags);
+                if (data.length === 0) continue;
+                fullHtml += decoder.decode(this.decompressPalmDoc(data));
+              }
+              if (i < numRecords) {
+                this.log(`Extracted ${i}/${numRecords} records...`);
+                setTimeout(processChunk, 0);
+              } else {
+                resolve(fullHtml);
+              }
             };
             processChunk();
-        });
-    }
+          });
+        }
 
-    parseDictionary(html) {
-        this.log('Parsing structure...');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const h2Entries = doc.querySelectorAll('h2');
-        this.log(`Found ${h2Entries.length} headwords.`);
+        parseDictionary(html) {
+          this.log("Parsing structure...");
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const h2Entries = doc.querySelectorAll("h2");
+          this.log(`Found ${h2Entries.length} headwords.`);
 
-        const styleFn = STYLES[this.options.style] || STYLES.nice;
+          const styleFn = STYLES[this.options.style] || STYLES.nice;
 
-        h2Entries.forEach(h2 => {
+          h2Entries.forEach((h2) => {
             const rawHeader = h2.textContent;
             const phonMatch = rawHeader.match(/\[([^\]]+)\]/);
-            const phonetics = phonMatch ? phonMatch[1] : '';
-            const word = rawHeader.split('[')[0].trim();
+            const phonetics = phonMatch ? phonMatch[1] : "";
+            const word = rawHeader.split("[")[0].trim();
             if (!word || word.length >= 100) return;
 
             // Collect sibling content until next H2/HR
-            let contentHtml = '';
+            let contentHtml = "";
             let next = h2.nextSibling;
-            while (next && next.tagName !== 'H2' && next.tagName !== 'HR') {
-                contentHtml += next.outerHTML || next.textContent || '';
-                next = next.nextSibling;
+            while (next && next.tagName !== "H2" && next.tagName !== "HR") {
+              contentHtml += next.outerHTML || next.textContent || "";
+              next = next.nextSibling;
             }
 
             const entryHtml = styleFn(word, phonetics, h2.outerHTML, contentHtml);
 
             if (this.options.merge && this.finalMap.has(word)) {
-                this.finalMap.set(word, this.finalMap.get(word) + '<hr style="margin:4px 0">' + entryHtml);
+              this.finalMap.set(
+                word,
+                this.finalMap.get(word) + '<hr style="margin:4px 0">' + entryHtml,
+              );
             } else {
-                this.finalMap.set(word, entryHtml);
+              this.finalMap.set(word, entryHtml);
             }
 
             // Collect synonyms from this entry
             if (this.options.generateSyn) {
-                // 1. Subscript variant: "word1" -> "word" (strip trailing digit subscripts)
-                const stripped = word.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, '').trim();
-                if (stripped !== word && stripped.length > 1) {
-                    if (!this.synMap.has(stripped)) this.synMap.set(stripped, word);
-                }
+              // 1. Subscript variant: "word1" -> "word" (strip trailing digit subscripts)
+              const stripped = word
+                .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "")
+                .trim();
+              if (stripped !== word && stripped.length > 1) {
+                if (!this.synMap.has(stripped)) this.synMap.set(stripped, word);
+              }
 
-                // 2. Bold sub-phrases inside the content
-                const bMatches = contentHtml.matchAll(/<b>([^<]{3,70})<\/b>/g);
-                for (const m of bMatches) {
-                    const phrase = m[1].trim();
-                    if (phrase.toLowerCase() === word.toLowerCase()) continue;
-                    if (phrase.length < 3 || phrase.length > 80) continue;
-                    if (/^\d+$/.test(phrase)) continue;
-                    if (!this.synMap.has(phrase)) this.synMap.set(phrase, word);
-                }
+              // 2. Bold sub-phrases inside the content
+              const bMatches = contentHtml.matchAll(/<b>([^<]{3,70})<\/b>/g);
+              for (const m of bMatches) {
+                const phrase = m[1].trim();
+                if (phrase.toLowerCase() === word.toLowerCase()) continue;
+                if (phrase.length < 3 || phrase.length > 80) continue;
+                if (/^\d+$/.test(phrase)) continue;
+                if (!this.synMap.has(phrase)) this.synMap.set(phrase, word);
+              }
 
-                // 3. Phonetic "also" forms: (tez X) or (also X) patterns
-                const tezRe = /\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi;
-                for (const m of contentHtml.matchAll(tezRe)) {
-                    const alt = m[1].trim();
-                    if (alt && alt !== word && !this.synMap.has(alt))
-                        this.synMap.set(alt, word);
-                }
+              // 3. Phonetic "also" forms: (tez X) or (also X) patterns
+              const tezRe = /\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi;
+              for (const m of contentHtml.matchAll(tezRe)) {
+                const alt = m[1].trim();
+                if (alt && alt !== word && !this.synMap.has(alt))
+                  this.synMap.set(alt, word);
+              }
             }
-        });
+          });
 
-        this.log(`Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`);
-    }
-}
-
-
-
-// ── UI ────────────────────────────────────────────────────────────────────────
-const fileInput = document.getElementById('fileInput');
-const startBtn  = document.getElementById('startBtn');
-const logEl     = document.getElementById('log');
-let globalBuffer = null;
-
-function addLog(msg) {
-    logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
-
-document.getElementById('dropZone').onclick = () => fileInput.click();
-fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        document.getElementById('fileNameDisplay').textContent = `📁 ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-        globalBuffer = await file.arrayBuffer();
-        startBtn.disabled = false;
-        addLog("File loaded. Ready.");
-    }
-});
-
-startBtn.onclick = () => {
-    startBtn.disabled = true;
-    startBtn.classList.add('processing');
-    startBtn.textContent = "WORKING...";
-
-    const options = {
-        style:       document.getElementById('styleSelect').value,
-        merge:       true,
-        generateSyn: true,
-    };
-
-    const converter = new Converter(globalBuffer, options, addLog);
-    setTimeout(async () => {
-        try {
-            const { finalMap } = await converter.run();
-            renderOutput(finalMap, converter.encoder, true);
-            startBtn.classList.remove('processing');
-            startBtn.textContent = "✅ DONE";
-        } catch (err) {
-            addLog("ERROR: " + err.message + '\n' + err.stack);
-            startBtn.disabled = false;
-            startBtn.classList.remove('processing');
-            startBtn.textContent = "RETRY";
+          this.log(
+            `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
+          );
         }
-    }, 100);
-};
+      }
 
-// ── Output ────────────────────────────────────────────────────────────────────
-// Shared StarDict validator logic used by converter and standalone validator tool.
-(function () {
-    function create(config) {
-        const ids = config.ids || {};
-        const el = {
-            status:      document.getElementById(ids.status),
-            search:      document.getElementById(ids.search),
-            resultCard:  document.getElementById(ids.resultCard),
-            resultWord:  document.getElementById(ids.resultWord),
-            byteBadge:   document.getElementById(ids.byteBadge),
-            synInfo:     document.getElementById(ids.synInfo),
-            paneRendered:document.getElementById(ids.paneRendered),
-            paneRaw:     document.getElementById(ids.paneRaw),
-            copyBtn:     document.getElementById(ids.copyBtn),
+
+      // ── UI ────────────────────────────────────────────────────────────────────────
+      const fileInput = document.getElementById("fileInput");
+      const startBtn = document.getElementById("startBtn");
+      const logEl = document.getElementById("log");
+      let globalBuffer = null;
+
+      function addLog(msg) {
+        logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          document.getElementById("fileNameDisplay").textContent =
+            `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+          globalBuffer = await file.arrayBuffer();
+          startBtn.disabled = false;
+          addLog("File loaded. Ready.");
+        }
+      });
+
+      startBtn.onclick = () => {
+        startBtn.disabled = true;
+        startBtn.classList.add("processing");
+        startBtn.textContent = "WORKING...";
+
+        const options = {
+          style: document.getElementById("styleSelect").value,
+          merge: true,
+          generateSyn: true,
         };
 
-        let idxData = null;
-        let dictData = null;
-        let wordMap = new Map();
-        let synMap = new Map();
-        let ordinalToKey = [];
-        let rawHtml = '';
+        const converter = new Converter(globalBuffer, options, addLog);
+        setTimeout(async () => {
+          try {
+            const { finalMap } = await converter.run();
+            renderOutput(finalMap, converter.encoder, true);
+            startBtn.classList.remove("processing");
+            startBtn.textContent = "✅ DONE";
+          } catch (err) {
+            addLog("ERROR: " + err.message + "\n" + err.stack);
+            startBtn.disabled = false;
+            startBtn.classList.remove("processing");
+            startBtn.textContent = "RETRY";
+          }
+        }, 100);
+      };
 
-        const dec = new TextDecoder('utf-8');
+      // ── Output ────────────────────────────────────────────────────────────────────
+      // Shared StarDict validator logic used by converter and standalone validator tool.
+      (function () {
+        function create(config) {
+          const ids = config.ids || {};
+          const el = {
+            status: document.getElementById(ids.status),
+            search: document.getElementById(ids.search),
+            resultCard: document.getElementById(ids.resultCard),
+            resultWord: document.getElementById(ids.resultWord),
+            byteBadge: document.getElementById(ids.byteBadge),
+            synInfo: document.getElementById(ids.synInfo),
+            paneRendered: document.getElementById(ids.paneRendered),
+            paneRaw: document.getElementById(ids.paneRaw),
+            copyBtn: document.getElementById(ids.copyBtn),
+          };
 
-        function setStatus(msg) {
+          let idxData = null;
+          let dictData = null;
+          let wordMap = new Map();
+          let synMap = new Map();
+          let ordinalToKey = [];
+          let rawHtml = "";
+
+          const dec = new TextDecoder("utf-8");
+
+          function setStatus(msg) {
             if (el.status) el.status.textContent = msg;
-        }
+          }
 
-        function parseIdx(buffer) {
+          function parseIdx(buffer) {
             idxData = new DataView(buffer);
             wordMap.clear();
             ordinalToKey = [];
             let offset = 0;
             while (offset < idxData.byteLength) {
-                const start = offset;
-                while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0) offset++;
-                const word = dec.decode(new Uint8Array(idxData.buffer, start, offset - start));
+              const start = offset;
+              while (offset < idxData.byteLength && idxData.getUint8(offset) !== 0)
                 offset++;
-                if (offset + 8 > idxData.byteLength) break;
-                const dataOffset = idxData.getUint32(offset, false);
-                const dataSize   = idxData.getUint32(offset + 4, false);
-                const lc = word.toLowerCase();
-                ordinalToKey.push(lc);
-                const entry = { off: dataOffset, sz: dataSize, original: word };
-                if (wordMap.has(lc)) wordMap.get(lc).push(entry);
-                else wordMap.set(lc, [entry]);
-                offset += 8;
+              const word = dec.decode(
+                new Uint8Array(idxData.buffer, start, offset - start),
+              );
+              offset++;
+              if (offset + 8 > idxData.byteLength) break;
+              const dataOffset = idxData.getUint32(offset, false);
+              const dataSize = idxData.getUint32(offset + 4, false);
+              const lc = word.toLowerCase();
+              ordinalToKey.push(lc);
+              const entry = { off: dataOffset, sz: dataSize, original: word };
+              if (wordMap.has(lc)) wordMap.get(lc).push(entry);
+              else wordMap.set(lc, [entry]);
+              offset += 8;
             }
-        }
+          }
 
-        function parseSyn(buffer) {
+          function parseSyn(buffer) {
             synMap.clear();
             if (!buffer) return;
             const synView = new DataView(buffer);
             let so = 0;
             while (so < synView.byteLength) {
-                const ss = so;
-                while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
-                const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
-                so++;
-                if (so + 4 > synView.byteLength) break;
-                const ordinal = synView.getUint32(so, false);
-                so += 4;
-                if (ordinal < ordinalToKey.length) synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
+              const ss = so;
+              while (so < synView.byteLength && synView.getUint8(so) !== 0) so++;
+              const alt = dec.decode(new Uint8Array(synView.buffer, ss, so - ss));
+              so++;
+              if (so + 4 > synView.byteLength) break;
+              const ordinal = synView.getUint32(so, false);
+              so += 4;
+              if (ordinal < ordinalToKey.length)
+                synMap.set(alt.toLowerCase(), ordinalToKey[ordinal]);
             }
-        }
+          }
 
-        function showEntry(lowerKey, matchInfo) {
+          function showEntry(lowerKey, matchInfo) {
             const entries = wordMap.get(lowerKey);
             if (!entries) return;
 
-            rawHtml = entries.map(e => dec.decode(new Uint8Array(dictData, e.off, e.sz))).join('');
+            rawHtml = entries
+              .map((e) => dec.decode(new Uint8Array(dictData, e.off, e.sz)))
+              .join("");
             const first = entries[0];
 
             if (el.resultWord) el.resultWord.textContent = first.original;
             if (el.byteBadge) {
-                el.byteBadge.textContent = entries.length > 1
-                    ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
-                    : `${first.sz} bytes`;
+              el.byteBadge.textContent =
+                entries.length > 1
+                  ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
+                  : `${first.sz} bytes`;
             }
 
             if (el.synInfo) {
-                if (matchInfo && matchInfo.mode === 'synonym') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else if (matchInfo && matchInfo.mode === 'fallback-word') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else if (matchInfo && matchInfo.mode === 'fallback-synonym') {
-                    el.synInfo.style.display = 'block';
-                    el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
-                } else {
-                    el.synInfo.style.display = 'none';
-                }
+              if (matchInfo && matchInfo.mode === "synonym") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else if (matchInfo && matchInfo.mode === "fallback-word") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else if (matchInfo && matchInfo.mode === "fallback-synonym") {
+                el.synInfo.style.display = "block";
+                el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+              } else {
+                el.synInfo.style.display = "none";
+              }
             }
 
             if (el.paneRendered) el.paneRendered.innerHTML = rawHtml;
             if (el.paneRaw) el.paneRaw.textContent = rawHtml;
-            if (el.resultCard) el.resultCard.style.display = 'block';
-        }
+            if (el.resultCard) el.resultCard.style.display = "block";
+          }
 
-        function bindSearch() {
+          function bindSearch() {
             if (!el.search) return;
 
             const candidateBases = (q) => {
-                const out = new Set();
-                const w = (q || '').toLowerCase();
-                if (!w) return out;
-                out.add(w);
-                if (w.endsWith('ies') && w.length > 4) out.add(w.slice(0, -3) + 'y');
-                if (w.endsWith('es') && w.length > 3) out.add(w.slice(0, -2));
-                if (w.endsWith('s') && w.length > 2) out.add(w.slice(0, -1));
-                if (w.endsWith('ing') && w.length > 5) {
-                    out.add(w.slice(0, -3));
-                    out.add(w.slice(0, -3) + 'e');
-                }
-                if (w.endsWith('ed') && w.length > 4) {
-                    out.add(w.slice(0, -2));
-                    out.add(w.slice(0, -1));
-                }
-                return out;
+              const out = new Set();
+              const w = (q || "").toLowerCase();
+              if (!w) return out;
+              out.add(w);
+              if (w.endsWith("ies") && w.length > 4) out.add(w.slice(0, -3) + "y");
+              if (w.endsWith("es") && w.length > 3) out.add(w.slice(0, -2));
+              if (w.endsWith("s") && w.length > 2) out.add(w.slice(0, -1));
+              if (w.endsWith("ing") && w.length > 5) {
+                out.add(w.slice(0, -3));
+                out.add(w.slice(0, -3) + "e");
+              }
+              if (w.endsWith("ed") && w.length > 4) {
+                out.add(w.slice(0, -2));
+                out.add(w.slice(0, -1));
+              }
+              return out;
             };
 
             const resolveKey = (queryLower) => {
-                if (wordMap.has(queryLower)) {
-                    return { key: queryLower, mode: 'exact' };
-                }
-                if (synMap.has(queryLower)) {
-                    return { key: synMap.get(queryLower), mode: 'synonym' };
-                }
+              if (wordMap.has(queryLower)) {
+                return { key: queryLower, mode: "exact" };
+              }
+              if (synMap.has(queryLower)) {
+                return { key: synMap.get(queryLower), mode: "synonym" };
+              }
 
-                for (const base of candidateBases(queryLower)) {
-                    if (base === queryLower) continue;
-                    if (wordMap.has(base)) {
-                        return { key: base, mode: 'fallback-word' };
-                    }
-                    if (synMap.has(base)) {
-                        return { key: synMap.get(base), mode: 'fallback-synonym' };
-                    }
+              for (const base of candidateBases(queryLower)) {
+                if (base === queryLower) continue;
+                if (wordMap.has(base)) {
+                  return { key: base, mode: "fallback-word" };
                 }
-                return null;
+                if (synMap.has(base)) {
+                  return { key: synMap.get(base), mode: "fallback-synonym" };
+                }
+              }
+              return null;
             };
 
-            el.search.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-                const lower = query.toLowerCase();
-                if (!query) {
-                    if (el.resultCard) el.resultCard.style.display = 'none';
-                    return;
-                }
+            el.search.addEventListener("input", (e) => {
+              const query = e.target.value.trim();
+              const lower = query.toLowerCase();
+              if (!query) {
+                if (el.resultCard) el.resultCard.style.display = "none";
+                return;
+              }
 
-                const resolved = resolveKey(lower);
-                const matchKey = resolved ? resolved.key : null;
+              const resolved = resolveKey(lower);
+              const matchKey = resolved ? resolved.key : null;
 
-                if (!matchKey) {
-                    if (el.resultCard) el.resultCard.style.display = 'none';
-                    return;
-                }
-                showEntry(matchKey, resolved && resolved.mode !== 'exact'
-                    ? { mode: resolved.mode, query }
-                    : null);
+              if (!matchKey) {
+                if (el.resultCard) el.resultCard.style.display = "none";
+                return;
+              }
+              showEntry(
+                matchKey,
+                resolved && resolved.mode !== "exact"
+                  ? { mode: resolved.mode, query }
+                  : null,
+              );
             });
-        }
+          }
 
-        function bindCopy() {
+          function bindCopy() {
             if (!el.copyBtn) return;
-            el.copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(rawHtml).then(() => {
-                    const copied = config.getCopiedLabel ? config.getCopiedLabel() : 'Copied';
-                    const copy = config.getCopyLabel ? config.getCopyLabel() : 'Copy HTML';
-                    el.copyBtn.textContent = copied;
-                    setTimeout(() => { el.copyBtn.textContent = copy; }, 1200);
-                });
+            el.copyBtn.addEventListener("click", () => {
+              navigator.clipboard.writeText(rawHtml).then(() => {
+                const copied = config.getCopiedLabel
+                  ? config.getCopiedLabel()
+                  : "Copied";
+                const copy = config.getCopyLabel
+                  ? config.getCopyLabel()
+                  : "Copy HTML";
+                el.copyBtn.textContent = copied;
+                setTimeout(() => {
+                  el.copyBtn.textContent = copy;
+                }, 1200);
+              });
             });
-        }
+          }
 
-        async function loadFromFiles(files) {
+          async function loadFromFiles(files) {
             if (!files.idx || !files.dict) return;
 
             const idxBuffer = await files.idx.arrayBuffer();
             const dictBuffer = await files.dict.arrayBuffer();
             const synBuffer = files.syn ? await files.syn.arrayBuffer() : null;
-            const ifoText = files.ifo ? dec.decode(await files.ifo.arrayBuffer()) : '';
+            const ifoText = files.ifo
+              ? dec.decode(await files.ifo.arrayBuffer())
+              : "";
 
             loadFromBuffers({ idxBuffer, dictBuffer, synBuffer, ifoText });
-        }
+          }
 
-        function loadFromBuffers(data) {
+          function loadFromBuffers(data) {
             parseIdx(data.idxBuffer);
             dictData = data.dictBuffer;
             parseSyn(data.synBuffer || null);
 
-            const ifoText = data.ifoText || '';
-            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || '?';
-            const syncount  = (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
+            const ifoText = data.ifoText || "";
+            const wordcount = (ifoText.match(/wordcount=(\d+)/) || [])[1] || "?";
+            const syncount =
+              (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
 
             setStatus(
-                `Ready: ${wordMap.size} entries` +
-                (synMap.size ? ` · ${synMap.size} synonyms` : '') +
-                (ifoText ? ` (ifo: wordcount=${wordcount}${syncount !== '0' ? ', synwordcount=' + syncount : ''})` : '')
+              `Ready: ${wordMap.size} entries` +
+                (synMap.size ? ` · ${synMap.size} synonyms` : "") +
+                (ifoText
+                  ? ` (ifo: wordcount=${wordcount}${syncount !== "0" ? ", synwordcount=" + syncount : ""})`
+                  : ""),
             );
-            if (el.search) el.search.style.display = 'block';
-        }
+            if (el.search) el.search.style.display = "block";
+          }
 
-        function attachFileInputs(fileInputIds) {
+          function attachFileInputs(fileInputIds) {
             const idsMap = fileInputIds || {};
             const ifoEl = document.getElementById(idsMap.ifo);
             const idxEl = document.getElementById(idsMap.idx);
@@ -655,262 +970,271 @@ startBtn.onclick = () => {
             const synEl = document.getElementById(idsMap.syn);
 
             const triggerLoad = () => {
-                loadFromFiles({
-                    ifo: ifoEl ? ifoEl.files[0] : null,
-                    idx: idxEl ? idxEl.files[0] : null,
-                    dict: dictEl ? dictEl.files[0] : null,
-                    syn: synEl ? synEl.files[0] : null,
-                });
+              loadFromFiles({
+                ifo: ifoEl ? ifoEl.files[0] : null,
+                idx: idxEl ? idxEl.files[0] : null,
+                dict: dictEl ? dictEl.files[0] : null,
+                syn: synEl ? synEl.files[0] : null,
+              });
             };
 
-            [ifoEl, idxEl, dictEl, synEl].forEach(node => {
-                if (node) node.addEventListener('change', triggerLoad);
+            [ifoEl, idxEl, dictEl, synEl].forEach((node) => {
+              if (node) node.addEventListener("change", triggerLoad);
             });
-        }
+          }
 
-        bindSearch();
-        bindCopy();
+          bindSearch();
+          bindCopy();
 
-        return {
+          return {
             loadFromBuffers,
             loadFromFiles,
             attachFileInputs,
             getRawHtml: () => rawHtml,
-        };
-    }
+          };
+        }
 
-    window.StarDictValidator = {
-        create,
-        initFromFiles(config) {
+        window.StarDictValidator = {
+          create,
+          initFromFiles(config) {
             const api = create(config);
             api.attachFileInputs(config.fileInputIds || {});
             return api;
-        },
-    };
-})();
+          },
+        };
+      })();
 
+      // StarDict output renderer for PalmDoc converter.
+      function renderOutput(finalMap, encoder, generateSyn) {
+        document.getElementById("downloadArea").style.display = "block";
+        const links = document.getElementById("links");
+        links.innerHTML = "";
 
-// StarDict output renderer for PalmDoc converter.
-function renderOutput(finalMap, encoder, generateSyn) {
-    document.getElementById('downloadArea').style.display = 'block';
-    const links = document.getElementById('links');
-    links.innerHTML = '';
+        // Build .dict and .idx
+        // StarDict requires .idx to be sorted alphabetically (case-insensitive)
+        const sortedEntries = Array.from(finalMap.entries()).sort(([a], [b]) =>
+          a.toLowerCase().localeCompare(b.toLowerCase()),
+        );
 
-    // Build .dict and .idx
-    // StarDict requires .idx to be sorted alphabetically (case-insensitive)
-    const sortedEntries = Array.from(finalMap.entries())
-        .sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        const wordToOrdinal = new Map();
+        let dict = [],
+          idx = [],
+          offset = 0,
+          count = 0;
 
-    const wordToOrdinal = new Map();
-    let dict = [], idx = [], offset = 0, count = 0;
+        for (const [word, def] of sortedEntries) {
+          wordToOrdinal.set(word, count);
+          const db = encoder.encode(def);
+          const wb = encoder.encode(word);
+          for (const b of db) dict.push(b);
+          for (const b of wb) idx.push(b);
+          idx.push(0);
+          const dv = new DataView(new ArrayBuffer(8));
+          dv.setUint32(0, offset, false);
+          dv.setUint32(4, db.length, false);
+          for (let i = 0; i < 8; i++) idx.push(dv.getUint8(i));
+          offset += db.length;
+          count++;
+        }
 
-    for (const [word, def] of sortedEntries) {
-        wordToOrdinal.set(word, count);
-        const db = encoder.encode(def);
-        const wb = encoder.encode(word);
-        for (const b of db) dict.push(b);
-        for (const b of wb) idx.push(b);
-        idx.push(0);
-        const dv = new DataView(new ArrayBuffer(8));
-        dv.setUint32(0, offset, false);
-        dv.setUint32(4, db.length, false);
-        for (let i = 0; i < 8; i++) idx.push(dv.getUint8(i));
-        offset += db.length;
-        count++;
-    }
+        // Build .syn (legacy-compatible): one .syn record per headword mapped to its own ordinal.
+        let synCount = 0;
+        let synBytes = [];
 
-    // Build .syn (legacy-compatible): one .syn record per headword mapped to its own ordinal.
-    let synCount = 0;
-    let synBytes = [];
-
-    if (generateSyn) {
-        for (const [word] of sortedEntries) {
+        if (generateSyn) {
+          for (const [word] of sortedEntries) {
             const ab = encoder.encode(word);
             for (const b of ab) synBytes.push(b);
             synBytes.push(0);
             const dv = new DataView(new ArrayBuffer(4));
             dv.setUint32(0, wordToOrdinal.get(word), false);
             for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
+          }
+          synCount = sortedEntries.length;
+          addLog(`Synonym file: ${synCount} entries written.`);
         }
-        synCount = sortedEntries.length;
-        addLog(`Synonym file: ${synCount} entries written.`);
-    }
 
-    // .ifo
-    let ifoLines = [
-        "StarDict's dict ifo file",
-        'version=2.4.2',
-        `wordcount=${count}`,
-        `idxfilesize=${idx.length}`,
-        'bookname=Wielki_Slownik_Ang-Pol',
-        'sametypesequence=h',
-    ];
-    if (generateSyn) ifoLines.push(`synwordcount=${synCount}`);
-    const ifo = ifoLines.join('\n') + '\n';
+        // .ifo
+        let ifoLines = [
+          "StarDict's dict ifo file",
+          "version=2.4.2",
+          `wordcount=${count}`,
+          `idxfilesize=${idx.length}`,
+          "bookname=Wielki_Slownik_Ang-Pol",
+          "sametypesequence=h",
+        ];
+        if (generateSyn) ifoLines.push(`synwordcount=${synCount}`);
+        const ifo = ifoLines.join("\n") + "\n";
 
-    const ifoBytes = new TextEncoder().encode(ifo);
-    const idxBytes = new Uint8Array(idx);
-    const dictBytes = new Uint8Array(dict);
-    const synBytesArr = generateSyn ? new Uint8Array(synBytes) : null;
+        const ifoBytes = new TextEncoder().encode(ifo);
+        const idxBytes = new Uint8Array(idx);
+        const dictBytes = new Uint8Array(dict);
+        const synBytesArr = generateSyn ? new Uint8Array(synBytes) : null;
 
-    // Download links
-    const dl = (name, data) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([data]));
-        a.download = name;
-        a.className = 'btn-dl';
-        a.textContent = `⬇ ${name}`;
-        links.appendChild(a);
-    };
-    dl('dictionary.ifo', ifoBytes);
-    dl('dictionary.idx', idxBytes);
-    dl('dictionary.dict', dictBytes);
-    if (generateSyn) {
-        dl('dictionary.syn', synBytesArr);
-        const badge = document.createElement('span');
-        badge.className = 'badge-syn';
-        badge.textContent = `${synCount} synonyms`;
-        links.appendChild(badge);
-    }
+        // Download links
+        const dl = (name, data) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([data]));
+          a.download = name;
+          a.className = "btn-dl";
+          a.textContent = `⬇ ${name}`;
+          links.appendChild(a);
+        };
+        dl("dictionary.ifo", ifoBytes);
+        dl("dictionary.idx", idxBytes);
+        dl("dictionary.dict", dictBytes);
+        if (generateSyn) {
+          dl("dictionary.syn", synBytesArr);
+          const badge = document.createElement("span");
+          badge.className = "badge-syn";
+          badge.textContent = `${synCount} synonyms`;
+          links.appendChild(badge);
+        }
 
-    addLog(`✅ Done. Entries: ${count}, idx: ${idx.length} B, dict: ${dict.length} B${synCount ? `, syn: ${synCount}` : ''}.`);
+        addLog(
+          `✅ Done. Entries: ${count}, idx: ${idx.length} B, dict: ${dict.length} B${synCount ? `, syn: ${synCount}` : ""}.`,
+        );
 
-    // Preview
-    const pArea = document.getElementById('previewArea');
-    const pGrid = document.getElementById('previewGrid');
-    pGrid.innerHTML = '';
-    pArea.style.display = 'block';
-    const keys = sortedEntries.map(([k]) => k);
-    const shown = new Set();
-    const sampleKeys = [];
-    for (let i = 0; i < Math.min(3, keys.length); i++) {
-        let k;
-        do { k = keys[Math.floor(Math.random() * keys.length)]; } while (shown.has(k));
-        shown.add(k);
-        sampleKeys.push(k);
-        const div = document.createElement('div');
-        div.className = 'preview-item';
-        div.innerHTML = `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:5px">${k}</b>`
-                      + finalMap.get(k);
-        pGrid.appendChild(div);
-    }
+        // Preview
+        const pArea = document.getElementById("previewArea");
+        const pGrid = document.getElementById("previewGrid");
+        pGrid.innerHTML = "";
+        pArea.style.display = "block";
+        const keys = sortedEntries.map(([k]) => k);
+        const shown = new Set();
+        const sampleKeys = [];
+        for (let i = 0; i < Math.min(3, keys.length); i++) {
+          let k;
+          do {
+            k = keys[Math.floor(Math.random() * keys.length)];
+          } while (shown.has(k));
+          shown.add(k);
+          sampleKeys.push(k);
+          const div = document.createElement("div");
+          div.className = "preview-item";
+          div.innerHTML =
+            `<b style="color:#007bff;display:block;border-bottom:1px solid #eee;margin-bottom:5px">${k}</b>` +
+            finalMap.get(k);
+          pGrid.appendChild(div);
+        }
 
-    if (window.StarDictValidator) {
-        if (!window.__palmValidator) {
+        if (window.StarDictValidator) {
+          if (!window.__palmValidator) {
             window.__palmValidator = window.StarDictValidator.create({
-                ids: {
-                    status: 'validatorStatus',
-                    search: 'validatorSearchBox',
-                    resultCard: 'validatorResultCard',
-                    resultWord: 'validatorResultWord',
-                    byteBadge: 'validatorByteBadge',
-                    synInfo: 'validatorSynInfo',
-                    paneRendered: 'validatorPaneRendered',
-                    copyBtn: 'validatorCopyBtn',
-                },
-                getCopyLabel: () => 'Copy HTML',
-                getCopiedLabel: () => 'Copied',
+              ids: {
+                status: "validatorStatus",
+                search: "validatorSearchBox",
+                resultCard: "validatorResultCard",
+                resultWord: "validatorResultWord",
+                byteBadge: "validatorByteBadge",
+                synInfo: "validatorSynInfo",
+                paneRendered: "validatorPaneRendered",
+                copyBtn: "validatorCopyBtn",
+              },
+              getCopyLabel: () => "Copy HTML",
+              getCopiedLabel: () => "Copied",
             });
-        }
-        window.__palmValidator.loadFromBuffers({
-            ifoText: new TextDecoder('utf-8').decode(ifoBytes),
+          }
+          window.__palmValidator.loadFromBuffers({
+            ifoText: new TextDecoder("utf-8").decode(ifoBytes),
             idxBuffer: idxBytes.buffer,
             dictBuffer: dictBytes.buffer,
             synBuffer: synBytesArr ? synBytesArr.buffer : null,
-        });
+          });
 
-        const searchEl = document.getElementById('validatorSearchBox');
-        if (searchEl && sampleKeys.length > 0) {
+          const searchEl = document.getElementById("validatorSearchBox");
+          if (searchEl && sampleKeys.length > 0) {
             const pick = sampleKeys[Math.floor(Math.random() * sampleKeys.length)];
             searchEl.value = pick;
-            searchEl.dispatchEvent(new Event('input', { bubbles: true }));
+            searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+          }
         }
-    }
-}
+      }
 
 
+      // ── i18n ──────────────────────────────────────────────────────────────────────
+      const I18N = {
+        en: {
+          title: "MOBI to StarDict",
+          subtitle:
+            "Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries",
+          step1: "Step 1: Select Dictionary File",
+          dropzone: "📁 Select .mobi file or drag it here",
+          step2: "Step 2: Options",
+          styleLabel: "🎨 Entry Style:",
+          styleNone: "None – raw HTML passthrough",
+          styleClean: "Clean – semantic, no inline styles",
+          styleNice: "Nice Theme – headword + phonetics styled",
+          styleEink: "E-ink mono – high contrast, no color styling",
+          styleRich: "Rich Color – full color-coded sections",
+          startBtn: "START CONVERSION",
+          logIdle: "Status: Idle. Waiting for file...",
+          previewTitle: "🧩 Processed Entries Preview",
+          validatorTitle: "🔎 Search Generated Dictionary",
+          validatorSearchPh: "🔍 Search generated dictionary...",
+          doneTitle: "✅ Done! Download Files:",
+        },
+        pl: {
+          title: "MOBI do StarDict",
+          subtitle:
+            "Zaprojektowany dla Wielki Słownik Ang-Pol 2014 i innych starszych słowników Mobi7/PalmDoc",
+          step1: "Krok 1: Wybierz plik słownika",
+          dropzone: "📁 Wybierz plik .mobi lub przeciągnij go tutaj",
+          step2: "Krok 2: Opcje",
+          styleLabel: "🎨 Styl wpisów:",
+          styleNone: "Brak – oryginalny HTML bez zmian",
+          styleClean: "Czysty – semantyczny, bez stylów inline",
+          styleNice: "Ładny – nagłówek + fonetyka ze stylem",
+          styleEink: "E-ink mono – wysoki kontrast, bez kolorowania",
+          styleRich: "Kolorowy – pełne kolorowanie sekcji",
+          startBtn: "ROZPOCZNIJ KONWERSJĘ",
+          logIdle: "Status: Bezczynny. Oczekiwanie na plik...",
+          previewTitle: "🧩 Podgląd przetworzonych wpisów",
+          validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
+          validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+          doneTitle: "✅ Gotowe! Pobierz pliki:",
+        },
+      };
+      // ── i18n: language detection, application & toggle ───────────────────────────
+      // Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
+      // file is included. All text lives only in I18N — HTML elements are empty shells.
 
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N = {
-    en: {
-        title:       'MOBI to StarDict',
-        subtitle:    'Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries',
-        step1:       'Step 1: Select Dictionary File',
-        dropzone:    '📁 Select .mobi file or drag it here',
-        step2:       'Step 2: Options',
-        styleLabel:  '🎨 Entry Style:',
-        styleNone:   'None – raw HTML passthrough',
-        styleClean:  'Clean – semantic, no inline styles',
-        styleNice:   'Nice Theme – headword + phonetics styled',
-        styleEink:   'E-ink mono – high contrast, no color styling',
-        styleRich:   'Rich Color – full color-coded sections',
-        startBtn:    'START CONVERSION',
-        logIdle:     'Status: Idle. Waiting for file...',
-        previewTitle:'🧩 Processed Entries Preview',
-        validatorTitle:'🔎 Search Generated Dictionary',
-        validatorSearchPh: '🔍 Search generated dictionary...',
-        doneTitle:   '✅ Done! Download Files:',
-    },
-    pl: {
-        title:       'MOBI do StarDict',
-        subtitle:    'Zaprojektowany dla Wielki Słownik Ang-Pol 2014 i innych starszych słowników Mobi7/PalmDoc',
-        step1:       'Krok 1: Wybierz plik słownika',
-        dropzone:    '📁 Wybierz plik .mobi lub przeciągnij go tutaj',
-        step2:       'Krok 2: Opcje',
-        styleLabel:  '🎨 Styl wpisów:',
-        styleNone:   'Brak – oryginalny HTML bez zmian',
-        styleClean:  'Czysty – semantyczny, bez stylów inline',
-        styleNice:   'Ładny – nagłówek + fonetyka ze stylem',
-        styleEink:   'E-ink mono – wysoki kontrast, bez kolorowania',
-        styleRich:   'Kolorowy – pełne kolorowanie sekcji',
-        startBtn:    'ROZPOCZNIJ KONWERSJĘ',
-        logIdle:     'Status: Bezczynny. Oczekiwanie na plik...',
-        previewTitle:'🧩 Podgląd przetworzonych wpisów',
-        validatorTitle:'🔎 Wyszukaj w wygenerowanym słowniku',
-        validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
-        doneTitle:   '✅ Gotowe! Pobierz pliki:',
-    }
-};
-// ── i18n: language detection, application & toggle ───────────────────────────
-// Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
-// file is included. All text lives only in I18N — HTML elements are empty shells.
+      (function () {
+        var stored = localStorage.getItem("lang");
+        var auto =
+          navigator.language && navigator.language.startsWith("pl") ? "pl" : "en";
+        window.LANG = stored || auto;
+        document.documentElement.lang = window.LANG;
+      })();
 
-(function () {
-    var stored = localStorage.getItem('lang');
-    var auto   = navigator.language && navigator.language.startsWith('pl') ? 'pl' : 'en';
-    window.LANG  = stored || auto;
-    document.documentElement.lang = window.LANG;
-})();
+      function applyI18n() {
+        var t = I18N[window.LANG] || I18N.en;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n")];
+          if (v !== undefined) el.textContent = v;
+        });
+        document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-html")];
+          if (v !== undefined) el.innerHTML = v;
+        });
+        document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-ph")];
+          if (v !== undefined) el.placeholder = v;
+        });
+        var btn = document.getElementById("langToggle");
+        if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";
+      }
 
-function applyI18n() {
-    var t = I18N[window.LANG] || I18N.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n')];
-        if (v !== undefined) el.textContent = v;
-    });
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-html')];
-        if (v !== undefined) el.innerHTML = v;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-ph')];
-        if (v !== undefined) el.placeholder = v;
-    });
-    var btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
-}
+      function toggleLang() {
+        window.LANG = window.LANG === "pl" ? "en" : "pl";
+        localStorage.setItem("lang", window.LANG);
+        document.documentElement.lang = window.LANG;
+        applyI18n();
+      }
 
-function toggleLang() {
-    window.LANG = window.LANG === 'pl' ? 'en' : 'pl';
-    localStorage.setItem('lang', window.LANG);
-    document.documentElement.lang = window.LANG;
-    applyI18n();
-}
+      // Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
+      applyI18n();
 
-// Script is always placed at the end of <body> — DOM is ready, safe to apply immediately.
-applyI18n();
-
-</script>
-</body>
+    </script>
+  </body>
 </html>
-

@@ -1,152 +1,316 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>StarDict Binary Validator</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1100px; margin: 20px auto; background: #f0f2f5; color: #1c1e21; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); margin-bottom: 16px; }
-        .file-inputs { display: grid; gap: 8px; background: #f8f9fa; padding: 14px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; }
-        .file-inputs label { display: flex; align-items: center; gap: 8px; }
-        #searchBox { width: 100%; padding: 12px; font-size: 18px; margin-top: 16px; border-radius: 6px; border: 2px solid #007bff; display: none; box-sizing: border-box; }
-        .status { font-size: 13px; color: #666; margin-top: 8px; }
-        #resultCard { display: none; margin-top: 8px; }
-        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
-        .result-title { font-weight: 700; font-size: 15px; color: #333; }
-        .badge { background: #007bff; color: white; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: bold; }
-        .btn-copy { padding: 5px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        .btn-copy:hover { background: #e0e0e0; }
-        .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 700px) { .split { grid-template-columns: 1fr; } }
-        .pane-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 5px; }
-        .pane-rendered { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; min-height: 160px; font-size: 13px; overflow-x: auto; }
-        .pane-raw { background: #1c1e21; color: #e8e8e8; border-radius: 8px; padding: 14px; font-family: 'Cascadia Code', monospace; font-size: 11px; white-space: pre-wrap; min-height: 80px; overflow-x: auto; overflow-y: auto; }
-        .syn-info { font-size: 12px; color: #6f42c1; background: #f5f0ff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; display: none; }
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1100px;
+        margin: 20px auto;
+        background: #f0f2f5;
+        color: #1c1e21;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        margin-bottom: 16px;
+      }
+      .file-inputs {
+        display: grid;
+        gap: 8px;
+        background: #f8f9fa;
+        padding: 14px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 13px;
+      }
+      .file-inputs label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #searchBox {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        margin-top: 16px;
+        border-radius: 6px;
+        border: 2px solid #007bff;
+        display: none;
+        box-sizing: border-box;
+      }
+      .status {
+        font-size: 13px;
+        color: #666;
+        margin-top: 8px;
+      }
+      #resultCard {
+        display: none;
+        margin-top: 8px;
+      }
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .result-title {
+        font-weight: 700;
+        font-size: 15px;
+        color: #333;
+      }
+      .badge {
+        background: #007bff;
+        color: white;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+      .btn-copy {
+        padding: 5px 12px;
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .btn-copy:hover {
+        background: #e0e0e0;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 700px) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+      .pane-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #888;
+        margin-bottom: 5px;
+      }
+      .pane-rendered {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 14px;
+        min-height: 160px;
+        font-size: 13px;
+        overflow-x: auto;
+      }
+      .pane-raw {
+        background: #1c1e21;
+        color: #e8e8e8;
+        border-radius: 8px;
+        padding: 14px;
+        font-family: "Cascadia Code", monospace;
+        font-size: 11px;
+        white-space: pre-wrap;
+        min-height: 80px;
+        overflow-x: auto;
+        overflow-y: auto;
+      }
+      .syn-info {
+        font-size: 12px;
+        color: #6f42c1;
+        background: #f5f0ff;
+        border: 1px solid #d8b4fe;
+        border-radius: 6px;
+        padding: 6px 12px;
+        margin-top: 8px;
+        display: none;
+      }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
     </style>
-</head>
-<body>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
-<div class="card">
-    <h2 data-i18n="title">StarDict Local Validator</h2>
-    <p data-i18n="desc">Upload your converted files to test them before moving to Onyx Boox.</p>
+  </head>
+  <body>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
+    <div class="card">
+      <h2 data-i18n="title">StarDict Local Validator</h2>
+      <p data-i18n="desc">
+        Upload your converted files to test them before moving to Onyx Boox.
+      </p>
 
-    <div class="file-inputs">
-        <label>1. <b>dictionary.ifo</b> <input type="file" id="ifoFile" accept=".ifo"></label>
-        <label>2. <b>dictionary.idx</b> <input type="file" id="idxFile" accept=".idx"></label>
-        <label>3. <b>dictionary.dict</b> <input type="file" id="dictFile" accept=".dict"></label>
-        <label>4. <b>dictionary.syn</b> <input type="file" id="synFile" accept=".syn"> <span style="color:#888;font-size:11px" data-i18n="optional">(optional)</span></label>
+      <div class="file-inputs">
+        <label
+          >1. <b>dictionary.ifo</b>
+          <input type="file" id="ifoFile" accept=".ifo"
+        /></label>
+        <label
+          >2. <b>dictionary.idx</b>
+          <input type="file" id="idxFile" accept=".idx"
+        /></label>
+        <label
+          >3. <b>dictionary.dict</b>
+          <input type="file" id="dictFile" accept=".dict"
+        /></label>
+        <label
+          >4. <b>dictionary.syn</b>
+          <input type="file" id="synFile" accept=".syn" />
+          <span style="color: #888; font-size: 11px" data-i18n="optional"
+            >(optional)</span
+          ></label
+        >
+      </div>
+
+      <div id="status" class="status" data-i18n="waiting">
+        Waiting for files (ifo + idx + dict required)…
+      </div>
+      <input
+        type="text"
+        id="searchBox"
+        data-i18n-ph="searchPh"
+        placeholder="🔍 Type a word to search…"
+      />
     </div>
 
-    <div id="status" class="status" data-i18n="waiting">Waiting for files (ifo + idx + dict required)…</div>
-    <input type="text" id="searchBox" data-i18n-ph="searchPh" placeholder="🔍 Type a word to search…">
-</div>
-
-<div class="card" id="resultCard">
-    <div class="result-header">
+    <div class="card" id="resultCard">
+      <div class="result-header">
         <span class="result-title" id="resultWord"></span>
-        <div style="display:flex;gap:6px;align-items:center">
-            <span class="badge" id="byteBadge"></span>
-            <button class="btn-copy" id="copyBtn" data-i18n="copyBtn">📋 Copy HTML</button>
+        <div style="display: flex; gap: 6px; align-items: center">
+          <span class="badge" id="byteBadge"></span>
+          <button class="btn-copy" id="copyBtn" data-i18n="copyBtn">
+            📋 Copy HTML
+          </button>
         </div>
-    </div>
-    <div class="syn-info" id="synInfo"></div>
-    <div class="split">
+      </div>
+      <div class="syn-info" id="synInfo"></div>
+      <div class="split">
         <div>
-            <div class="pane-label" data-i18n="rendered">Rendered</div>
-            <div class="pane-rendered" id="paneRendered"></div>
+          <div class="pane-label" data-i18n="rendered">Rendered</div>
+          <div class="pane-rendered" id="paneRendered"></div>
         </div>
         <div>
-            <div class="pane-label" data-i18n="rawSource">Raw HTML source</div>
-            <div class="pane-raw" id="paneRaw"></div>
+          <div class="pane-label" data-i18n="rawSource">Raw HTML source</div>
+          <div class="pane-raw" id="paneRaw"></div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-// @@include(src/stardict-validator-core.js)
+    <script>
+      // @@include(src/stardict-validator-core.js)
 
-let validatorApi = null;
+      let validatorApi = null;
 
-const I18N = {
-    en: {
-        title:    'StarDict Local Validator',
-        desc:     'Upload your converted files to test them before moving to Onyx Boox.',
-        optional: '(optional)',
-        waiting:  'Waiting for files (ifo + idx + dict required)…',
-        searchPh: '🔍 Type a word to search…',
-        copyBtn:  '📋 Copy HTML',
-        copied:   '✅ Copied!',
-        rendered: 'Rendered',
-        rawSource:'Raw HTML source',
-    },
-    pl: {
-        title:    'Lokalny walidator StarDict',
-        desc:     'Wczytaj skonwertowane pliki, aby sprawdzić je przed przeniesieniem na Onyx Boox.',
-        optional: '(opcjonalny)',
-        waiting:  'Oczekiwanie na pliki (wymagane: ifo + idx + dict)…',
-        searchPh: '🔍 Wpisz szukane słowo…',
-        copyBtn:  '📋 Kopiuj HTML',
-        copied:   '✅ Skopiowano!',
-        rendered: 'Podgląd',
-        rawSource:'Źródło HTML',
-    }
-};
-
-(function () {
-    var stored = localStorage.getItem('lang');
-    var auto   = navigator.language && navigator.language.startsWith('pl') ? 'pl' : 'en';
-    window.LANG = stored || auto;
-    document.documentElement.lang = window.LANG;
-})();
-
-function applyI18n() {
-    var t = I18N[window.LANG] || I18N.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n')];
-        if (v !== undefined) el.textContent = v;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
-        var v = t[el.getAttribute('data-i18n-ph')];
-        if (v !== undefined) el.placeholder = v;
-    });
-    var btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = window.LANG === 'pl' ? '🇬🇧 EN' : '🇵🇱 PL';
-}
-
-function toggleLang() {
-    window.LANG = window.LANG === 'pl' ? 'en' : 'pl';
-    localStorage.setItem('lang', window.LANG);
-    document.documentElement.lang = window.LANG;
-    applyI18n();
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    applyI18n();
-    validatorApi = window.StarDictValidator.initFromFiles({
-        ids: {
-            status: 'status',
-            search: 'searchBox',
-            resultCard: 'resultCard',
-            resultWord: 'resultWord',
-            byteBadge: 'byteBadge',
-            synInfo: 'synInfo',
-            paneRendered: 'paneRendered',
-            paneRaw: 'paneRaw',
-            copyBtn: 'copyBtn',
+      const I18N = {
+        en: {
+          title: "StarDict Local Validator",
+          desc: "Upload your converted files to test them before moving to Onyx Boox.",
+          optional: "(optional)",
+          waiting: "Waiting for files (ifo + idx + dict required)…",
+          searchPh: "🔍 Type a word to search…",
+          copyBtn: "📋 Copy HTML",
+          copied: "✅ Copied!",
+          rendered: "Rendered",
+          rawSource: "Raw HTML source",
         },
-        fileInputIds: {
-            ifo: 'ifoFile',
-            idx: 'idxFile',
-            dict: 'dictFile',
-            syn: 'synFile',
+        pl: {
+          title: "Lokalny walidator StarDict",
+          desc: "Wczytaj skonwertowane pliki, aby sprawdzić je przed przeniesieniem na Onyx Boox.",
+          optional: "(opcjonalny)",
+          waiting: "Oczekiwanie na pliki (wymagane: ifo + idx + dict)…",
+          searchPh: "🔍 Wpisz szukane słowo…",
+          copyBtn: "📋 Kopiuj HTML",
+          copied: "✅ Skopiowano!",
+          rendered: "Podgląd",
+          rawSource: "Źródło HTML",
         },
-        getCopyLabel: function () { return (I18N[window.LANG] || I18N.en).copyBtn; },
-        getCopiedLabel: function () { return (I18N[window.LANG] || I18N.en).copied; },
-    });
-});
-</script>
-</body>
+      };
+
+      (function () {
+        var stored = localStorage.getItem("lang");
+        var auto =
+          navigator.language && navigator.language.startsWith("pl")
+            ? "pl"
+            : "en";
+        window.LANG = stored || auto;
+        document.documentElement.lang = window.LANG;
+      })();
+
+      function applyI18n() {
+        var t = I18N[window.LANG] || I18N.en;
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n")];
+          if (v !== undefined) el.textContent = v;
+        });
+        document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-ph")];
+          if (v !== undefined) el.placeholder = v;
+        });
+        var btn = document.getElementById("langToggle");
+        if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";
+      }
+
+      function toggleLang() {
+        window.LANG = window.LANG === "pl" ? "en" : "pl";
+        localStorage.setItem("lang", window.LANG);
+        document.documentElement.lang = window.LANG;
+        applyI18n();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        applyI18n();
+        validatorApi = window.StarDictValidator.initFromFiles({
+          ids: {
+            status: "status",
+            search: "searchBox",
+            resultCard: "resultCard",
+            resultWord: "resultWord",
+            byteBadge: "byteBadge",
+            synInfo: "synInfo",
+            paneRendered: "paneRendered",
+            paneRaw: "paneRaw",
+            copyBtn: "copyBtn",
+          },
+          fileInputIds: {
+            ifo: "ifoFile",
+            idx: "idxFile",
+            dict: "dictFile",
+            syn: "synFile",
+          },
+          getCopyLabel: function () {
+            return (I18N[window.LANG] || I18N.en).copyBtn;
+          },
+          getCopiedLabel: function () {
+            return (I18N[window.LANG] || I18N.en).copied;
+          },
+        });
+      });
+    </script>
+  </body>
 </html>
-

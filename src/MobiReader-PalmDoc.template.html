@@ -1,159 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MOBI Reader V2 - UTF-8 Professional</title>
     <style>
-        #langToggle { position:fixed; top:12px; right:14px; z-index:9999; background:#fff; border:1px solid #ccc; border-radius:999px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
-        #langToggle:hover { border-color:#007bff; color:#007bff; }
-        body { font-family: 'Segoe UI', sans-serif; max-width: 1200px; margin: 20px auto; background: #f0f2f5; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .upload-section { border: 2px dashed #007bff; padding: 30px; text-align: center; cursor: pointer; background: #f8fbff; border-radius: 8px; margin-bottom: 20px; }
+      #langToggle {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      #langToggle:hover {
+        border-color: #007bff;
+        color: #007bff;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        max-width: 1200px;
+        margin: 20px auto;
+        background: #f0f2f5;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      .upload-section {
+        border: 2px dashed #007bff;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        background: #f8fbff;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
 
-        .viewer-controls { display: flex; justify-content: space-between; align-items: center; background: #e4e6eb; padding: 15px; border-radius: 8px; margin-bottom: 10px; position: sticky; top: 10px; z-index: 100; }
-        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .viewer-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #e4e6eb;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+      }
+      .btn {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-        .content-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
-        .box { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; height: 600px; overflow-y: auto; }
-        .box h3 { margin-top: 0; color: #007bff; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+      .content-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 10px;
+      }
+      .box {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        height: 600px;
+        overflow-y: auto;
+      }
+      .box h3 {
+        margin-top: 0;
+        color: #007bff;
+        font-size: 14px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
 
-        .raw-text { font-family: 'Consolas', monospace; font-size: 13px; white-space: pre-wrap; color: #d63384; }
-        .rendered-html { font-size: 15px; }
+      .raw-text {
+        font-family: "Consolas", monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        color: #d63384;
+      }
+      .rendered-html {
+        font-size: 15px;
+      }
 
-        #log { background: #1c1e21; color: #a5d6a7; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 5px; margin-top: 10px; }
+      #log {
+        background: #1c1e21;
+        color: #a5d6a7;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
     </style>
-</head>
-<body>
-<button id="langToggle" onclick="toggleLang()" title="Switch language / Zmień język">🇵🇱 PL</button>
+  </head>
+  <body>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      title="Switch language / Zmień język"
+    >
+      🇵🇱 PL
+    </button>
 
-<div class="card">
-    <h2 data-i18n="title"></h2>
-    <div class="upload-section" id="dropZone">
+    <div class="card">
+      <h2 data-i18n="title"></h2>
+      <div class="upload-section" id="dropZone">
         <span id="fileName" data-i18n="dropzone"></span>
-        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none">
-    </div>
+        <input
+          type="file"
+          id="fileInput"
+          accept=".mobi,.azw,.azw3"
+          style="display: none"
+        />
+      </div>
 
-    <div class="viewer-controls" id="controls" style="display:none">
+      <div class="viewer-controls" id="controls" style="display: none">
         <div>
-            <button class="btn" id="prevBtn" data-i18n="prevBtn"></button>
-            <span id="pageInfo" style="margin: 0 15px; font-weight: bold;"><span data-i18n="recordLabel"></span> 0 / 0</span>
-            <button class="btn" id="nextBtn" data-i18n="nextBtn"></button>
+          <button class="btn" id="prevBtn" data-i18n="prevBtn"></button>
+          <span id="pageInfo" style="margin: 0 15px; font-weight: bold"
+            ><span data-i18n="recordLabel"></span> 0 / 0</span
+          >
+          <button class="btn" id="nextBtn" data-i18n="nextBtn"></button>
         </div>
-        <div class="record-meta" id="recordMeta" style="font-size: 12px; color: #666;"></div>
+        <div
+          class="record-meta"
+          id="recordMeta"
+          style="font-size: 12px; color: #666"
+        ></div>
         <div>
-            <input type="number" id="jumpTo" data-i18n-ph="jumpPh" placeholder="Record no." style="width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-            <button class="btn" id="jumpBtn" style="background:#28a745" data-i18n="jumpBtn"></button>
+          <input
+            type="number"
+            id="jumpTo"
+            data-i18n-ph="jumpPh"
+            placeholder="Record no."
+            style="
+              width: 100px;
+              padding: 8px;
+              border-radius: 4px;
+              border: 1px solid #ddd;
+            "
+          />
+          <button
+            class="btn"
+            id="jumpBtn"
+            style="background: #28a745"
+            data-i18n="jumpBtn"
+          ></button>
         </div>
+      </div>
+
+      <div class="content-container">
+        <div class="box">
+          <h3 data-i18n="rawTitle"></h3>
+          <div id="rawContent" class="raw-text"></div>
+        </div>
+        <div class="box">
+          <h3 data-i18n="renderedTitle"></h3>
+          <div id="htmlContent" class="rendered-html"></div>
+        </div>
+      </div>
+
+      <div id="log" data-i18n="logIdle"></div>
     </div>
 
-    <div class="content-container">
-        <div class="box">
-            <h3 data-i18n="rawTitle"></h3>
-            <div id="rawContent" class="raw-text"></div>
-        </div>
-        <div class="box">
-            <h3 data-i18n="renderedTitle"></h3>
-            <div id="htmlContent" class="rendered-html"></div>
-        </div>
-    </div>
+    <script>
+      // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/palmdoc-core.js)
+      // ─────────────────────────────────────────────────────────────────────────────
 
-    <div id="log" data-i18n="logIdle"></div>
-</div>
+      // ── MobiReader: thin wrapper around PalmDocBase for the inspector UI ──────────
+      class MobiReader extends PalmDocBase {
+        constructor(buffer) {
+          super(buffer);
+        }
 
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
-// @@include(src/palmdoc-core.js)
-// ─────────────────────────────────────────────────────────────────────────────
+        init() {
+          const numRecords = this.buildRecords();
+          return numRecords;
+        }
+      }
 
-// ── MobiReader: thin wrapper around PalmDocBase for the inspector UI ──────────
-class MobiReader extends PalmDocBase {
-    constructor(buffer) {
-        super(buffer);
-    }
+      let reader = null;
+      let currentIdx = 1;
 
-    init() {
-        const numRecords = this.buildRecords();
-        return numRecords;
-    }
-}
+      document.getElementById("dropZone").onclick = () =>
+        document.getElementById("fileInput").click();
+      document.getElementById("fileInput").onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById("fileName").textContent = file.name;
 
-let reader = null;
-let currentIdx = 1;
+        const buffer = await file.arrayBuffer();
+        reader = new MobiReader(buffer);
+        const total = reader.init();
+        const t = I18N[window.LANG] || I18N.en;
 
-document.getElementById('dropZone').onclick = () => document.getElementById('fileInput').click();
-document.getElementById('fileInput').onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById('fileName').textContent = file.name;
+        document.getElementById("controls").style.display = "flex";
+        document.getElementById("log").textContent =
+          `[System] ${t.loadedMsg.replace("{n}", total)} flags: ${reader.extraFlags.toString(16)}`;
+        updateView(1);
+      };
 
-    const buffer = await file.arrayBuffer();
-    reader = new MobiReader(buffer);
-    const total = reader.init();
-    const t = I18N[window.LANG] || I18N.en;
+      function updateView(idx) {
+        if (!reader) return;
+        currentIdx = idx;
+        const text = reader.getRecordText(idx);
+        const t = I18N[window.LANG] || I18N.en;
 
-    document.getElementById('controls').style.display = "flex";
-    document.getElementById('log').textContent = `[System] ${t.loadedMsg.replace('{n}', total)} flags: ${reader.extraFlags.toString(16)}`;
-    updateView(1);
-};
+        document.getElementById("rawContent").textContent = text;
+        document.getElementById("htmlContent").innerHTML = text;
 
-function updateView(idx) {
-    if (!reader) return;
-    currentIdx = idx;
-    const text = reader.getRecordText(idx);
-    const t = I18N[window.LANG] || I18N.en;
+        document.getElementById("pageInfo").innerHTML =
+          `<span data-i18n="recordLabel"></span> ${idx} / ${reader.records.length - 1}`;
+        document.getElementById("recordMeta").textContent =
+          `Offset: ${reader.records[idx].offset} | ${t.sizeLabel}: ${text.length}`;
 
-    document.getElementById('rawContent').textContent = text;
-    document.getElementById('htmlContent').innerHTML = text;
+        document.getElementById("prevBtn").disabled = idx <= 1;
+        document.getElementById("nextBtn").disabled =
+          idx >= reader.records.length - 1;
+      }
 
-    document.getElementById('pageInfo').innerHTML = `<span data-i18n="recordLabel"></span> ${idx} / ${reader.records.length - 1}`;
-    document.getElementById('recordMeta').textContent = `Offset: ${reader.records[idx].offset} | ${t.sizeLabel}: ${text.length}`;
+      document.getElementById("nextBtn").onclick = () =>
+        updateView(currentIdx + 1);
+      document.getElementById("prevBtn").onclick = () =>
+        updateView(currentIdx - 1);
+      document.getElementById("jumpBtn").onclick = () => {
+        const val = parseInt(document.getElementById("jumpTo").value);
+        if (val > 0 && val < reader.records.length) updateView(val);
+      };
 
-    document.getElementById('prevBtn').disabled = (idx <= 1);
-    document.getElementById('nextBtn').disabled = (idx >= reader.records.length - 1);
-}
-
-document.getElementById('nextBtn').onclick = () => updateView(currentIdx + 1);
-document.getElementById('prevBtn').onclick = () => updateView(currentIdx - 1);
-document.getElementById('jumpBtn').onclick = () => {
-    const val = parseInt(document.getElementById('jumpTo').value);
-    if (val > 0 && val < reader.records.length) updateView(val);
-};
-
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const I18N = {
-    en: {
-        title:       'MOBI Content Explorer V2',
-        dropzone:    '📁 Select .mobi dictionary file (UTF-8)',
-        prevBtn:     '« Previous',
-        recordLabel: 'Record:',
-        nextBtn:     'Next »',
-        jumpPh:      'Record no.',
-        jumpBtn:     'Go',
-        rawTitle:    'SOURCE CODE (Raw tags)',
-        renderedTitle:'RENDERED PREVIEW',
-        logIdle:     'Status: Ready. Select a file to start debugging.',
-        loadedMsg:   'Loaded {n} records. Meta flags:',
-        sizeLabel:   'Size (chars)',
-    },
-    pl: {
-        title:       'Eksplorator zawartości MOBI V2',
-        dropzone:    '📁 Wybierz plik słownika .mobi (UTF-8)',
-        prevBtn:     '« Poprzedni',
-        recordLabel: 'Rekord:',
-        nextBtn:     'Następny »',
-        jumpPh:      'Nr rekordu',
-        jumpBtn:     'Skocz',
-        rawTitle:    'KOD ŹRÓDŁOWY (Surowe tagi)',
-        renderedTitle:'PODGLĄD RENDEROWANIA',
-        logIdle:     'Status: Gotowy. Wybierz plik, aby rozpocząć.',
-        loadedMsg:   'Wczytano {n} rekordów. Flagi metadanych:',
-        sizeLabel:   'Rozmiar (znaki)',
-    }
-};
-// @@include(src/i18n-core.js)
-</script>
-</body>
+      // ── i18n ──────────────────────────────────────────────────────────────────────
+      const I18N = {
+        en: {
+          title: "MOBI Content Explorer V2",
+          dropzone: "📁 Select .mobi dictionary file (UTF-8)",
+          prevBtn: "« Previous",
+          recordLabel: "Record:",
+          nextBtn: "Next »",
+          jumpPh: "Record no.",
+          jumpBtn: "Go",
+          rawTitle: "SOURCE CODE (Raw tags)",
+          renderedTitle: "RENDERED PREVIEW",
+          logIdle: "Status: Ready. Select a file to start debugging.",
+          loadedMsg: "Loaded {n} records. Meta flags:",
+          sizeLabel: "Size (chars)",
+        },
+        pl: {
+          title: "Eksplorator zawartości MOBI V2",
+          dropzone: "📁 Wybierz plik słownika .mobi (UTF-8)",
+          prevBtn: "« Poprzedni",
+          recordLabel: "Rekord:",
+          nextBtn: "Następny »",
+          jumpPh: "Nr rekordu",
+          jumpBtn: "Skocz",
+          rawTitle: "KOD ŹRÓDŁOWY (Surowe tagi)",
+          renderedTitle: "PODGLĄD RENDEROWANIA",
+          logIdle: "Status: Gotowy. Wybierz plik, aby rozpocząć.",
+          loadedMsg: "Wczytano {n} rekordów. Flagi metadanych:",
+          sizeLabel: "Rozmiar (znaki)",
+        },
+      };
+      // @@include(src/i18n-core.js)
+    </script>
+  </body>
 </html>
-

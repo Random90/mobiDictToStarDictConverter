@@ -24,7 +24,7 @@ The main motivation for this project was to build a simple tool I would use once
 
 Apart from the conversion itself, the tool offers **the ability to enhance the appearance of the dictionary** by choosing entry styles that provide better readability and aesthetics on both black-and-white and color e-ink screens.
 
-The repository contains only the conversion script, the **dictionary must be purchased separately**. Compatibility is not guaranteed, the project is experimental.
+The repository contains only the conversion script, the **dictionary must be purchased separately**.
 
 Decompress algorithm is based on [KindleUnpack](https://github.com/kevinhendricks/KindleUnpack) python script, but completely rewritten in JavaScript to run in a browser.
 

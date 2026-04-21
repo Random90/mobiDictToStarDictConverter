@@ -9,7 +9,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOBI8/KF8 to StarDict - HUFF/CDIC</title>
+    <title data-i18n="pageTitle">MOBI8/KF8 to StarDict - HUFF/CDIC</title>
     <style>
       #langToggle {
         position: fixed;
@@ -223,7 +223,7 @@
     <button
       id="langToggle"
       onclick="toggleLang()"
-      title="Switch language / Zmień język"
+      data-i18n-title="langToggleTitle"
     >
       🇵🇱 PL
     </button>
@@ -291,7 +291,7 @@
           id="validatorSearchBox"
           class="validator-search"
           data-i18n-ph="validatorSearchPh"
-          placeholder="Search in generated StarDict..."
+          placeholder=""
         />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
@@ -311,9 +311,8 @@
                 id="validatorCopyBtn"
                 class="btn-dl"
                 style="padding: 6px 10px; background: #6c757d"
-              >
-                Copy HTML
-              </button>
+                data-i18n="validatorCopyHtml"
+              ></button>
             </div>
           </div>
           <div
@@ -333,6 +332,23 @@
     </div>
 
     <script>
+      function formatI18nText(template, vars) {
+        if (!vars) return template;
+        return String(template).replace(/\{(\w+)}/g, (_, k) =>
+          vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+        );
+      }
+
+      function i18nText(key, fallback, vars) {
+        const tables = window.__I18N_TABLES || {};
+        const lang = window.LANG || "en";
+        const table = tables[lang] || tables.en || {};
+        const en = tables.en || {};
+        const base = table[key] !== undefined ? table[key] : en[key];
+        const text = base !== undefined ? base : fallback || key;
+        return formatI18nText(text, vars);
+      }
+
       // ─────────────────────────────────────────────────────────────────────────────
       // Style engines  (applied to each extracted entry's HTML)
       // ─────────────────────────────────────────────────────────────────────────────
@@ -539,7 +555,9 @@
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         globalBuffer = await file.arrayBuffer();
         document.getElementById("startBtn").disabled = false;
-        addLog(`File loaded: ${file.name}`);
+        addLog(
+          i18nText("logFileLoaded", "File loaded: {file}", { file: file.name }),
+        );
       });
 
       // ─────────────────────────────────────────────────────────────────────────────
@@ -558,6 +576,13 @@
           this.mincodeArr = new Array(33).fill(0);
           this.maxcodeArr = new Array(33).fill(0);
           this.dict = [];
+        }
+
+        t(key, fallback, vars) {
+          if (typeof i18nText === "function") return i18nText(key, fallback, vars);
+          return String(fallback || key).replace(/\{(\w+)}/g, (_, k) =>
+            vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+          );
         }
 
         _stripTrailingWithFlags(data, flags) {
@@ -603,7 +628,13 @@
           if (raw === 0xffff) {
             // For sentinel/noisy values, start in conservative mode immediately.
             addLog(
-              `⚠️ ${sourceLabel}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.`,
+              this.t(
+                "logExtraDataSentinel",
+                "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
+                {
+                  source: sourceLabel,
+                },
+              ),
             );
             return 0x0001;
           }
@@ -611,7 +642,15 @@
           const masked = raw & 0x001f;
           if (masked !== raw) {
             addLog(
-              `⚠️ ${sourceLabel}: masking ExtraDataFlags 0x${raw.toString(16)} -> 0x${masked.toString(16)}`,
+              this.t(
+                "logExtraDataMask",
+                "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
+                {
+                  source: sourceLabel,
+                  from: raw.toString(16),
+                  to: masked.toString(16),
+                },
+              ),
             );
           }
           return masked || 0x0001;
@@ -651,7 +690,14 @@
           if (!headerCount) return huffBound;
           if (headerCount > huffBound) {
             addLog(
-              `⚠️ text_records (${headerCount}) exceeds HUFF bound (${huffBound}); clamping.`,
+              this.t(
+                "logTextRecordsClamp",
+                "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+                {
+                  headerCount,
+                  huffBound,
+                },
+              ),
             );
             return huffBound;
           }
@@ -678,14 +724,27 @@
           const mobiType = this.u32(recBase + 0x18);
           const mobiVer = this.u32(recBase + 0x68);
           addLog(
-            `Record 0: MOBI type=${mobiType}, headerLen=0x${hdrLen.toString(16)}`,
+            this.t(
+              "logRecord0",
+              "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
+              {
+                mobiType,
+                headerLen: hdrLen.toString(16),
+              },
+            ),
           );
 
           let flags = 0x0001;
           if (hdrLen >= 0xe4 && mobiVer >= 5) {
             const raw = this.u16(recBase + 0xf2);
             addLog(
-              `ExtraDataFlags from MOBI header (offset 0xF2): 0x${raw.toString(16)}`,
+              this.t(
+                "logExtraDataFromHeader",
+                "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
+                {
+                  raw: raw.toString(16),
+                },
+              ),
             );
             flags = this._normalizeExtraDataFlags(raw, "MOBI header");
           }
@@ -707,7 +766,11 @@
               const len = this.u32(pos + 4);
               if (tag === 121 && len === 12) {
                 const kf8Bound = this.u32(pos + 8);
-                addLog(`KF8 boundary record: ${kf8Bound}`);
+                addLog(
+                  this.t("logKf8BoundaryRecord", "KF8 boundary record: {kf8Bound}", {
+                    kf8Bound,
+                  }),
+                );
                 const kf8RecIdx = kf8Bound + 1;
                 if (kf8RecIdx < recs.length) {
                   const kf8Off = recs[kf8RecIdx];
@@ -727,7 +790,15 @@
                   if (kl >= 0xe4 && kv >= 5) {
                     const raw = this.u16(kf8Base + 0xf2);
                     flags = this._normalizeExtraDataFlags(raw, "KF8 override");
-                    addLog(`KF8 section flags override: 0x${flags.toString(16)}`);
+                    addLog(
+                      this.t(
+                        "logKf8FlagsOverride",
+                        "KF8 section flags override: 0x{flags}",
+                        {
+                          flags: flags.toString(16),
+                        },
+                      ),
+                    );
                   }
                 }
               }
@@ -735,7 +806,11 @@
             }
           }
 
-          addLog(`Final ExtraDataFlags: 0x${flags.toString(16)}`);
+          addLog(
+            this.t("logFinalExtraDataFlags", "Final ExtraDataFlags: 0x{flags}", {
+              flags: flags.toString(16),
+            }),
+          );
           return flags;
         }
 
@@ -757,7 +832,7 @@
             this.raw[hOff + 6] !== 0x00 ||
             this.raw[hOff + 7] !== 0x18
           ) {
-            throw new Error("invalid huff header");
+            throw new Error(this.t("errInvalidHuffHeader", "invalid huff header"));
           }
 
           const off1 = this.u32(hOff + 8);
@@ -767,9 +842,20 @@
             const v = this.u32(hOff + off1 + i * 4);
             const codelen = v & 0x1f;
             const term = !!(v & 0x80);
-            if (codelen === 0) throw new Error("invalid huff table: zero codelen");
+            if (codelen === 0)
+              throw new Error(
+                this.t(
+                  "errInvalidHuffTableZeroCodeLen",
+                  "invalid huff table: zero codelen",
+                ),
+              );
             if (codelen <= 8 && !term)
-              throw new Error("invalid huff table: short non-terminal code");
+              throw new Error(
+                this.t(
+                  "errInvalidHuffTableShortNonTerminal",
+                  "invalid huff table: short non-terminal code",
+                ),
+              );
             const mxraw = (v >>> 8) >>> 0;
             const maxcode =
               Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
@@ -786,7 +872,10 @@
               Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
           }
           addLog(
-            `HUFF loaded. off1=0x${off1.toString(16)} off2=0x${off2.toString(16)}`,
+            this.t("logHuffLoaded", "HUFF loaded. off1=0x{off1} off2=0x{off2}", {
+              off1: off1.toString(16),
+              off2: off2.toString(16),
+            }),
           );
         }
 
@@ -802,7 +891,7 @@
             this.raw[rOff + 6] !== 0x00 ||
             this.raw[rOff + 7] !== 0x10
           ) {
-            throw new Error("invalid cdic header");
+            throw new Error(this.t("errInvalidCdicHeader", "invalid cdic header"));
           }
 
           const phrases = this.u32(rOff + 8);
@@ -835,7 +924,14 @@
             count++;
           }
           addLog(
-            `Loaded ${count} CDIC records → ${this.dict.length} symbols in dictionary.`,
+            this.t(
+              "logCdicLoaded",
+              "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
+              {
+                count,
+                symbols: this.dict.length,
+              },
+            ),
           );
         }
 
@@ -1226,7 +1322,11 @@
                   firstDecodedLogged = true;
                   const preview = text.substring(0, 300).replace(/[\r\n]+/g, " ");
                   addLog(
-                    `First record decoded (${dec.length} bytes). Preview:\n  ${preview}`,
+                    this.t(
+                      "logFirstRecordDecoded",
+                      "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+                      { bytes: dec.length, preview },
+                    ),
                   );
                 }
 
@@ -1238,12 +1338,26 @@
               if (i < endExclusive) {
                 if (i % 500 < BATCH)
                   addLog(
-                    `Decompressing: ${i}/${textRecordMax}... entries so far: ${this.finalMap.size}`,
+                    this.t(
+                      "logDecompressing",
+                      "Decompressing: {current}/{max}... entries so far: {entries}",
+                      {
+                        current: i,
+                        max: textRecordMax,
+                        entries: this.finalMap.size,
+                      },
+                    ),
                   );
                 setTimeout(processChunk, 0);
               } else {
                 this.extractEntriesFrom(overlap, true);
-                addLog(`Extraction complete: ${this.finalMap.size} unique entries.`);
+                addLog(
+                  this.t(
+                    "logExtractionComplete",
+                    "Extraction complete: {entries} unique entries.",
+                    { entries: this.finalMap.size },
+                  ),
+                );
                 resolve();
               }
             };
@@ -1254,7 +1368,11 @@
         // Main pipeline
         async run() {
           this.buildRecords();
-          addLog(`PDB records: ${this.recs.length}`);
+          addLog(
+            this.t("logPdbRecords", "PDB records: {count}", {
+              count: this.recs.length,
+            }),
+          );
 
           const extraFlags = this.findExtraDataFlags();
 
@@ -1273,27 +1391,54 @@
             }
           }
           if (huffIdx === -1) {
-            addLog("ERROR: No HUFF record found.");
+            addLog(this.t("logErrorNoHuff", "ERROR: No HUFF record found."));
             return this.finalMap;
           }
           const textRecordMax = this.getTextRecordMax(huffIdx);
-          addLog(`HUFF record: ${huffIdx}  (text records: 1-${textRecordMax})`);
+          addLog(
+            this.t(
+              "logHuffRecord",
+              "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
+              {
+                huffIdx,
+                textRecordMax,
+              },
+            ),
+          );
 
           this.loadHuff(this.recs[huffIdx]);
           this.loadAllCdic(huffIdx);
 
           if (this.dict.length === 0) {
-            addLog("ERROR: Symbol dictionary is empty. Cannot decompress.");
+            addLog(
+              this.t(
+                "logErrorEmptySymbolDict",
+                "ERROR: Symbol dictionary is empty. Cannot decompress.",
+              ),
+            );
             return this.finalMap;
           }
 
           await this.streamDecompress(textRecordMax, extraFlags);
           if (this.options.generateSyn) {
             addLog(
-              `idx:entry blocks seen: ${this.synStats.idxBlocks}, idx:iform seen: ${this.synStats.idxIformsSeen}, idx:iform added: ${this.synStats.idxIformsAdded}, phrase-tail inflections: ${this.synStats.phraseTailAdded}`,
+              this.t(
+                "logSynStats",
+                "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+                {
+                  idxBlocks: this.synStats.idxBlocks,
+                  idxIformsSeen: this.synStats.idxIformsSeen,
+                  idxIformsAdded: this.synStats.idxIformsAdded,
+                  phraseTailAdded: this.synStats.phraseTailAdded,
+                },
+              ),
             );
           }
-          addLog(`Synonyms collected: ${this.synMap.size}`);
+          addLog(
+            this.t("logSynonymsCollected", "Synonyms collected: {count}", {
+              count: this.synMap.size,
+            }),
+          );
           return { finalMap: this.finalMap, synMap: this.synMap };
         }
       }
@@ -1326,6 +1471,19 @@
           let rawHtml = "";
 
           const dec = new TextDecoder("utf-8");
+
+          function formatText(template, vars) {
+            if (!vars) return template;
+            return String(template).replace(/\{(\w+)}/g, (_, k) =>
+              vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+            );
+          }
+
+          function tr(key, fallback, vars) {
+            if (typeof config.t === "function") return config.t(key, vars);
+            if (typeof i18nText === "function") return i18nText(key, fallback, vars);
+            return formatText(fallback || key, vars);
+          }
 
           function setStatus(msg) {
             if (el.status) el.status.textContent = msg;
@@ -1387,20 +1545,41 @@
             if (el.byteBadge) {
               el.byteBadge.textContent =
                 entries.length > 1
-                  ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
-                  : `${first.sz} bytes`;
+                  ? tr(
+                      "validatorByteBadgeMulti",
+                      "{entries} idx entries · {bytes} bytes",
+                      {
+                        entries: entries.length,
+                        bytes: entries.reduce((s, e) => s + e.sz, 0),
+                      },
+                    )
+                  : tr("validatorByteBadgeSingle", "{bytes} bytes", {
+                      bytes: first.sz,
+                    });
             }
 
             if (el.synInfo) {
               if (matchInfo && matchInfo.mode === "synonym") {
                 el.synInfo.style.display = "block";
-                el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                el.synInfo.innerHTML = tr(
+                  "validatorSynRedirect",
+                  "Synonym redirect: <b>{query}</b> -> <b>{word}</b>",
+                  { query: matchInfo.query, word: first.original },
+                );
               } else if (matchInfo && matchInfo.mode === "fallback-word") {
                 el.synInfo.style.display = "block";
-                el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                el.synInfo.innerHTML = tr(
+                  "validatorFallbackWord",
+                  "Inflection fallback: <b>{query}</b> -> <b>{word}</b>",
+                  { query: matchInfo.query, word: first.original },
+                );
               } else if (matchInfo && matchInfo.mode === "fallback-synonym") {
                 el.synInfo.style.display = "block";
-                el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+                el.synInfo.innerHTML = tr(
+                  "validatorFallbackSynonym",
+                  "Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>",
+                  { query: matchInfo.query, word: first.original },
+                );
               } else {
                 el.synInfo.style.display = "none";
               }
@@ -1483,10 +1662,10 @@
               navigator.clipboard.writeText(rawHtml).then(() => {
                 const copied = config.getCopiedLabel
                   ? config.getCopiedLabel()
-                  : "Copied";
+                  : tr("validatorCopyDone", "Copied");
                 const copy = config.getCopyLabel
                   ? config.getCopyLabel()
-                  : "Copy HTML";
+                  : tr("validatorCopyHtml", "Copy HTML");
                 el.copyBtn.textContent = copied;
                 setTimeout(() => {
                   el.copyBtn.textContent = copy;
@@ -1518,12 +1697,34 @@
             const syncount =
               (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
 
+            const synPart = synMap.size
+              ? tr("validatorStatusReadySynonyms", " · {count} synonyms", {
+                  count: synMap.size,
+                })
+              : "";
+            const ifoSynPart =
+              syncount !== "0"
+                ? tr("validatorStatusReadyIfoSynPart", ", synwordcount={syncount}", {
+                    syncount,
+                  })
+                : "";
+            const ifoPart = ifoText
+              ? tr(
+                  "validatorStatusReadyIfo",
+                  " (ifo: wordcount={wordcount}{synPart})",
+                  {
+                    wordcount,
+                    synPart: ifoSynPart,
+                  },
+                )
+              : "";
+
             setStatus(
-              `Ready: ${wordMap.size} entries` +
-                (synMap.size ? ` · ${synMap.size} synonyms` : "") +
-                (ifoText
-                  ? ` (ifo: wordcount=${wordcount}${syncount !== "0" ? ", synwordcount=" + syncount : ""})`
-                  : ""),
+              tr("validatorStatusReadyBase", "Ready: {entries} entries", {
+                entries: wordMap.size,
+              }) +
+                synPart +
+                ifoPart,
             );
             if (el.search) el.search.style.display = "block";
           }
@@ -1626,7 +1827,11 @@
             for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
           }
           synCount = validSyns.length;
-          addLog(`Synonym file: ${synCount} entries.`);
+          addLog(
+            i18nText("logSynonymFile", "Synonym file: {count} entries.", {
+              count: synCount,
+            }),
+          );
         }
 
         // .ifo
@@ -1662,7 +1867,9 @@
           dl("dictionary.syn", synBytesArr);
           const badge = document.createElement("span");
           badge.className = "badge-syn";
-          badge.textContent = `${synCount} synonyms`;
+          badge.textContent = i18nText("validatorSynonymBadge", "{count} synonyms", {
+            count: synCount,
+          });
           links.appendChild(badge);
         }
 
@@ -1704,8 +1911,9 @@
                 paneRendered: "validatorPaneRendered",
                 copyBtn: "validatorCopyBtn",
               },
-              getCopyLabel: () => "Copy HTML",
-              getCopiedLabel: () => "Copied",
+              t: (key, vars) => i18nText(key, key, vars),
+              getCopyLabel: () => i18nText("validatorCopyHtml", "Copy HTML"),
+              getCopiedLabel: () => i18nText("validatorCopyDone", "Copied"),
             });
           }
           window.__kf8Validator.loadFromBuffers({
@@ -1724,8 +1932,20 @@
           }
         }
 
+        const synPart = synCount
+          ? i18nText("logOutputReadySynPart", ", syn={synCount}", { synCount })
+          : "";
         addLog(
-          `✅ Output ready. ${count} entries, idx=${idx.length} B, dict=${dict.length} B${synCount ? `, syn=${synCount}` : ""}.`,
+          i18nText(
+            "logOutputReady",
+            "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+            {
+              count,
+              idxBytes: idx.length,
+              dictBytes: dict.length,
+              synPart,
+            },
+          ),
         );
       }
 
@@ -1736,7 +1956,7 @@
       document.getElementById("startBtn").onclick = () => {
         const btn = document.getElementById("startBtn");
         btn.disabled = true;
-        btn.textContent = "WORKING...";
+        btn.textContent = i18nText("startBtnWorking", "WORKING...");
 
         const options = {
           style: document.getElementById("styleSelect").value,
@@ -1750,16 +1970,26 @@
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
               renderOutput(finalMap, synMap, true);
-              btn.textContent = "✅ DONE";
+              btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
-              addLog("⚠️ No entries extracted. Check log for details.");
+              addLog(
+                i18nText(
+                  "logNoEntries",
+                  "⚠️ No entries extracted. Check log for details.",
+                ),
+              );
               btn.disabled = false;
-              btn.textContent = "RETRY";
+              btn.textContent = i18nText("startBtnRetry", "RETRY");
             }
           } catch (err) {
-            addLog("FATAL ERROR: " + err.message + "\n" + err.stack);
+            addLog(
+              i18nText("logFatalError", "FATAL ERROR: {message}\n{stack}", {
+                message: err.message,
+                stack: err.stack,
+              }),
+            );
             btn.disabled = false;
-            btn.textContent = "ERROR – Retry";
+            btn.textContent = i18nText("startBtnErrorRetry", "ERROR - Retry");
           }
         }, 150);
       };
@@ -1767,6 +1997,8 @@
       // ── i18n ──────────────────────────────────────────────────────────────────────
       const I18N = {
         en: {
+          pageTitle: "MOBI8/KF8 to StarDict - HUFF/CDIC",
+          langToggleTitle: "Switch language",
           title: "MOBI/KF8 → StarDict (HUFF/CDIC Decoder)",
           desc: "Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>",
           dropzone: "📁 Click or drag your .mobi file here",
@@ -1782,8 +2014,71 @@
           previewTitle: "🧩 Sample Entries",
           validatorTitle: "🔎 Search Generated Dictionary",
           validatorSearchPh: "🔍 Search generated dictionary...",
+          validatorCopyHtml: "Copy HTML",
+          startBtnWorking: "WORKING...",
+          startBtnDone: "✅ DONE",
+          startBtnRetry: "RETRY",
+          startBtnErrorRetry: "ERROR - Retry",
+          logFileLoaded: "File loaded: {file}",
+          logNoEntries: "⚠️ No entries extracted. Check log for details.",
+          logFatalError: "FATAL ERROR: {message}\n{stack}",
+          logExtraDataSentinel:
+            "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
+          logExtraDataMask:
+            "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
+          logTextRecordsClamp:
+            "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+          logRecord0: "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
+          logExtraDataFromHeader:
+            "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
+          logKf8BoundaryRecord: "KF8 boundary record: {kf8Bound}",
+          logKf8FlagsOverride: "KF8 section flags override: 0x{flags}",
+          logFinalExtraDataFlags: "Final ExtraDataFlags: 0x{flags}",
+          logHuffLoaded: "HUFF loaded. off1=0x{off1} off2=0x{off2}",
+          logCdicLoaded:
+            "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
+          logFirstRecordDecoded:
+            "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+          logDecompressing:
+            "Decompressing: {current}/{max}... entries so far: {entries}",
+          logExtractionComplete:
+            "Extraction complete: {entries} unique entries.",
+          logPdbRecords: "PDB records: {count}",
+          logErrorNoHuff: "ERROR: No HUFF record found.",
+          logHuffRecord:
+            "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
+          logErrorEmptySymbolDict:
+            "ERROR: Symbol dictionary is empty. Cannot decompress.",
+          logSynStats:
+            "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+          logSynonymsCollected: "Synonyms collected: {count}",
+          logSynonymFile: "Synonym file: {count} entries.",
+          validatorSynonymBadge: "{count} synonyms",
+          validatorCopyDone: "Copied",
+          validatorStatusReadyBase: "Ready: {entries} entries",
+          validatorStatusReadySynonyms: " · {count} synonyms",
+          validatorStatusReadyIfo: " (ifo: wordcount={wordcount}{synPart})",
+          validatorStatusReadyIfoSynPart: ", synwordcount={syncount}",
+          validatorByteBadgeMulti: "{entries} idx entries · {bytes} bytes",
+          validatorByteBadgeSingle: "{bytes} bytes",
+          validatorSynRedirect:
+            "Synonym redirect: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackWord:
+            "Inflection fallback: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackSynonym:
+            "Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>",
+          logOutputReady:
+            "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+          logOutputReadySynPart: ", syn={synCount}",
+          errInvalidHuffHeader: "invalid huff header",
+          errInvalidHuffTableZeroCodeLen: "invalid huff table: zero codelen",
+          errInvalidHuffTableShortNonTerminal:
+            "invalid huff table: short non-terminal code",
+          errInvalidCdicHeader: "invalid cdic header",
         },
         pl: {
+          pageTitle: "MOBI8/KF8 do StarDict - HUFF/CDIC",
+          langToggleTitle: "Przełącz język",
           title: "MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)",
           desc: "Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>",
           dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
@@ -1799,8 +2094,70 @@
           previewTitle: "🧩 Przykładowe wpisy",
           validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
           validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+          validatorCopyHtml: "Kopiuj HTML",
+          startBtnWorking: "PRACUJE...",
+          startBtnDone: "✅ GOTOWE",
+          startBtnRetry: "PONÓW",
+          startBtnErrorRetry: "BŁĄD - Ponów",
+          logFileLoaded: "Wczytano plik: {file}",
+          logNoEntries: "⚠️ Nie wyodrębniono wpisów. Sprawdź log po szczegóły.",
+          logFatalError: "BŁĄD KRYTYCZNY: {message}\n{stack}",
+          logExtraDataSentinel:
+            "⚠️ {source}: ExtraDataFlags ma wartość 0xFFFF (wartość sentinel/szum), wymuszam konserwatywny tryb obcinania 0x1.",
+          logExtraDataMask:
+            "⚠️ {source}: maskowanie ExtraDataFlags 0x{from} -> 0x{to}",
+          logTextRecordsClamp:
+            "⚠️ text_records ({headerCount}) przekracza granicę HUFF ({huffBound}); ograniczam.",
+          logRecord0: "Rekord 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
+          logExtraDataFromHeader:
+            "ExtraDataFlags z nagłówka MOBI (offset 0xF2): 0x{raw}",
+          logKf8BoundaryRecord: "Rekord graniczny KF8: {kf8Bound}",
+          logKf8FlagsOverride: "Nadpisanie flag sekcji KF8: 0x{flags}",
+          logFinalExtraDataFlags: "Końcowe ExtraDataFlags: 0x{flags}",
+          logHuffLoaded: "Wczytano HUFF. off1=0x{off1} off2=0x{off2}",
+          logCdicLoaded:
+            "Wczytano {count} rekordów CDIC -> {symbols} symboli w słowniku.",
+          logFirstRecordDecoded:
+            "Zdekodowano pierwszy rekord ({bytes} bajtów). Podgląd:\n  {preview}",
+          logDecompressing: "Dekompresja: {current}/{max}... wpisów: {entries}",
+          logExtractionComplete:
+            "Ekstrakcja zakończona: {entries} unikalnych wpisów.",
+          logPdbRecords: "Rekordy PDB: {count}",
+          logErrorNoHuff: "BŁĄD: Nie znaleziono rekordu HUFF.",
+          logHuffRecord:
+            "Rekord HUFF: {huffIdx}  (rekordy tekstowe: 1-{textRecordMax})",
+          logErrorEmptySymbolDict:
+            "BŁĄD: Słownik symboli jest pusty. Nie można dekompresować.",
+          logSynStats:
+            "Widziane bloki idx:entry: {idxBlocks}, widziane idx:iform: {idxIformsSeen}, dodane idx:iform: {idxIformsAdded}, odmiany z końców fraz: {phraseTailAdded}",
+          logSynonymsCollected: "Zebrane odmiany: {count}",
+          logSynonymFile: "Plik odmian: {count} wpisów.",
+          validatorSynonymBadge: "{count} odmian",
+          validatorCopyDone: "Skopiowano",
+          validatorStatusReadyBase: "Gotowe: {entries} wpisów",
+          validatorStatusReadySynonyms: " · {count} odmian",
+          validatorStatusReadyIfo: " (ifo: wordcount={wordcount}{synPart})",
+          validatorStatusReadyIfoSynPart: ", synwordcount={syncount}",
+          validatorByteBadgeMulti: "{entries} wpisów idx · {bytes} bajtów",
+          validatorByteBadgeSingle: "{bytes} bajtów",
+          validatorSynRedirect:
+            "Przekierowanie odmiany: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackWord:
+            "Odmiana - fallback: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackSynonym:
+            "Odmiana -> fallback odmiany: <b>{query}</b> -> <b>{word}</b>",
+          logOutputReady:
+            "✅ Dane wyjściowe gotowe. {count} wpisów, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+          logOutputReadySynPart: ", syn={synCount}",
+          errInvalidHuffHeader: "nieprawidłowy nagłówek HUFF",
+          errInvalidHuffTableZeroCodeLen:
+            "nieprawidłowa tabela HUFF: zerowa długość kodu",
+          errInvalidHuffTableShortNonTerminal:
+            "nieprawidłowa tabela HUFF: zbyt krótki kod nieterminalny",
+          errInvalidCdicHeader: "nieprawidłowy nagłówek CDIC",
         },
       };
+      window.__I18N_TABLES = I18N;
       // ── i18n: language detection, application & toggle ───────────────────────────
       // Expects a global `const I18N = { en: {...}, pl: {...} }` defined before this
       // file is included. All text lives only in I18N — HTML elements are empty shells.
@@ -1826,6 +2183,10 @@
         document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
           var v = t[el.getAttribute("data-i18n-ph")];
           if (v !== undefined) el.placeholder = v;
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach(function (el) {
+          var v = t[el.getAttribute("data-i18n-title")];
+          if (v !== undefined) el.title = v;
         });
         var btn = document.getElementById("langToggle");
         if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";

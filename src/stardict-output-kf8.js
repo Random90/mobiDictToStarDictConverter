@@ -54,7 +54,11 @@ function renderOutput(finalMap, synMap, generateSyn) {
       for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
     }
     synCount = validSyns.length;
-    addLog(`Synonym file: ${synCount} entries.`);
+    addLog(
+      i18nText("logSynonymFile", "Synonym file: {count} entries.", {
+        count: synCount,
+      }),
+    );
   }
 
   // .ifo
@@ -90,7 +94,9 @@ function renderOutput(finalMap, synMap, generateSyn) {
     dl("dictionary.syn", synBytesArr);
     const badge = document.createElement("span");
     badge.className = "badge-syn";
-    badge.textContent = `${synCount} synonyms`;
+    badge.textContent = i18nText("validatorSynonymBadge", "{count} synonyms", {
+      count: synCount,
+    });
     links.appendChild(badge);
   }
 
@@ -132,8 +138,9 @@ function renderOutput(finalMap, synMap, generateSyn) {
           paneRendered: "validatorPaneRendered",
           copyBtn: "validatorCopyBtn",
         },
-        getCopyLabel: () => "Copy HTML",
-        getCopiedLabel: () => "Copied",
+        t: (key, vars) => i18nText(key, key, vars),
+        getCopyLabel: () => i18nText("validatorCopyHtml", "Copy HTML"),
+        getCopiedLabel: () => i18nText("validatorCopyDone", "Copied"),
       });
     }
     window.__kf8Validator.loadFromBuffers({
@@ -152,7 +159,19 @@ function renderOutput(finalMap, synMap, generateSyn) {
     }
   }
 
+  const synPart = synCount
+    ? i18nText("logOutputReadySynPart", ", syn={synCount}", { synCount })
+    : "";
   addLog(
-    `✅ Output ready. ${count} entries, idx=${idx.length} B, dict=${dict.length} B${synCount ? `, syn=${synCount}` : ""}.`,
+    i18nText(
+      "logOutputReady",
+      "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+      {
+        count,
+        idxBytes: idx.length,
+        dictBytes: dict.length,
+        synPart,
+      },
+    ),
   );
 }

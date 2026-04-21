@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOBI8/KF8 to StarDict - HUFF/CDIC</title>
+    <title data-i18n="pageTitle">MOBI8/KF8 to StarDict - HUFF/CDIC</title>
     <style>
       #langToggle {
         position: fixed;
@@ -209,7 +209,7 @@
     <button
       id="langToggle"
       onclick="toggleLang()"
-      title="Switch language / Zmień język"
+      data-i18n-title="langToggleTitle"
     >
       🇵🇱 PL
     </button>
@@ -277,7 +277,7 @@
           id="validatorSearchBox"
           class="validator-search"
           data-i18n-ph="validatorSearchPh"
-          placeholder="Search in generated StarDict..."
+          placeholder=""
         />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
@@ -297,9 +297,8 @@
                 id="validatorCopyBtn"
                 class="btn-dl"
                 style="padding: 6px 10px; background: #6c757d"
-              >
-                Copy HTML
-              </button>
+                data-i18n="validatorCopyHtml"
+              ></button>
             </div>
           </div>
           <div
@@ -319,6 +318,23 @@
     </div>
 
     <script>
+      function formatI18nText(template, vars) {
+        if (!vars) return template;
+        return String(template).replace(/\{(\w+)}/g, (_, k) =>
+          vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+        );
+      }
+
+      function i18nText(key, fallback, vars) {
+        const tables = window.__I18N_TABLES || {};
+        const lang = window.LANG || "en";
+        const table = tables[lang] || tables.en || {};
+        const en = tables.en || {};
+        const base = table[key] !== undefined ? table[key] : en[key];
+        const text = base !== undefined ? base : fallback || key;
+        return formatI18nText(text, vars);
+      }
+
       // ─────────────────────────────────────────────────────────────────────────────
       // Style engines  (applied to each extracted entry's HTML)
       // ─────────────────────────────────────────────────────────────────────────────
@@ -525,7 +541,9 @@
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         globalBuffer = await file.arrayBuffer();
         document.getElementById("startBtn").disabled = false;
-        addLog(`File loaded: ${file.name}`);
+        addLog(
+          i18nText("logFileLoaded", "File loaded: {file}", { file: file.name }),
+        );
       });
 
       // ─────────────────────────────────────────────────────────────────────────────
@@ -549,7 +567,7 @@
       document.getElementById("startBtn").onclick = () => {
         const btn = document.getElementById("startBtn");
         btn.disabled = true;
-        btn.textContent = "WORKING...";
+        btn.textContent = i18nText("startBtnWorking", "WORKING...");
 
         const options = {
           style: document.getElementById("styleSelect").value,
@@ -563,16 +581,26 @@
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
               renderOutput(finalMap, synMap, true);
-              btn.textContent = "✅ DONE";
+              btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
-              addLog("⚠️ No entries extracted. Check log for details.");
+              addLog(
+                i18nText(
+                  "logNoEntries",
+                  "⚠️ No entries extracted. Check log for details.",
+                ),
+              );
               btn.disabled = false;
-              btn.textContent = "RETRY";
+              btn.textContent = i18nText("startBtnRetry", "RETRY");
             }
           } catch (err) {
-            addLog("FATAL ERROR: " + err.message + "\n" + err.stack);
+            addLog(
+              i18nText("logFatalError", "FATAL ERROR: {message}\n{stack}", {
+                message: err.message,
+                stack: err.stack,
+              }),
+            );
             btn.disabled = false;
-            btn.textContent = "ERROR – Retry";
+            btn.textContent = i18nText("startBtnErrorRetry", "ERROR - Retry");
           }
         }, 150);
       };
@@ -580,6 +608,8 @@
       // ── i18n ──────────────────────────────────────────────────────────────────────
       const I18N = {
         en: {
+          pageTitle: "MOBI8/KF8 to StarDict - HUFF/CDIC",
+          langToggleTitle: "Switch language",
           title: "MOBI/KF8 → StarDict (HUFF/CDIC Decoder)",
           desc: "Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>",
           dropzone: "📁 Click or drag your .mobi file here",
@@ -595,8 +625,71 @@
           previewTitle: "🧩 Sample Entries",
           validatorTitle: "🔎 Search Generated Dictionary",
           validatorSearchPh: "🔍 Search generated dictionary...",
+          validatorCopyHtml: "Copy HTML",
+          startBtnWorking: "WORKING...",
+          startBtnDone: "✅ DONE",
+          startBtnRetry: "RETRY",
+          startBtnErrorRetry: "ERROR - Retry",
+          logFileLoaded: "File loaded: {file}",
+          logNoEntries: "⚠️ No entries extracted. Check log for details.",
+          logFatalError: "FATAL ERROR: {message}\n{stack}",
+          logExtraDataSentinel:
+            "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
+          logExtraDataMask:
+            "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
+          logTextRecordsClamp:
+            "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+          logRecord0: "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
+          logExtraDataFromHeader:
+            "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
+          logKf8BoundaryRecord: "KF8 boundary record: {kf8Bound}",
+          logKf8FlagsOverride: "KF8 section flags override: 0x{flags}",
+          logFinalExtraDataFlags: "Final ExtraDataFlags: 0x{flags}",
+          logHuffLoaded: "HUFF loaded. off1=0x{off1} off2=0x{off2}",
+          logCdicLoaded:
+            "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
+          logFirstRecordDecoded:
+            "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+          logDecompressing:
+            "Decompressing: {current}/{max}... entries so far: {entries}",
+          logExtractionComplete:
+            "Extraction complete: {entries} unique entries.",
+          logPdbRecords: "PDB records: {count}",
+          logErrorNoHuff: "ERROR: No HUFF record found.",
+          logHuffRecord:
+            "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
+          logErrorEmptySymbolDict:
+            "ERROR: Symbol dictionary is empty. Cannot decompress.",
+          logSynStats:
+            "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+          logSynonymsCollected: "Synonyms collected: {count}",
+          logSynonymFile: "Synonym file: {count} entries.",
+          validatorSynonymBadge: "{count} synonyms",
+          validatorCopyDone: "Copied",
+          validatorStatusReadyBase: "Ready: {entries} entries",
+          validatorStatusReadySynonyms: " · {count} synonyms",
+          validatorStatusReadyIfo: " (ifo: wordcount={wordcount}{synPart})",
+          validatorStatusReadyIfoSynPart: ", synwordcount={syncount}",
+          validatorByteBadgeMulti: "{entries} idx entries · {bytes} bytes",
+          validatorByteBadgeSingle: "{bytes} bytes",
+          validatorSynRedirect:
+            "Synonym redirect: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackWord:
+            "Inflection fallback: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackSynonym:
+            "Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>",
+          logOutputReady:
+            "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+          logOutputReadySynPart: ", syn={synCount}",
+          errInvalidHuffHeader: "invalid huff header",
+          errInvalidHuffTableZeroCodeLen: "invalid huff table: zero codelen",
+          errInvalidHuffTableShortNonTerminal:
+            "invalid huff table: short non-terminal code",
+          errInvalidCdicHeader: "invalid cdic header",
         },
         pl: {
+          pageTitle: "MOBI8/KF8 do StarDict - HUFF/CDIC",
+          langToggleTitle: "Przełącz język",
           title: "MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)",
           desc: "Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>",
           dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
@@ -612,8 +705,70 @@
           previewTitle: "🧩 Przykładowe wpisy",
           validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
           validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+          validatorCopyHtml: "Kopiuj HTML",
+          startBtnWorking: "PRACUJE...",
+          startBtnDone: "✅ GOTOWE",
+          startBtnRetry: "PONÓW",
+          startBtnErrorRetry: "BŁĄD - Ponów",
+          logFileLoaded: "Wczytano plik: {file}",
+          logNoEntries: "⚠️ Nie wyodrębniono wpisów. Sprawdź log po szczegóły.",
+          logFatalError: "BŁĄD KRYTYCZNY: {message}\n{stack}",
+          logExtraDataSentinel:
+            "⚠️ {source}: ExtraDataFlags ma wartość 0xFFFF (wartość sentinel/szum), wymuszam konserwatywny tryb obcinania 0x1.",
+          logExtraDataMask:
+            "⚠️ {source}: maskowanie ExtraDataFlags 0x{from} -> 0x{to}",
+          logTextRecordsClamp:
+            "⚠️ text_records ({headerCount}) przekracza granicę HUFF ({huffBound}); ograniczam.",
+          logRecord0: "Rekord 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
+          logExtraDataFromHeader:
+            "ExtraDataFlags z nagłówka MOBI (offset 0xF2): 0x{raw}",
+          logKf8BoundaryRecord: "Rekord graniczny KF8: {kf8Bound}",
+          logKf8FlagsOverride: "Nadpisanie flag sekcji KF8: 0x{flags}",
+          logFinalExtraDataFlags: "Końcowe ExtraDataFlags: 0x{flags}",
+          logHuffLoaded: "Wczytano HUFF. off1=0x{off1} off2=0x{off2}",
+          logCdicLoaded:
+            "Wczytano {count} rekordów CDIC -> {symbols} symboli w słowniku.",
+          logFirstRecordDecoded:
+            "Zdekodowano pierwszy rekord ({bytes} bajtów). Podgląd:\n  {preview}",
+          logDecompressing: "Dekompresja: {current}/{max}... wpisów: {entries}",
+          logExtractionComplete:
+            "Ekstrakcja zakończona: {entries} unikalnych wpisów.",
+          logPdbRecords: "Rekordy PDB: {count}",
+          logErrorNoHuff: "BŁĄD: Nie znaleziono rekordu HUFF.",
+          logHuffRecord:
+            "Rekord HUFF: {huffIdx}  (rekordy tekstowe: 1-{textRecordMax})",
+          logErrorEmptySymbolDict:
+            "BŁĄD: Słownik symboli jest pusty. Nie można dekompresować.",
+          logSynStats:
+            "Widziane bloki idx:entry: {idxBlocks}, widziane idx:iform: {idxIformsSeen}, dodane idx:iform: {idxIformsAdded}, odmiany z końców fraz: {phraseTailAdded}",
+          logSynonymsCollected: "Zebrane odmiany: {count}",
+          logSynonymFile: "Plik odmian: {count} wpisów.",
+          validatorSynonymBadge: "{count} odmian",
+          validatorCopyDone: "Skopiowano",
+          validatorStatusReadyBase: "Gotowe: {entries} wpisów",
+          validatorStatusReadySynonyms: " · {count} odmian",
+          validatorStatusReadyIfo: " (ifo: wordcount={wordcount}{synPart})",
+          validatorStatusReadyIfoSynPart: ", synwordcount={syncount}",
+          validatorByteBadgeMulti: "{entries} wpisów idx · {bytes} bajtów",
+          validatorByteBadgeSingle: "{bytes} bajtów",
+          validatorSynRedirect:
+            "Przekierowanie odmiany: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackWord:
+            "Odmiana - fallback: <b>{query}</b> -> <b>{word}</b>",
+          validatorFallbackSynonym:
+            "Odmiana -> fallback odmiany: <b>{query}</b> -> <b>{word}</b>",
+          logOutputReady:
+            "✅ Dane wyjściowe gotowe. {count} wpisów, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+          logOutputReadySynPart: ", syn={synCount}",
+          errInvalidHuffHeader: "nieprawidłowy nagłówek HUFF",
+          errInvalidHuffTableZeroCodeLen:
+            "nieprawidłowa tabela HUFF: zerowa długość kodu",
+          errInvalidHuffTableShortNonTerminal:
+            "nieprawidłowa tabela HUFF: zbyt krótki kod nieterminalny",
+          errInvalidCdicHeader: "nieprawidłowy nagłówek CDIC",
         },
       };
+      window.__I18N_TABLES = I18N;
       // @@include(src/i18n-core.js)
     </script>
   </body>

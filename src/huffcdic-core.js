@@ -15,6 +15,13 @@ class HuffCdicBase {
     this.dict = [];
   }
 
+  t(key, fallback, vars) {
+    if (typeof i18nText === "function") return i18nText(key, fallback, vars);
+    return String(fallback || key).replace(/\{(\w+)}/g, (_, k) =>
+      vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+    );
+  }
+
   _stripTrailingWithFlags(data, flags) {
     // KindleUnpack parity: count trailer entries from set bits > 0 and trim one entry per count.
     const multibyte = flags & 1;
@@ -58,7 +65,13 @@ class HuffCdicBase {
     if (raw === 0xffff) {
       // For sentinel/noisy values, start in conservative mode immediately.
       addLog(
-        `⚠️ ${sourceLabel}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.`,
+        this.t(
+          "logExtraDataSentinel",
+          "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
+          {
+            source: sourceLabel,
+          },
+        ),
       );
       return 0x0001;
     }
@@ -66,7 +79,15 @@ class HuffCdicBase {
     const masked = raw & 0x001f;
     if (masked !== raw) {
       addLog(
-        `⚠️ ${sourceLabel}: masking ExtraDataFlags 0x${raw.toString(16)} -> 0x${masked.toString(16)}`,
+        this.t(
+          "logExtraDataMask",
+          "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
+          {
+            source: sourceLabel,
+            from: raw.toString(16),
+            to: masked.toString(16),
+          },
+        ),
       );
     }
     return masked || 0x0001;
@@ -106,7 +127,14 @@ class HuffCdicBase {
     if (!headerCount) return huffBound;
     if (headerCount > huffBound) {
       addLog(
-        `⚠️ text_records (${headerCount}) exceeds HUFF bound (${huffBound}); clamping.`,
+        this.t(
+          "logTextRecordsClamp",
+          "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+          {
+            headerCount,
+            huffBound,
+          },
+        ),
       );
       return huffBound;
     }
@@ -133,14 +161,27 @@ class HuffCdicBase {
     const mobiType = this.u32(recBase + 0x18);
     const mobiVer = this.u32(recBase + 0x68);
     addLog(
-      `Record 0: MOBI type=${mobiType}, headerLen=0x${hdrLen.toString(16)}`,
+      this.t(
+        "logRecord0",
+        "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
+        {
+          mobiType,
+          headerLen: hdrLen.toString(16),
+        },
+      ),
     );
 
     let flags = 0x0001;
     if (hdrLen >= 0xe4 && mobiVer >= 5) {
       const raw = this.u16(recBase + 0xf2);
       addLog(
-        `ExtraDataFlags from MOBI header (offset 0xF2): 0x${raw.toString(16)}`,
+        this.t(
+          "logExtraDataFromHeader",
+          "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
+          {
+            raw: raw.toString(16),
+          },
+        ),
       );
       flags = this._normalizeExtraDataFlags(raw, "MOBI header");
     }
@@ -162,7 +203,11 @@ class HuffCdicBase {
         const len = this.u32(pos + 4);
         if (tag === 121 && len === 12) {
           const kf8Bound = this.u32(pos + 8);
-          addLog(`KF8 boundary record: ${kf8Bound}`);
+          addLog(
+            this.t("logKf8BoundaryRecord", "KF8 boundary record: {kf8Bound}", {
+              kf8Bound,
+            }),
+          );
           const kf8RecIdx = kf8Bound + 1;
           if (kf8RecIdx < recs.length) {
             const kf8Off = recs[kf8RecIdx];
@@ -182,7 +227,15 @@ class HuffCdicBase {
             if (kl >= 0xe4 && kv >= 5) {
               const raw = this.u16(kf8Base + 0xf2);
               flags = this._normalizeExtraDataFlags(raw, "KF8 override");
-              addLog(`KF8 section flags override: 0x${flags.toString(16)}`);
+              addLog(
+                this.t(
+                  "logKf8FlagsOverride",
+                  "KF8 section flags override: 0x{flags}",
+                  {
+                    flags: flags.toString(16),
+                  },
+                ),
+              );
             }
           }
         }
@@ -190,7 +243,11 @@ class HuffCdicBase {
       }
     }
 
-    addLog(`Final ExtraDataFlags: 0x${flags.toString(16)}`);
+    addLog(
+      this.t("logFinalExtraDataFlags", "Final ExtraDataFlags: 0x{flags}", {
+        flags: flags.toString(16),
+      }),
+    );
     return flags;
   }
 
@@ -212,7 +269,7 @@ class HuffCdicBase {
       this.raw[hOff + 6] !== 0x00 ||
       this.raw[hOff + 7] !== 0x18
     ) {
-      throw new Error("invalid huff header");
+      throw new Error(this.t("errInvalidHuffHeader", "invalid huff header"));
     }
 
     const off1 = this.u32(hOff + 8);
@@ -222,9 +279,20 @@ class HuffCdicBase {
       const v = this.u32(hOff + off1 + i * 4);
       const codelen = v & 0x1f;
       const term = !!(v & 0x80);
-      if (codelen === 0) throw new Error("invalid huff table: zero codelen");
+      if (codelen === 0)
+        throw new Error(
+          this.t(
+            "errInvalidHuffTableZeroCodeLen",
+            "invalid huff table: zero codelen",
+          ),
+        );
       if (codelen <= 8 && !term)
-        throw new Error("invalid huff table: short non-terminal code");
+        throw new Error(
+          this.t(
+            "errInvalidHuffTableShortNonTerminal",
+            "invalid huff table: short non-terminal code",
+          ),
+        );
       const mxraw = (v >>> 8) >>> 0;
       const maxcode =
         Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
@@ -241,7 +309,10 @@ class HuffCdicBase {
         Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
     }
     addLog(
-      `HUFF loaded. off1=0x${off1.toString(16)} off2=0x${off2.toString(16)}`,
+      this.t("logHuffLoaded", "HUFF loaded. off1=0x{off1} off2=0x{off2}", {
+        off1: off1.toString(16),
+        off2: off2.toString(16),
+      }),
     );
   }
 
@@ -257,7 +328,7 @@ class HuffCdicBase {
       this.raw[rOff + 6] !== 0x00 ||
       this.raw[rOff + 7] !== 0x10
     ) {
-      throw new Error("invalid cdic header");
+      throw new Error(this.t("errInvalidCdicHeader", "invalid cdic header"));
     }
 
     const phrases = this.u32(rOff + 8);
@@ -290,7 +361,14 @@ class HuffCdicBase {
       count++;
     }
     addLog(
-      `Loaded ${count} CDIC records → ${this.dict.length} symbols in dictionary.`,
+      this.t(
+        "logCdicLoaded",
+        "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
+        {
+          count,
+          symbols: this.dict.length,
+        },
+      ),
     );
   }
 

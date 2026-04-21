@@ -311,7 +311,11 @@ class KF8Converter extends HuffCdicBase {
             firstDecodedLogged = true;
             const preview = text.substring(0, 300).replace(/[\r\n]+/g, " ");
             addLog(
-              `First record decoded (${dec.length} bytes). Preview:\n  ${preview}`,
+              this.t(
+                "logFirstRecordDecoded",
+                "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+                { bytes: dec.length, preview },
+              ),
             );
           }
 
@@ -323,12 +327,26 @@ class KF8Converter extends HuffCdicBase {
         if (i < endExclusive) {
           if (i % 500 < BATCH)
             addLog(
-              `Decompressing: ${i}/${textRecordMax}... entries so far: ${this.finalMap.size}`,
+              this.t(
+                "logDecompressing",
+                "Decompressing: {current}/{max}... entries so far: {entries}",
+                {
+                  current: i,
+                  max: textRecordMax,
+                  entries: this.finalMap.size,
+                },
+              ),
             );
           setTimeout(processChunk, 0);
         } else {
           this.extractEntriesFrom(overlap, true);
-          addLog(`Extraction complete: ${this.finalMap.size} unique entries.`);
+          addLog(
+            this.t(
+              "logExtractionComplete",
+              "Extraction complete: {entries} unique entries.",
+              { entries: this.finalMap.size },
+            ),
+          );
           resolve();
         }
       };
@@ -339,7 +357,11 @@ class KF8Converter extends HuffCdicBase {
   // Main pipeline
   async run() {
     this.buildRecords();
-    addLog(`PDB records: ${this.recs.length}`);
+    addLog(
+      this.t("logPdbRecords", "PDB records: {count}", {
+        count: this.recs.length,
+      }),
+    );
 
     const extraFlags = this.findExtraDataFlags();
 
@@ -358,27 +380,54 @@ class KF8Converter extends HuffCdicBase {
       }
     }
     if (huffIdx === -1) {
-      addLog("ERROR: No HUFF record found.");
+      addLog(this.t("logErrorNoHuff", "ERROR: No HUFF record found."));
       return this.finalMap;
     }
     const textRecordMax = this.getTextRecordMax(huffIdx);
-    addLog(`HUFF record: ${huffIdx}  (text records: 1-${textRecordMax})`);
+    addLog(
+      this.t(
+        "logHuffRecord",
+        "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
+        {
+          huffIdx,
+          textRecordMax,
+        },
+      ),
+    );
 
     this.loadHuff(this.recs[huffIdx]);
     this.loadAllCdic(huffIdx);
 
     if (this.dict.length === 0) {
-      addLog("ERROR: Symbol dictionary is empty. Cannot decompress.");
+      addLog(
+        this.t(
+          "logErrorEmptySymbolDict",
+          "ERROR: Symbol dictionary is empty. Cannot decompress.",
+        ),
+      );
       return this.finalMap;
     }
 
     await this.streamDecompress(textRecordMax, extraFlags);
     if (this.options.generateSyn) {
       addLog(
-        `idx:entry blocks seen: ${this.synStats.idxBlocks}, idx:iform seen: ${this.synStats.idxIformsSeen}, idx:iform added: ${this.synStats.idxIformsAdded}, phrase-tail inflections: ${this.synStats.phraseTailAdded}`,
+        this.t(
+          "logSynStats",
+          "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+          {
+            idxBlocks: this.synStats.idxBlocks,
+            idxIformsSeen: this.synStats.idxIformsSeen,
+            idxIformsAdded: this.synStats.idxIformsAdded,
+            phraseTailAdded: this.synStats.phraseTailAdded,
+          },
+        ),
       );
     }
-    addLog(`Synonyms collected: ${this.synMap.size}`);
+    addLog(
+      this.t("logSynonymsCollected", "Synonyms collected: {count}", {
+        count: this.synMap.size,
+      }),
+    );
     return { finalMap: this.finalMap, synMap: this.synMap };
   }
 }

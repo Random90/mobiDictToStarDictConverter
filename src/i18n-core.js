@@ -24,6 +24,10 @@ function applyI18n() {
     var v = t[el.getAttribute("data-i18n-ph")];
     if (v !== undefined) el.placeholder = v;
   });
+  document.querySelectorAll("[data-i18n-title]").forEach(function (el) {
+    var v = t[el.getAttribute("data-i18n-title")];
+    if (v !== undefined) el.title = v;
+  });
   var btn = document.getElementById("langToggle");
   if (btn) btn.textContent = window.LANG === "pl" ? "🇬🇧 EN" : "🇵🇱 PL";
 }

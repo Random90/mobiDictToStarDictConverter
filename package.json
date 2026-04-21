@@ -1,6 +1,7 @@
 {
   "name": "mobiconverter",
   "version": "1.0.0",
+  "type": "module",
   "description": "Kindle Mobi to StarDict Converter + Tools",
   "main": "index.html",
   "scripts": {

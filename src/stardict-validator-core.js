@@ -23,6 +23,19 @@
 
     const dec = new TextDecoder("utf-8");
 
+    function formatText(template, vars) {
+      if (!vars) return template;
+      return String(template).replace(/\{(\w+)}/g, (_, k) =>
+        vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+      );
+    }
+
+    function tr(key, fallback, vars) {
+      if (typeof config.t === "function") return config.t(key, vars);
+      if (typeof i18nText === "function") return i18nText(key, fallback, vars);
+      return formatText(fallback || key, vars);
+    }
+
     function setStatus(msg) {
       if (el.status) el.status.textContent = msg;
     }
@@ -83,20 +96,41 @@
       if (el.byteBadge) {
         el.byteBadge.textContent =
           entries.length > 1
-            ? `${entries.length} idx entries · ${entries.reduce((s, e) => s + e.sz, 0)} bytes`
-            : `${first.sz} bytes`;
+            ? tr(
+                "validatorByteBadgeMulti",
+                "{entries} idx entries · {bytes} bytes",
+                {
+                  entries: entries.length,
+                  bytes: entries.reduce((s, e) => s + e.sz, 0),
+                },
+              )
+            : tr("validatorByteBadgeSingle", "{bytes} bytes", {
+                bytes: first.sz,
+              });
       }
 
       if (el.synInfo) {
         if (matchInfo && matchInfo.mode === "synonym") {
           el.synInfo.style.display = "block";
-          el.synInfo.innerHTML = `Synonym redirect: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+          el.synInfo.innerHTML = tr(
+            "validatorSynRedirect",
+            "Synonym redirect: <b>{query}</b> -> <b>{word}</b>",
+            { query: matchInfo.query, word: first.original },
+          );
         } else if (matchInfo && matchInfo.mode === "fallback-word") {
           el.synInfo.style.display = "block";
-          el.synInfo.innerHTML = `Inflection fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+          el.synInfo.innerHTML = tr(
+            "validatorFallbackWord",
+            "Inflection fallback: <b>{query}</b> -> <b>{word}</b>",
+            { query: matchInfo.query, word: first.original },
+          );
         } else if (matchInfo && matchInfo.mode === "fallback-synonym") {
           el.synInfo.style.display = "block";
-          el.synInfo.innerHTML = `Inflection -> synonym fallback: <b>${matchInfo.query}</b> -> <b>${first.original}</b>`;
+          el.synInfo.innerHTML = tr(
+            "validatorFallbackSynonym",
+            "Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>",
+            { query: matchInfo.query, word: first.original },
+          );
         } else {
           el.synInfo.style.display = "none";
         }
@@ -179,10 +213,10 @@
         navigator.clipboard.writeText(rawHtml).then(() => {
           const copied = config.getCopiedLabel
             ? config.getCopiedLabel()
-            : "Copied";
+            : tr("validatorCopyDone", "Copied");
           const copy = config.getCopyLabel
             ? config.getCopyLabel()
-            : "Copy HTML";
+            : tr("validatorCopyHtml", "Copy HTML");
           el.copyBtn.textContent = copied;
           setTimeout(() => {
             el.copyBtn.textContent = copy;
@@ -214,12 +248,34 @@
       const syncount =
         (ifoText.match(/synwordcount=(\d+)/) || [])[1] || synMap.size;
 
+      const synPart = synMap.size
+        ? tr("validatorStatusReadySynonyms", " · {count} synonyms", {
+            count: synMap.size,
+          })
+        : "";
+      const ifoSynPart =
+        syncount !== "0"
+          ? tr("validatorStatusReadyIfoSynPart", ", synwordcount={syncount}", {
+              syncount,
+            })
+          : "";
+      const ifoPart = ifoText
+        ? tr(
+            "validatorStatusReadyIfo",
+            " (ifo: wordcount={wordcount}{synPart})",
+            {
+              wordcount,
+              synPart: ifoSynPart,
+            },
+          )
+        : "";
+
       setStatus(
-        `Ready: ${wordMap.size} entries` +
-          (synMap.size ? ` · ${synMap.size} synonyms` : "") +
-          (ifoText
-            ? ` (ifo: wordcount=${wordcount}${syncount !== "0" ? ", synwordcount=" + syncount : ""})`
-            : ""),
+        tr("validatorStatusReadyBase", "Ready: {entries} entries", {
+          entries: wordMap.size,
+        }) +
+          synPart +
+          ifoPart,
       );
       if (el.search) el.search.style.display = "block";
     }

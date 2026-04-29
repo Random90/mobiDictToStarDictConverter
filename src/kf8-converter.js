@@ -72,8 +72,14 @@ class KF8Converter extends HuffCdicBase {
   // Extract entries from a HTML chunk (format-routed, legacy-safe)
   extractEntriesFrom(html, isFinal = false) {
     const detected = this._detectEntryFormat(html);
-    if (detected && !this.detectedEntryFormat)
+    if (detected && !this.detectedEntryFormat) {
       this.detectedEntryFormat = detected;
+      addLog(
+        this.t("logDetectedEntryFormat", "Detected entry format: {format}", {
+          format: detected,
+        }),
+      );
+    }
 
     if (this.detectedEntryFormat === "header-block") {
       this._extractEntriesHeaderBlocks(html, isFinal);

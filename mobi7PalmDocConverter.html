@@ -256,7 +256,7 @@
 
     <div class="card">
       <h2 data-i18n="title"></h2>
-      <small data-i18n="subtitle">For older Mobi7/PalmDoc</small>
+      <small data-i18n-html="subtitle">For older Mobi7/PalmDoc</small>
 
       <div class="controls">
         <label data-i18n="step1"></label>
@@ -616,6 +616,7 @@
         parseDictionary(html) {
           this.log("Parsing structure...");
           const fmt = this.detectDictionaryFormat(html);
+          this.log(`Detected entry format: ${fmt}`);
           if (fmt === "hr-bold") {
             this.log("Detected alternate HR/B parser format.");
             this.parseDictionaryHrBold(html);
@@ -1278,7 +1279,7 @@
         en: {
           title: "MOBI to StarDict",
           subtitle:
-            "Designed for Wielki Słownik Ang-Pol 2014 and similar older Mobi7/PalmDoc dictionaries",
+            'Tested with <b>Wielki Słownik Ang-Pol 2014</b> and free dictionaries from <a href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>, e.g. <i>zbiorczy słownik czesko-polski</i> and <i>zbiorczy słownik włosko-polski</i>.',
           step1: "Step 1: Select Dictionary File",
           dropzone: "📁 Select .mobi file or drag it here",
           step2: "Step 2: Options",
@@ -1298,7 +1299,7 @@
         pl: {
           title: "MOBI do StarDict",
           subtitle:
-            "Zaprojektowany dla Wielki Słownik Ang-Pol 2014 i innych starszych słowników Mobi7/PalmDoc",
+            'Przetestowany z <b>Wielkim Słownikiem Ang-Pol 2014</b> oraz darmowymi słownikami ze strony <a href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>, np. <i>zbiorczy słownik czesko-polski</i> i <i>zbiorczy słownik włosko-polski</i>.',
           step1: "Krok 1: Wybierz plik słownika",
           dropzone: "📁 Wybierz plik .mobi lub przeciągnij go tutaj",
           step2: "Krok 2: Opcje",

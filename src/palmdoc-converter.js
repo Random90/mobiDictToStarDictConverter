@@ -53,6 +53,7 @@ class Converter extends PalmDocBase {
   parseDictionary(html) {
     this.log("Parsing structure...");
     const fmt = this.detectDictionaryFormat(html);
+    this.log(`Detected entry format: ${fmt}`);
     if (fmt === "hr-bold") {
       this.log("Detected alternate HR/B parser format.");
       this.parseDictionaryHrBold(html);

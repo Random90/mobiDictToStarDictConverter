@@ -1083,8 +1083,14 @@
         // Extract entries from a HTML chunk (format-routed, legacy-safe)
         extractEntriesFrom(html, isFinal = false) {
           const detected = this._detectEntryFormat(html);
-          if (detected && !this.detectedEntryFormat)
+          if (detected && !this.detectedEntryFormat) {
             this.detectedEntryFormat = detected;
+            addLog(
+              this.t("logDetectedEntryFormat", "Detected entry format: {format}", {
+                format: detected,
+              }),
+            );
+          }
 
           if (this.detectedEntryFormat === "header-block") {
             this._extractEntriesHeaderBlocks(html, isFinal);
@@ -2068,7 +2074,7 @@
           pageTitle: "MOBI8/KF8 to StarDict - HUFF/CDIC",
           langToggleTitle: "Switch language",
           title: "MOBI/KF8 → StarDict (HUFF/CDIC Decoder)",
-          desc: "Designed for <b>Wielki Słownik Ang-Pol 2023</b><small> from: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> and similar KF8-format dictionaries.<br>",
+          desc: 'Tested with <b>Wielki Słownik Ang-Pol 2023+</b><small> (Dariusz Jemielniak, Marcin Milkowski)</small> and the free <b>SJP2</b> dictionary from <a href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>.<br>',
           dropzone: "📁 Click or drag your .mobi file here",
           styleLabel: "🎨 Entry Style:",
           styleNone: "Original - original HTML pass-through",
@@ -2111,6 +2117,7 @@
             "Decompressing: {current}/{max}... entries so far: {entries}",
           logExtractionComplete:
             "Extraction complete: {entries} unique entries.",
+          logDetectedEntryFormat: "Detected entry format: {format}",
           logPdbRecords: "PDB records: {count}",
           logErrorNoHuff: "ERROR: No HUFF record found.",
           logHuffRecord:
@@ -2148,7 +2155,7 @@
           pageTitle: "MOBI8/KF8 do StarDict - HUFF/CDIC",
           langToggleTitle: "Przełącz język",
           title: "MOBI/KF8 → StarDict (Dekoder HUFF/CDIC)",
-          desc: "Przeznaczony dla <b>Wielkiego Słownika Ang-Pol 2023</b><small> autorstwa: Dariusz Jemielniak, Marcin Miłkowski (red.)</small> i podobnych słowników w formacie KF8.<br>",
+          desc: 'Przetestowany z <b>Wielkim Słownikiem Ang-Pol 2023+</b><small> (Dariusz Jemielniak, Marcin Milkowski)</small> oraz darmowym słownikiem <b>SJP2</b> ze strony <a href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>.<br>',
           dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
           styleLabel: "🎨 Styl wpisów:",
           styleNone: "Oryginalny - oryginalny HTML bez stylowania",
@@ -2190,6 +2197,7 @@
           logDecompressing: "Dekompresja: {current}/{max}... wpisów: {entries}",
           logExtractionComplete:
             "Ekstrakcja zakończona: {entries} unikalnych wpisów.",
+          logDetectedEntryFormat: "Wykryty format wpisów: {format}",
           logPdbRecords: "Rekordy PDB: {count}",
           logErrorNoHuff: "BŁĄD: Nie znaleziono rekordu HUFF.",
           logHuffRecord:

@@ -11,6 +11,9 @@ Istnieją dwa konwertery w zależności od wersji słownika:
 - [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - dla słownika w formacie KF8 (**nowsze wydania**), działa z wersją 2023-2026
 - [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - dla słownika w formacie PalmDoc (**starsze wydania**), działa z wersją 2014 (i prawdopodobnie częcią aktualizcji)
 
+Konwerter obsługuje też darmowy słownik języka polskiego SJP2, który jest dostępny na [https://cc-sjp.zabałaganionemiejsce.pl/](https://cc-sjp.zabałaganionemiejsce.pl/) oraz słowniki zbiorcze z [https://sowaczyta.pl/slowniki-zbiorcze/](https://sowaczyta.pl/slowniki-zbiorcze/) (np. `zbiorczy slownik czesko-polski`, `zbiorczy slownik wlosko-polski`).
+Jeżeli posiadasz inny słownik w formacie .mobi, możesz spróbować go przekonwertować, ale nie gwarantuję, że będzie działać poprawnie.
+
 Plik konwertera wysarczy otworzyć w nowym oknie przeglądarki, wybrać plik słownika i kliknąć Convert/Begin. Potem należy pobrać wygenerowane pliki osobno i umieścić w osobnym folderze w katalogu /dict (na Onyx Boox).
 
 Oprócz samej konwersji, narzędzie oferuje **możliwość ulepszenia wyglądu słownika** poprzez wybór stylu wpisów, które oferują lepszą czytelność i estetykę na ekranach e-ink czarno-białych jak i kolorowych.
@@ -36,6 +39,21 @@ Use one of the two converters depending on the version of your dictionary:
 - [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - for PalmDoc format (older editions)
 
 Pick a mobi file, select StarDict entry style and click Convert/Begin. Then download the generated files separately and place them in a separate folder in the /dict directory of your reader (on Onyx Boox, might differ on others).
+
+## ✅ Compatibility (tested)
+
+The converters were tested with the dictionaries below:
+
+- **KF8 / HUFF converter** (`mobiKF8HuffConverter.html`)
+  - Wielki Slownik Angielsko-Polski 2023+
+  - Free SJP2 dictionary: [https://cc-sjp.zabałaganionemiejsce.pl/](https://cc-sjp.zabałaganionemiejsce.pl/)
+
+- **Mobi7 / PalmDoc converter** (`mobi7PalmDocConverter.html`)
+  - Wielki Slownik Angielsko-Polski 2014
+  - Free dictionaries from: [https://sowaczyta.pl/slowniki-zbiorcze/](https://sowaczyta.pl/slowniki-zbiorcze/)
+	- for example: `zbiorczy slownik czesko-polski`, `zbiorczy slownik wlosko-polski`
+
+If a dictionary uses a different internal HTML structure, conversion may still work, but please treat it as best-effort and verify the output with the included validator tool.
 
 ## 🧰 Additional tools
 

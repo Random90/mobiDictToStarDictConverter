@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOBI Reader V2 - UTF-8 Professional</title>
+    <title>MobiReader PalmDoc</title>
     <style>
       #langToggle {
         position: fixed;
@@ -118,7 +118,7 @@
     <button
       id="langToggle"
       onclick="toggleLang()"
-      title="Switch language / Zmień język"
+      data-i18n-title="langToggleTitle"
     >
       🇵🇱 PL
     </button>
@@ -167,6 +167,11 @@
             style="background: #28a745"
             data-i18n="jumpBtn"
           ></button>
+          <button
+            class="btn"
+            id="downloadHtmlBtn"
+            data-i18n="downloadHtmlBtn"
+          ></button>
         </div>
       </div>
 
@@ -203,6 +208,24 @@
 
       let reader = null;
       let currentIdx = 1;
+      let sourceFileName = "mobi";
+
+      function i18nText(key, fallback) {
+        const t = I18N[window.LANG] || I18N.en;
+        return t[key] || fallback || key;
+      }
+
+      function downloadBlob(name, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
 
       document.getElementById("dropZone").onclick = () =>
         document.getElementById("fileInput").click();
@@ -210,6 +233,7 @@
         const file = e.target.files[0];
         if (!file) return;
         document.getElementById("fileName").textContent = file.name;
+        sourceFileName = file.name.replace(/\.[^/.]+$/, "");
 
         const buffer = await file.arrayBuffer();
         reader = new MobiReader(buffer);
@@ -250,6 +274,31 @@
         if (val > 0 && val < reader.records.length) updateView(val);
       };
 
+      document.getElementById("downloadHtmlBtn").onclick = () => {
+        if (!reader) return;
+        try {
+          const parts = [];
+          for (let i = 1; i < reader.records.length; i++) {
+            parts.push(reader.getRecordText(i));
+          }
+          const html = `<!doctype html>\n<html lang="${window.LANG}">\n<head><meta charset="UTF-8"><title>${sourceFileName}</title></head>\n<body>\n${parts.join("\n")}\n</body>\n</html>`;
+          const outName = `${sourceFileName}-decoded-full-palmdoc.html`;
+          downloadBlob(outName, html, "text/html;charset=utf-8");
+          document.getElementById("log").textContent =
+            "[System] " +
+            i18nText("downloadOk", "Exported full HTML: {file}")
+              .replace("{file}", outName)
+              .replace("{n}", String(reader.records.length - 1));
+        } catch (e) {
+          document.getElementById("log").textContent =
+            "[System] " +
+            i18nText("downloadErr", "Download failed: {err}").replace(
+              "{err}",
+              e.message,
+            );
+        }
+      };
+
       // ── i18n ──────────────────────────────────────────────────────────────────────
       const I18N = {
         en: {
@@ -260,11 +309,15 @@
           nextBtn: "Next »",
           jumpPh: "Record no.",
           jumpBtn: "Go",
+          downloadHtmlBtn: "Download full HTML",
           rawTitle: "SOURCE CODE (Raw tags)",
           renderedTitle: "RENDERED PREVIEW",
           logIdle: "Status: Ready. Select a file to start debugging.",
           loadedMsg: "Loaded {n} records. Meta flags:",
           sizeLabel: "Size (chars)",
+          downloadOk: "Exported full decoded HTML ({n} records): {file}",
+          downloadErr: "Download failed: {err}",
+          langToggleTitle: "Switch language / Zmien jezyk",
         },
         pl: {
           title: "Eksplorator zawartości MOBI V2",
@@ -274,11 +327,16 @@
           nextBtn: "Następny »",
           jumpPh: "Nr rekordu",
           jumpBtn: "Skocz",
+          downloadHtmlBtn: "Pobierz pelny HTML",
           rawTitle: "KOD ŹRÓDŁOWY (Surowe tagi)",
           renderedTitle: "PODGLĄD RENDEROWANIA",
           logIdle: "Status: Gotowy. Wybierz plik, aby rozpocząć.",
           loadedMsg: "Wczytano {n} rekordów. Flagi metadanych:",
           sizeLabel: "Rozmiar (znaki)",
+          downloadOk:
+            "Wyeksportowano pelny zdekodowany HTML ({n} rekordow): {file}",
+          downloadErr: "Nie udalo sie pobrac pliku: {err}",
+          langToggleTitle: "Switch language / Zmien jezyk",
         },
       };
       // @@include(src/i18n-core.js)

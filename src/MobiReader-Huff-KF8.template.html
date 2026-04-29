@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOBI Raw Text Inspector</title>
+    <title>MobiReader KF8</title>
     <style>
       #langToggle {
         position: fixed;
@@ -181,7 +181,7 @@
     <button
       id="langToggle"
       onclick="toggleLang()"
-      title="Switch language / Zmień język"
+      data-i18n-title="langToggleTitle"
     >
       🇵🇱 PL
     </button>
@@ -250,7 +250,15 @@
           ><span data-i18n="outputLabel"></span>
           <span id="bytesBadge" class="badge"></span
         ></b>
-        <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn"></button>
+        <div>
+          <button
+            class="btn btn-sm"
+            id="downloadHtmlBtn"
+            data-i18n="downloadHtmlBtn"
+            disabled
+          ></button>
+          <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn"></button>
+        </div>
       </div>
       <div class="tabs">
         <div class="tab active" data-tab="raw" data-i18n="tabRaw"></div>
@@ -270,6 +278,7 @@
 
       // ── File I/O ─────────────────────────────────────────────────────────────────
       let globalBuffer = null;
+      let sourceFileName = "mobi";
       const fileInput = document.getElementById("fileInput");
       document.getElementById("dropZone").onclick = () => fileInput.click();
       fileInput.addEventListener("change", async (e) => {
@@ -277,6 +286,7 @@
         if (!file) return;
         document.getElementById("fileNameDisplay").textContent =
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        sourceFileName = file.name.replace(/\.[^/.]+$/, "");
         globalBuffer = await file.arrayBuffer();
         addLog(`File loaded: ${file.name}`);
         initConverter();
@@ -303,6 +313,52 @@
         navigator.clipboard.writeText(
           document.getElementById("rawOutput").textContent,
         );
+      };
+
+      function i18nText(key, fallback) {
+        const t = I18N[window.LANG] || I18N.en;
+        return t[key] || fallback || key;
+      }
+
+      function downloadBlob(name, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById("downloadHtmlBtn").onclick = () => {
+        if (!decoder) return;
+        const btn = document.getElementById("downloadHtmlBtn");
+        btn.disabled = true;
+        try {
+          const parts = [];
+          for (let i = 1; i <= decoder.textRecordMax; i++) {
+            parts.push(decoder.decodeRecord(i).text);
+          }
+          const html = `<!doctype html>\n<html lang="${window.LANG}">\n<head><meta charset="UTF-8"><title>${sourceFileName}</title></head>\n<body>\n${parts.join("\n")}\n</body>\n</html>`;
+          const outName = `${sourceFileName}-decoded-full-kf8.html`;
+          downloadBlob(outName, html, "text/html;charset=utf-8");
+          addLog(
+            i18nText("downloadOk", "Exported full HTML: {file}")
+              .replace("{file}", outName)
+              .replace("{n}", String(decoder.textRecordMax)),
+          );
+        } catch (e) {
+          addLog(
+            i18nText("downloadErr", "Download failed: {err}").replace(
+              "{err}",
+              e.message,
+            ),
+          );
+        } finally {
+          btn.disabled = false;
+        }
       };
 
       // ─────────────────────────────────────────────────────────────────────────────
@@ -395,6 +451,7 @@
         document.getElementById("prevBtn").disabled = false;
         document.getElementById("nextBtn").disabled = false;
         document.getElementById("searchRow").style.display = "flex";
+        document.getElementById("downloadHtmlBtn").disabled = false;
         addLog(
           `Ready. Text records: 1–${maxRec}. Use controls above to inspect.`,
         );
@@ -559,9 +616,13 @@
           nextBtn: "Next ▶",
           logIdle: "Status: Idle. Load a .mobi file to begin.",
           outputLabel: "Decoded Output",
+          downloadHtmlBtn: "💾 Download full HTML",
+          downloadOk: "Exported full decoded HTML ({n} records): {file}",
+          downloadErr: "Download failed: {err}",
           copyBtn: "📋 Copy raw text",
           tabRaw: "Raw HTML source",
           tabRendered: "Rendered HTML",
+          langToggleTitle: "Switch language / Zmien jezyk",
         },
         pl: {
           title: "🔬 Inspektor tekstu MOBI",
@@ -573,9 +634,14 @@
           nextBtn: "Nast. ▶",
           logIdle: "Status: Bezczynny. Wczytaj plik .mobi, aby rozpocząć.",
           outputLabel: "Zdekodowane dane",
+          downloadHtmlBtn: "💾 Pobierz pełny HTML",
+          downloadOk:
+            "Wyeksportowano pelny zdekodowany HTML ({n} rekordow): {file}",
+          downloadErr: "Nie udalo sie pobrac pliku: {err}",
           copyBtn: "📋 Kopiuj tekst",
           tabRaw: "Źródło HTML",
           tabRendered: "Podgląd HTML",
+          langToggleTitle: "Switch language / Zmien jezyk",
         },
       };
       // @@include(src/i18n-core.js)

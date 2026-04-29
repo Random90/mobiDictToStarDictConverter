@@ -499,8 +499,8 @@
         const converter = new Converter(globalBuffer, options, addLog);
         setTimeout(async () => {
           try {
-            const { finalMap } = await converter.run();
-            renderOutput(finalMap, converter.encoder, true);
+            const { finalMap, synMap } = await converter.run();
+            renderOutput(finalMap, synMap, converter.encoder, true);
             startBtn.classList.remove("processing");
             startBtn.textContent = "✅ DONE";
           } catch (err) {

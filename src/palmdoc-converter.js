@@ -52,6 +52,73 @@ class Converter extends PalmDocBase {
 
   parseDictionary(html) {
     this.log("Parsing structure...");
+    const fmt = this.detectDictionaryFormat(html);
+    if (fmt === "hr-bold") {
+      this.log("Detected alternate HR/B parser format.");
+      this.parseDictionaryHrBold(html);
+      return;
+    }
+    this.parseDictionaryMain(html);
+  }
+
+  detectDictionaryFormat(html) {
+    const h2Count = (html.match(/<h2\b/gi) || []).length;
+    if (h2Count >= 20) return "main";
+
+    const hrCount = (html.match(/<hr\b/gi) || []).length;
+    if (hrCount < 100) return "main";
+
+    const boldHeadCount = (html.match(
+      /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
+    ) || []).length;
+
+    if (boldHeadCount >= 100) return "hr-bold";
+    return "main";
+  }
+
+  _ingestEntry(word, contentHtml, styleFn, phonetics = "", rawHeadHtml = "") {
+    if (!word || word.length >= 100) return;
+
+    const safeHead = rawHeadHtml || `<h2>${word}</h2>`;
+    const entryHtml = styleFn(word, phonetics, safeHead, contentHtml);
+
+    if (this.options.merge && this.finalMap.has(word)) {
+      this.finalMap.set(
+        word,
+        this.finalMap.get(word) + '<hr style="margin:4px 0">' + entryHtml,
+      );
+    } else {
+      this.finalMap.set(word, entryHtml);
+    }
+
+    this._collectSynonyms(word, contentHtml);
+  }
+
+  _collectSynonyms(word, contentHtml) {
+    if (!this.options.generateSyn) return;
+
+    const stripped = word.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "").trim();
+    if (stripped !== word && stripped.length > 1 && !this.synMap.has(stripped)) {
+      this.synMap.set(stripped, word);
+    }
+
+    const bMatches = contentHtml.matchAll(/<b>([^<]{3,70})<\/b>/g);
+    for (const m of bMatches) {
+      const phrase = m[1].trim();
+      if (phrase.toLowerCase() === word.toLowerCase()) continue;
+      if (phrase.length < 3 || phrase.length > 80) continue;
+      if (/^\d+$/.test(phrase)) continue;
+      if (!this.synMap.has(phrase)) this.synMap.set(phrase, word);
+    }
+
+    const tezRe = /\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi;
+    for (const m of contentHtml.matchAll(tezRe)) {
+      const alt = m[1].trim();
+      if (alt && alt !== word && !this.synMap.has(alt)) this.synMap.set(alt, word);
+    }
+  }
+
+  parseDictionaryMain(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     const h2Entries = doc.querySelectorAll("h2");
@@ -74,47 +141,37 @@ class Converter extends PalmDocBase {
         next = next.nextSibling;
       }
 
-      const entryHtml = styleFn(word, phonetics, h2.outerHTML, contentHtml);
-
-      if (this.options.merge && this.finalMap.has(word)) {
-        this.finalMap.set(
-          word,
-          this.finalMap.get(word) + '<hr style="margin:4px 0">' + entryHtml,
-        );
-      } else {
-        this.finalMap.set(word, entryHtml);
-      }
-
-      // Collect synonyms from this entry
-      if (this.options.generateSyn) {
-        // 1. Subscript variant: "word1" -> "word" (strip trailing digit subscripts)
-        const stripped = word
-          .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "")
-          .trim();
-        if (stripped !== word && stripped.length > 1) {
-          if (!this.synMap.has(stripped)) this.synMap.set(stripped, word);
-        }
-
-        // 2. Bold sub-phrases inside the content
-        const bMatches = contentHtml.matchAll(/<b>([^<]{3,70})<\/b>/g);
-        for (const m of bMatches) {
-          const phrase = m[1].trim();
-          if (phrase.toLowerCase() === word.toLowerCase()) continue;
-          if (phrase.length < 3 || phrase.length > 80) continue;
-          if (/^\d+$/.test(phrase)) continue;
-          if (!this.synMap.has(phrase)) this.synMap.set(phrase, word);
-        }
-
-        // 3. Phonetic "also" forms: (tez X) or (also X) patterns
-        const tezRe = /\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi;
-        for (const m of contentHtml.matchAll(tezRe)) {
-          const alt = m[1].trim();
-          if (alt && alt !== word && !this.synMap.has(alt))
-            this.synMap.set(alt, word);
-        }
-      }
+      this._ingestEntry(word, contentHtml, styleFn, phonetics, h2.outerHTML);
     });
 
+    this.log(
+      `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
+    );
+  }
+
+  parseDictionaryHrBold(html) {
+    const styleFn = STYLES[this.options.style] || STYLES.nice;
+    const parts = html.split(/<hr\b[^>]*>/i);
+    let found = 0;
+
+    for (const seg of parts) {
+      const m = seg.match(/^\s*<b[^>]*>([\s\S]*?)<\/b>\s*<br\s*\/?>/i);
+      if (!m) continue;
+
+      const word = (m[1] || "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!word || word.length >= 100) continue;
+
+      let contentHtml = seg.slice(m.index + m[0].length);
+      contentHtml = contentHtml.replace(/^(?:\s*<br\s*\/?>)+/i, "").trim();
+
+      found++;
+      this._ingestEntry(word, contentHtml, styleFn, "", `<h2>${word}</h2>`);
+    }
+
+    this.log(`Found ${found} headwords.`);
     this.log(
       `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
     );

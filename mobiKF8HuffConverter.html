@@ -1023,6 +1023,7 @@
             idxIformsAdded: 0,
             phraseTailAdded: 0,
           };
+          this.detectedEntryFormat = null;
         }
 
         _sanitizeEntryHtml(html) {
@@ -1059,8 +1060,41 @@
           this._collectSyns(key, synHtml || def);
         }
 
-        // Extract entries from a HTML chunk (both idx:entry and h2 styles)
+        _detectEntryFormat(html) {
+          if (this.detectedEntryFormat) return this.detectedEntryFormat;
+
+          if (/<idx:entry\b/i.test(html)) return "main";
+          if (/<p\b[^>]*width\s*=\s*["']?-20/i.test(html)) return "main";
+
+          const headerHeadCount = (
+            html.match(/<h[1-3]\b[^>]*>\s*<b[^>]*>[\s\S]*?<\/b>\s*<\/h[1-3]>/gi) || []
+          ).length;
+          if (
+            headerHeadCount >= 3 &&
+            /<blockquote\b/i.test(html) &&
+            /<hr\b/i.test(html)
+          )
+            return "header-block";
+
+          if (/<h2\b/i.test(html)) return "main";
+          return null;
+        }
+
+        // Extract entries from a HTML chunk (format-routed, legacy-safe)
         extractEntriesFrom(html, isFinal = false) {
+          const detected = this._detectEntryFormat(html);
+          if (detected && !this.detectedEntryFormat)
+            this.detectedEntryFormat = detected;
+
+          if (this.detectedEntryFormat === "header-block") {
+            this._extractEntriesHeaderBlocks(html, isFinal);
+            return;
+          }
+          this._extractEntriesMain(html, isFinal);
+        }
+
+        // Main extractor (original logic for primary dictionary formats)
+        _extractEntriesMain(html, isFinal = false) {
           const styleFn = STYLES[this.options.style] || STYLES.nice;
 
           // Method 1: KF8 idx:entry
@@ -1164,6 +1198,40 @@
 
             const def = styleFn(word, pContent);
             this._ingestEntry(word, def, pContent);
+          }
+        }
+
+        _extractEntriesHeaderBlocks(html, isFinal = false) {
+          const styleFn = STYLES[this.options.style] || STYLES.nice;
+          const headRe = /<h([1-6])\b[^>]*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/h\1>/gi;
+          const starts = [];
+          let m;
+          while ((m = headRe.exec(html)) !== null) {
+            starts.push({ index: m.index, headInner: m[2] || "" });
+          }
+
+          for (let i = 0; i < starts.length; i++) {
+            const s = starts[i];
+            const headInner = (s.headInner || "")
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+            if (!headInner || headInner.length > 120) continue;
+
+            const blockStart = s.index;
+            const blockEnd =
+              i + 1 < starts.length ? starts[i + 1].index : html.length;
+
+            if (!isFinal && i === starts.length - 1) break;
+
+            let block = html.slice(blockStart, blockEnd);
+            block = block
+              .replace(/\s*<hr\b[^>]*>\s*(?:<div\b[^>]*>\s*)?$/i, "")
+              .trim();
+            if (!block) continue;
+
+            const def = styleFn(headInner, block);
+            this._ingestEntry(headInner, def, block);
           }
         }
 

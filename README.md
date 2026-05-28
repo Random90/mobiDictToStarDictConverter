@@ -2,6 +2,10 @@
 
 🌐 **[Project website & live tools → random90.github.io/mobiDictToStarDictConverter](https://random90.github.io/mobiDictToStarDictConverter)**
 
+## Recenzja na światczytnikow.pl
+
+[https://swiatczytnikow.pl/konwerter-slownikow-z-formatu-mobi-na-stardict-obsluguje-wielki-slownik-angielsko-polski-i-slownik-jezyka-polskiego/](https://swiatczytnikow.pl/konwerter-slownikow-z-formatu-mobi-na-stardict-obsluguje-wielki-slownik-angielsko-polski-i-slownik-jezyka-polskiego/)
+
 ## 🇵🇱 Informacja o projekcie [Polish note]
 
 Najlepszy słownik angielsko-polski na czytniki, [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e), jest dostępny wyłącznie w formatach dla Kindle i Pocketbook. Celem tego projektu jest umożliwienie korzystania z tego słownika na innych czytnikach, takich jak np. Onyx Boox, które obsługują format StarDict. Repozytorium zawiera tylko skrypt do konwersji, **słownik należy zakupić samodzielnie**. Jeżeli wystąpią błędy to daj znać, postaram się poprawić. 

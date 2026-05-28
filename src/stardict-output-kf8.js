@@ -11,30 +11,40 @@ function renderOutput(finalMap, synMap, generateSyn) {
     a.toLowerCase().localeCompare(b.toLowerCase()),
   );
 
+  const concatChunks = (chunks, total) => {
+    const out = new Uint8Array(total);
+    let pos = 0;
+    for (const c of chunks) { out.set(c, pos); pos += c.length; }
+    return out;
+  };
+
   const wordToOrdinal = new Map();
-  let dict = [],
-    idx = [],
-    offset = 0,
-    count = 0;
+  const nullByte = new Uint8Array(1);
+  let dictChunks = [], idxChunks = [],
+    dictTotalSize = 0, idxTotalSize = 0,
+    offset = 0, count = 0;
 
   for (const [word, def] of sorted) {
     wordToOrdinal.set(word, count);
     const db = enc.encode(def);
     const wb = enc.encode(word);
-    for (const b of db) dict.push(b);
-    for (const b of wb) idx.push(b);
-    idx.push(0);
+    dictChunks.push(db);
+    dictTotalSize += db.length;
+    idxChunks.push(wb);
+    idxTotalSize += wb.length;
+    idxChunks.push(nullByte);
+    idxTotalSize += 1;
     const dv = new DataView(new ArrayBuffer(8));
     dv.setUint32(0, offset, false);
     dv.setUint32(4, db.length, false);
-    for (let i = 0; i < 8; i++) idx.push(dv.getUint8(i));
+    idxChunks.push(new Uint8Array(dv.buffer));
+    idxTotalSize += 8;
     offset += db.length;
     count++;
   }
 
   // Build .syn
-  let synBytes = [],
-    synCount = 0;
+  let synChunks = [], synTotalSize = 0, synCount = 0;
   if (generateSyn && synMap.size > 0) {
     const validSyns = [];
     for (const [alt, canonical] of synMap.entries()) {
@@ -47,11 +57,14 @@ function renderOutput(finalMap, synMap, generateSyn) {
     );
     for (const [alt, ordinal] of validSyns) {
       const ab = enc.encode(alt);
-      for (const b of ab) synBytes.push(b);
-      synBytes.push(0);
+      synChunks.push(ab);
+      synTotalSize += ab.length;
+      synChunks.push(nullByte);
+      synTotalSize += 1;
       const dv = new DataView(new ArrayBuffer(4));
       dv.setUint32(0, ordinal, false);
-      for (let i = 0; i < 4; i++) synBytes.push(dv.getUint8(i));
+      synChunks.push(new Uint8Array(dv.buffer));
+      synTotalSize += 4;
     }
     synCount = validSyns.length;
     addLog(
@@ -66,7 +79,7 @@ function renderOutput(finalMap, synMap, generateSyn) {
     "StarDict's dict ifo file",
     "version=2.4.2",
     `wordcount=${count}`,
-    `idxfilesize=${idx.length}`,
+    `idxfilesize=${idxTotalSize}`,
     "bookname=Wielki_Slownik_Ang-Pol_JEM",
     "sametypesequence=h",
   ];
@@ -74,9 +87,9 @@ function renderOutput(finalMap, synMap, generateSyn) {
   const ifo = ifoLines.join("\n") + "\n";
 
   const ifoBytes = enc.encode(ifo);
-  const idxBytes = new Uint8Array(idx);
-  const dictBytes = new Uint8Array(dict);
-  const synBytesArr = synCount > 0 ? new Uint8Array(synBytes) : null;
+  const idxBytes = concatChunks(idxChunks, idxTotalSize);
+  const dictBytes = concatChunks(dictChunks, dictTotalSize);
+  const synBytesArr = synCount > 0 ? concatChunks(synChunks, synTotalSize) : null;
 
   // Download links
   const dl = (name, data) => {
@@ -168,8 +181,8 @@ function renderOutput(finalMap, synMap, generateSyn) {
       "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
       {
         count,
-        idxBytes: idx.length,
-        dictBytes: dict.length,
+        idxBytes: idxTotalSize,
+        dictBytes: dictTotalSize,
         synPart,
       },
     ),

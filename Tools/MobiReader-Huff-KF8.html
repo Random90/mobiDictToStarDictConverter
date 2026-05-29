@@ -817,6 +817,18 @@
           }
           return result;
         }
+
+        // ── Parse MOBI ORTH+INFL binary indexes → inflection form map ──────────────
+        // Delegates to the shared parseMobiIndexes() function (mobi-index-core.js).
+        // Passes the already-extracted HTML headwords (finalMap keys) so that the
+        // correct Polish text is used for headword lookup instead of the hard-to-
+        // decode binary ORTH labels.
+        parseMobiIndexes() {
+          const externalHeadwords = (this.finalMap && this.finalMap.size > 0)
+            ? [...this.finalMap.keys()]
+            : null;
+          return parseMobiIndexes(this.raw, this.recs, addLog, externalHeadwords);
+        }
       }
 
       // ─────────────────────────────────────────────────────────────────────────────

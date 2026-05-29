@@ -555,6 +555,8 @@
       });
 
       // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(src/mobi-index-core.js)
+      // ─────────────────────────────────────────────────────────────────────────────
       // @@include(src/huffcdic-core.js)
       // ─────────────────────────────────────────────────────────────────────────────
 
@@ -673,6 +675,9 @@
             "ERROR: Symbol dictionary is empty. Cannot decompress.",
           logSynStats:
             "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+          logParsingMobiIndex: "Parsing MOBI INDX inflection index...",
+          logMobiIndexResult: "MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.",
+          logMobiIndexNone: "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
           logSynonymsCollected: "Synonyms collected: {count}",
           logSynonymFile: "Synonym file: {count} entries.",
           validatorSynonymBadge: "{count} synonyms",
@@ -755,6 +760,9 @@
             "BŁĄD: Słownik symboli jest pusty. Nie można dekompresować.",
           logSynStats:
             "Widziane bloki idx:entry: {idxBlocks}, widziane idx:iform: {idxIformsSeen}, dodane idx:iform: {idxIformsAdded}, odmiany z końców fraz: {phraseTailAdded}",
+          logParsingMobiIndex: "Parsowanie indeksu odmiany MOBI INDX...",
+          logMobiIndexResult: "MOBI INDX: zdekodowano {total} form odmiany, dodano {added} nowych wpisów syn.",
+          logMobiIndexNone: "MOBI INDX: brak indeksu ORTH/INFL (normalne dla plików innych niż SJP2).",
           logSynonymsCollected: "Zebrane odmiany: {count}",
           logSynonymFile: "Plik odmian: {count} wpisów.",
           validatorSynonymBadge: "{count} odmian",

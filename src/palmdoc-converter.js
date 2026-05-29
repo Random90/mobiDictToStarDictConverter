@@ -18,6 +18,27 @@ class Converter extends PalmDocBase {
     const html = await this.extractAsync(numRecords);
     this.log("Step 2: Running extraction engines...");
     this.parseDictionary(html);
+
+    // Step 3: Parse MOBI binary INDX for inflected forms (ORTH+INFL indexes).
+    if (this.options.generateSyn) {
+      try {
+        const inflMap = this.parseMobiIndexes();
+        let added = 0;
+        for (const [form, headword] of inflMap) {
+          if (!this.synMap.has(form) && form !== headword) {
+            this.synMap.set(form, headword);
+            added++;
+          }
+        }
+        if (inflMap.size > 0)
+          this.log(`MOBI INDX: ${inflMap.size} inflected forms decoded, ${added} new syn entries added.`);
+        else
+          this.log('MOBI INDX: no ORTH/INFL index found (normal for many MOBI7 files).');
+      } catch (e) {
+        this.log('MOBI INDX parse skipped (non-fatal): ' + e.message);
+      }
+    }
+
     return { finalMap: this.finalMap, synMap: this.synMap };
   }
 

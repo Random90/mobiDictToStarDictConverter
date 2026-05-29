@@ -483,6 +483,31 @@ class KF8Converter extends HuffCdicBase {
     }
 
     await this.streamDecompress(textRecordMax, extraFlags);
+
+    // ── MOBI binary INDX: extract inflected forms from ORTH+INFL indexes ────
+    if (this.options.generateSyn) {
+      try {
+        addLog(this.t('logParsingMobiIndex', 'Parsing MOBI INDX inflection index...'));
+        const inflMap = this.parseMobiIndexes();
+        let added = 0;
+        for (const [form, headword] of inflMap) {
+          if (!this.synMap.has(form) && form !== headword) {
+            this.synMap.set(form, headword);
+            added++;
+          }
+        }
+        if (inflMap.size > 0) {
+          addLog(this.t('logMobiIndexResult',
+            'MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.',
+            { total: inflMap.size, added }));
+        } else {
+          addLog(this.t('logMobiIndexNone', 'MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).'));
+        }
+      } catch (e) {
+        addLog('MOBI INDX parse skipped (non-fatal): ' + e.message);
+      }
+    }
+
     if (this.options.generateSyn) {
       addLog(
         this.t(

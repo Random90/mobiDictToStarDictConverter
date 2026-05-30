@@ -8,12 +8,24 @@
 //   raw               – Uint8Array of the entire .mobi file
 //   recsOffsets       – flat Array<number> of record start offsets within raw
 //   logFn             – optional logging callback
-//   externalHeadwords – optional Array<string> of HTML-extracted headwords
-//                       (indexed by ORTH ordinal); when supplied the ORTH
-//                       binary labels are not decoded and lookups use this
-//                       list instead, giving correctly encoded Polish text.
+//   externalHeadwords – optional Array<string> of headwords indexed by ORTH
+//                       ordinal (i.e. in the same order as the binary ORTH
+//                       index sub-records).  When supplied, binary ORTH label
+//                       decoding is skipped and this array is used directly.
+//                       ⚠ The array MUST be in ORTH ordinal order – passing
+//                       words in any other order (e.g. HTML extraction order)
+//                       will cause wrong headword↔group mappings.  In most
+//                       cases it is simpler and more correct to pass null and
+//                       let the built-in ORDT-aware binary decoder handle it.
 //
 // Returns Map<string, string>: inflectedForm → canonicalHeadword.
+//
+// ORTH label encoding:
+//   KF8 / modern Mobipocket dictionaries with non-ASCII headwords use ORDT
+//   (character remapping table) encoding: each label byte is an index into a
+//   uint16 codepoint table stored in the INDX control record.  The decoder
+//   detects ORDT automatically via the `code` field (0xfdea) or the `ocnt`
+//   flag in the INDX header, and falls back to plain UTF-8 for standard files.
 //
 // INFL binary format (MOBI INDX):
 //   ORTH entries have tag42 = inflection group ID (1..N)
@@ -27,6 +39,7 @@
 //          [0x02][reversed_form_suffix][0x03][reversed_canonical_suffix]
 //        Inflected form = (canonical stripped of canonical_suffix) + form_suffix
 //        Label bytes starting with 0x01 are grammar/metadata entries (skipped).
+//        INFL labels are always plain UTF-8 (never ORDT-encoded).
 // ─────────────────────────────────────────────────────────────────────────────
 function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
@@ -68,21 +81,28 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   //
   // INDX header layout (offsets from record start, all uint32 big-endian):
   //   0x04: headerLength
-  //   0x1c: code  (0xfdea = ORDT-encoded labels)
-  //   0xa4: ocnt  (non-zero also signals ORDT presence)
-  //   0xa8: oentries (number of ORDT entries)
-  //   0xac: op1   (offset of ORDT1 within this record)
-  //   0xb0: op2   (offset of ORDT2 within this record)
+  //   0x1c: code     (0xfdea = ORDT-encoded labels)
+  //   0xa4: ocnt     (non-zero also signals ORDT presence)
+  //   0xa8: oentries (number of entries in each ORDT table)
+  //   0xac: op1      (absolute offset of ORDT1 within this record)
+  //   0xb0: op2      (absolute offset of ORDT2 within this record)
   //
-  // ORDT2 at rec[op2]:  b'ORDT' magic + oentries × uint16 codepoints.
+  // Both ORDT1 and ORDT2 start with a 4-byte 'ORDT' magic marker.
+  // ORDT2 contains oentries × uint16 codepoints; we use ORDT2 for decoding
+  // (it is the full-Unicode table, whereas ORDT1 is a legacy single-byte one).
+  // Requires both markers to be valid, mirroring KindleUnpack / Python behaviour.
   const readOrdt = (rec) => {
     if (rec.length < 0xb4) return null;
-    const code     = ru32(rec, 0x1c);  // encoding
-    const ocnt     = ru32(rec, 0xa4);
+    const code     = ru32(rec, 0x1c);   // encoding flag
+    const ocnt     = ru32(rec, 0xa4);   // ORDT-present signal
     const oentries = ru32(rec, 0xa8);
+    const op1      = ru32(rec, 0xac);
     const op2      = ru32(rec, 0xb0);
     if (!(code === 0xfdea || ocnt) || oentries === 0) return null;
-    if (op2 + 4 + oentries * 2 > rec.length) return null;
+    // Validate both ORDT1 and ORDT2 markers (both must be 'ORDT')
+    if (op1 + 4 > rec.length || op2 + 4 + oentries * 2 > rec.length) return null;
+    if (rec[op1]   !== 0x4f || rec[op1+1] !== 0x52 ||
+        rec[op1+2] !== 0x44 || rec[op1+3] !== 0x54) return null;
     if (rec[op2]   !== 0x4f || rec[op2+1] !== 0x52 ||
         rec[op2+2] !== 0x44 || rec[op2+3] !== 0x54) return null;
     const ordt = [];

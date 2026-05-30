@@ -87,16 +87,13 @@ class PalmDocBase {
 
   // ── Parse MOBI ORTH+INFL binary indexes → inflection form map ──────────────
   // Delegates to the shared parseMobiIndexes() function (mobi-index-core.js).
-  // Passes the already-extracted HTML headwords (finalMap keys) so that the
-  // correct Polish text is used for headword lookup instead of the hard-to-
-  // decode binary ORTH labels.
+  // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
+  // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
+  // order, and would cause wrong headword↔group mappings.
   parseMobiIndexes() {
     const raw = new Uint8Array(this.buffer);
     const offsets = this.records.map(r => r.offset);
-    const externalHeadwords = (this.finalMap && this.finalMap.size > 0)
-      ? [...this.finalMap.keys()]
-      : null;
     const logFn = typeof addLog === 'function' ? addLog : (typeof this.log === 'function' ? this.log : null);
-    return parseMobiIndexes(raw, offsets, logFn, externalHeadwords);
+    return parseMobiIndexes(raw, offsets, logFn, null);
   }
 }

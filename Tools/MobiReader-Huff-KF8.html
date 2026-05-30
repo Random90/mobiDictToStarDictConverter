@@ -820,14 +820,11 @@
 
         // ── Parse MOBI ORTH+INFL binary indexes → inflection form map ──────────────
         // Delegates to the shared parseMobiIndexes() function (mobi-index-core.js).
-        // Passes the already-extracted HTML headwords (finalMap keys) so that the
-        // correct Polish text is used for headword lookup instead of the hard-to-
-        // decode binary ORTH labels.
+        // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
+        // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
+        // order, and would cause wrong headword↔group mappings.
         parseMobiIndexes() {
-          const externalHeadwords = (this.finalMap && this.finalMap.size > 0)
-            ? [...this.finalMap.keys()]
-            : null;
-          return parseMobiIndexes(this.raw, this.recs, addLog, externalHeadwords);
+          return parseMobiIndexes(this.raw, this.recs, addLog, null);
         }
       }
 

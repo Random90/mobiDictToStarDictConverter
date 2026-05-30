@@ -541,6 +541,48 @@
           return s;
         };
 
+        // Read ORDT2 translation table from an INDX control record (if present).
+        // Returns an array of Unicode codepoints indexed by byte value, or null.
+        //
+        // INDX header layout (offsets from record start, all uint32 big-endian):
+        //   0x04: headerLength
+        //   0x1c: code  (0xfdea = ORDT-encoded labels)
+        //   0xa4: ocnt  (non-zero also signals ORDT presence)
+        //   0xa8: oentries (number of ORDT entries)
+        //   0xac: op1   (offset of ORDT1 within this record)
+        //   0xb0: op2   (offset of ORDT2 within this record)
+        //
+        // ORDT2 at rec[op2]:  b'ORDT' magic + oentries × uint16 codepoints.
+        const readOrdt = (rec) => {
+          if (rec.length < 0xb4) return null;
+          const code     = ru32(rec, 0x1c);  // encoding
+          const ocnt     = ru32(rec, 0xa4);
+          const oentries = ru32(rec, 0xa8);
+          const op2      = ru32(rec, 0xb0);
+          if (!(code === 0xfdea || ocnt) || oentries === 0) return null;
+          if (op2 + 4 + oentries * 2 > rec.length) return null;
+          if (rec[op2]   !== 0x4f || rec[op2+1] !== 0x52 ||
+              rec[op2+2] !== 0x44 || rec[op2+3] !== 0x54) return null;
+          const ordt = [];
+          for (let i = 0; i < oentries; i++) ordt.push(ru16(rec, op2 + 4 + i * 2));
+          return ordt;
+        };
+
+        // Decode an ORTH label.
+        //   With ORDT: each byte is an index into the codepoint table; codepoint 0 → skip.
+        //   Without:   filter bytes < 0x05 (control markers) then decode as UTF-8.
+        const decodeOrthLabel = (labelBytes, ordt) => {
+          if (ordt) {
+            let s = '';
+            for (const b of labelBytes) {
+              const cp = b < ordt.length ? ordt[b] : b;
+              if (cp > 0) s += String.fromCodePoint(cp);
+            }
+            return s;
+          }
+          return utf8.decode(labelBytes.filter(b => b >= 0x05));
+        };
+
         // Parse TAGX section within rec at tagxOff.
         const parseTagx = (rec, tagxOff) => {
           if (tagxOff + 12 > rec.length) return null;
@@ -746,20 +788,28 @@
         log(`MOBI INDX: ORTH group has ${orthGroup.subRecs.length} sub-record(s), ` +
             `INFL group has ${inflGroup.subRecs.length} sub-record(s).`);
 
+        // Read ORDT from the ORTH control record for correct label decoding.
+        const orthOrdt = readOrdt(getRec(orthGroup.ctrlRecIdx));
+        if (orthOrdt) log(`MOBI INDX: ORTH ORDT found (${orthOrdt.length} entries) – using codepoint mapping.`);
+
         // Build ordered ORTH headwords array from all ORTH sub-records.
+        // Always decode from binary using ORDT when available, so the array is in
+        // the correct ORTH index ordinal order (critical for group→headword mapping).
+        // The optional externalHeadwords is accepted only when the caller guarantees
+        // it is indexed by ORTH ordinal (i.e. same order as the binary ORTH index).
         let orthHeadwords;
         if (Array.isArray(externalHeadwords) && externalHeadwords.length > 0) {
           orthHeadwords = externalHeadwords;
-          log(`MOBI INDX: using ${orthHeadwords.length} external (HTML) ORTH headwords.`);
+          log(`MOBI INDX: using ${orthHeadwords.length} external (caller-supplied, ordinal-ordered) ORTH headwords.`);
         } else {
           orthHeadwords = [];
           for (const ri of orthGroup.subRecs) {
             for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
-              const printable = e.labelBytes.filter(b => b >= 0x05);
-              orthHeadwords.push(utf8.decode(printable));
+              orthHeadwords.push(decodeOrthLabel(e.labelBytes, orthOrdt));
             }
           }
-          log(`MOBI INDX: decoded ${orthHeadwords.length} ORTH headwords from binary.`);
+          log(`MOBI INDX: decoded ${orthHeadwords.length} ORTH headwords from binary` +
+              (orthOrdt ? ' (ORDT)' : ' (UTF-8)') + '.');
         }
 
         if (orthHeadwords.length === 0) return inflMap;
@@ -977,17 +1027,14 @@
 
         // ── Parse MOBI ORTH+INFL binary indexes → inflection form map ──────────────
         // Delegates to the shared parseMobiIndexes() function (mobi-index-core.js).
-        // Passes the already-extracted HTML headwords (finalMap keys) so that the
-        // correct Polish text is used for headword lookup instead of the hard-to-
-        // decode binary ORTH labels.
+        // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
+        // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
+        // order, and would cause wrong headword↔group mappings.
         parseMobiIndexes() {
           const raw = new Uint8Array(this.buffer);
           const offsets = this.records.map(r => r.offset);
-          const externalHeadwords = (this.finalMap && this.finalMap.size > 0)
-            ? [...this.finalMap.keys()]
-            : null;
           const logFn = typeof addLog === 'function' ? addLog : (typeof this.log === 'function' ? this.log : null);
-          return parseMobiIndexes(raw, offsets, logFn, externalHeadwords);
+          return parseMobiIndexes(raw, offsets, logFn, null);
         }
       }
 

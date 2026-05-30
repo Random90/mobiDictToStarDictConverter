@@ -43,6 +43,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
+  // i18n helper: uses global i18nText (defined by the host template) when available,
+  // otherwise substitutes variables into the English fallback string directly.
+  const t = (key, fallback, vars) => {
+    if (typeof i18nText === 'function') return i18nText(key, fallback, vars);
+    if (!vars) return fallback;
+    return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
+      vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+  };
   const inflMap = new Map();
   const utf8 = new TextDecoder('utf-8', { fatal: false });
   const totalLen = raw.length;
@@ -302,12 +310,6 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
     }
   }
 
-  log(`MOBI INDX: found ${groups.length} index group(s)` +
-    (groups.length > 0
-      ? '. Tags: ' + groups.map(g =>
-          '[' + g.tagx.tags.map(t => t.tag).join(',') + ']'
-        ).join(' | ')
-      : ' (no INDX records in this file).'));
 
   if (groups.length < 2) return inflMap;
 
@@ -318,21 +320,11 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   const orthGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 42));
   const inflGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 26 || t.tag === 27));
 
-  if (!orthGroup) {
-    log('MOBI INDX: ORTH group not found (no tag 42). Not a dictionary INDX.');
-    return inflMap;
-  }
-  if (!inflGroup) {
-    log('MOBI INDX: INFL group not found (no tag 26/27). No inflection index present.');
-    return inflMap;
-  }
-
-  log(`MOBI INDX: ORTH group has ${orthGroup.subRecs.length} sub-record(s), ` +
-      `INFL group has ${inflGroup.subRecs.length} sub-record(s).`);
+  if (!orthGroup) return inflMap;
+  if (!inflGroup) return inflMap;
 
   // Read ORDT from the ORTH control record for correct label decoding.
   const orthOrdt = readOrdt(getRec(orthGroup.ctrlRecIdx));
-  if (orthOrdt) log(`MOBI INDX: ORTH ORDT found (${orthOrdt.length} entries) – using codepoint mapping.`);
 
   // Build ordered ORTH headwords array from all ORTH sub-records.
   // Always decode from binary using ORDT when available, so the array is in
@@ -342,7 +334,6 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   let orthHeadwords;
   if (Array.isArray(externalHeadwords) && externalHeadwords.length > 0) {
     orthHeadwords = externalHeadwords;
-    log(`MOBI INDX: using ${orthHeadwords.length} external (caller-supplied, ordinal-ordered) ORTH headwords.`);
   } else {
     orthHeadwords = [];
     for (const ri of orthGroup.subRecs) {
@@ -350,8 +341,6 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
         orthHeadwords.push(decodeOrthLabel(e.labelBytes, orthOrdt));
       }
     }
-    log(`MOBI INDX: decoded ${orthHeadwords.length} ORTH headwords from binary` +
-        (orthOrdt ? ' (ORDT)' : ' (UTF-8)') + '.');
   }
 
   if (orthHeadwords.length === 0) return inflMap;
@@ -373,7 +362,6 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
       inflEntries.push(e);
     }
   }
-  log(`MOBI INDX: pre-loaded ${inflEntries.length} INFL entries.`);
 
   // ── Step 2: Build groupHeadwords from ORTH ──────────────────────────────────
   //
@@ -398,16 +386,9 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
         oOrd++;
       }
     }
-    log(`MOBI INDX: ${groupHeadwords.size} paradigm groups found ` +
-        `(${[...groupHeadwords.values()].reduce((s, a) => s + a.length, 0)} headwords). ` +
-        `Sample: ` + [...groupHeadwords.entries()].slice(0, 3)
-            .map(([g, ws]) => `G${g}→[${ws.slice(0,2).map(w=>`"${w}"`).join(',')}]`).join(', '));
   }
 
-  if (groupHeadwords.size === 0) {
-    log('MOBI INDX: no tag42 values found in ORTH entries — cannot build inflection map.');
-    return inflMap;
-  }
+  if (groupHeadwords.size === 0) return inflMap;
 
   // ── Step 3: Process paradigm templates → derive inflected forms ─────────────
   //
@@ -425,55 +406,42 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   //     form = stem + form_suffix
   //     inflMap.set(form, canonical)   ← unless form == canonical
   //
-  {
-    let templatesProcessed = 0;
-    let formRefsTotal = 0;
-    let formRefsParsed = 0;
+  for (let G = 0; G < inflEntries.length; G++) {
+    const tmpl = inflEntries[G];
+    const t26 = tmpl.tagVals[26];
+    if (!t26 || t26.length === 0) continue; // not a template
 
-    for (let G = 0; G < inflEntries.length; G++) {
-      const tmpl = inflEntries[G];
-      const t26 = tmpl.tagVals[26];
-      if (!t26 || t26.length === 0) continue; // not a template
+    const headwords = groupHeadwords.get(G);
+    if (!headwords || headwords.length === 0) continue;
 
-      const headwords = groupHeadwords.get(G);
-      if (!headwords || headwords.length === 0) continue;
+    for (const formOrd of t26) {
+      if (formOrd >= inflEntries.length) continue;
+      const formEntry = inflEntries[formOrd];
+      const parsed = parseFormLabel(formEntry.labelBytes);
+      if (!parsed) continue;
 
-      templatesProcessed++;
-      formRefsTotal += t26.length;
+      const { formSuffix, canonicalSuffix } = parsed;
 
-      for (const formOrd of t26) {
-        if (formOrd >= inflEntries.length) continue;
-        const formEntry = inflEntries[formOrd];
-        const parsed = parseFormLabel(formEntry.labelBytes);
-        if (!parsed) continue;
-
-        formRefsParsed++;
-        const { formSuffix, canonicalSuffix } = parsed;
-
-        for (const canonical of headwords) {
-          let stem;
-          if (canonicalSuffix) {
-            if (!canonical.endsWith(canonicalSuffix)) continue;
-            stem = canonical.slice(0, canonical.length - canonicalSuffix.length);
-          } else {
-            stem = canonical;
-          }
-          const form = stem + formSuffix;
-          if (form && form !== canonical) {
-            inflMap.set(form, canonical);
-          }
+      for (const canonical of headwords) {
+        let stem;
+        if (canonicalSuffix) {
+          if (!canonical.endsWith(canonicalSuffix)) continue;
+          stem = canonical.slice(0, canonical.length - canonicalSuffix.length);
+        } else {
+          stem = canonical;
+        }
+        const form = stem + formSuffix;
+        if (form && form !== canonical) {
+          inflMap.set(form, canonical);
         }
       }
     }
-
-    log(`MOBI INDX DIAG: templates=${templatesProcessed}, ` +
-        `formRefs=${formRefsTotal}, parsed=${formRefsParsed}, mapped=${inflMap.size}`);
   }
 
-  log(`MOBI INDX: mapped ${inflMap.size} inflected forms.` +
-    (inflMap.size > 0
-      ? ' Sample: ' + [...inflMap.entries()].slice(0, 5).map(([k, v]) => `${k}→${v}`).join(', ')
-      : ''));
+  if (inflMap.size > 0) {
+    const sample = [...inflMap.entries()].slice(0, 5).map(([k, v]) => `${k}→${v}`).join(', ');
+    log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample }));
+  }
 
   return inflMap;
 }

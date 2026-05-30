@@ -535,32 +535,20 @@
           const recBase = this._getRecord0Base();
 
           // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
-          const hdrLen = this.u32(recBase + 0x14);
-          const mobiType = this.u32(recBase + 0x18);
+          const hdrLen  = this.u32(recBase + 0x14);
           const mobiVer = this.u32(recBase + 0x68);
-          addLog(
-            this.t(
-              "logRecord0",
-              "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
-              {
-                mobiType,
-                headerLen: hdrLen.toString(16),
-              },
-            ),
-          );
+          const encoding = hdrLen >= 0x10 ? this.u32(recBase + 0x1c) : 0;
+
+          const verLabel = mobiVer >= 8 ? 'KF8' : mobiVer >= 6 ? 'MOBI6' : `MOBI${mobiVer}`;
+          const encLabel = encoding === 65001 || encoding === 0
+            ? 'UTF-8'
+            : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
+          addLog(this.t('logMobiFormat', 'MOBI: {label} (v{ver}), encoding: {enc}',
+            { label: verLabel, ver: mobiVer, enc: encLabel }));
 
           let flags = 0x0001;
           if (hdrLen >= 0xe4 && mobiVer >= 5) {
             const raw = this.u16(recBase + 0xf2);
-            addLog(
-              this.t(
-                "logExtraDataFromHeader",
-                "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
-                {
-                  raw: raw.toString(16),
-                },
-              ),
-            );
             flags = this._normalizeExtraDataFlags(raw, "MOBI header");
           }
 
@@ -581,11 +569,6 @@
               const len = this.u32(pos + 4);
               if (tag === 121 && len === 12) {
                 const kf8Bound = this.u32(pos + 8);
-                addLog(
-                  this.t("logKf8BoundaryRecord", "KF8 boundary record: {kf8Bound}", {
-                    kf8Bound,
-                  }),
-                );
                 const kf8RecIdx = kf8Bound + 1;
                 if (kf8RecIdx < recs.length) {
                   const kf8Off = recs[kf8RecIdx];
@@ -605,15 +588,6 @@
                   if (kl >= 0xe4 && kv >= 5) {
                     const raw = this.u16(kf8Base + 0xf2);
                     flags = this._normalizeExtraDataFlags(raw, "KF8 override");
-                    addLog(
-                      this.t(
-                        "logKf8FlagsOverride",
-                        "KF8 section flags override: 0x{flags}",
-                        {
-                          flags: flags.toString(16),
-                        },
-                      ),
-                    );
                   }
                 }
               }
@@ -621,11 +595,6 @@
             }
           }
 
-          addLog(
-            this.t("logFinalExtraDataFlags", "Final ExtraDataFlags: 0x{flags}", {
-              flags: flags.toString(16),
-            }),
-          );
           return flags;
         }
 

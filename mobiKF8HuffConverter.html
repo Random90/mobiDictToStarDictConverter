@@ -614,6 +614,14 @@
       // ─────────────────────────────────────────────────────────────────────────────
       function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
         const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
+        // i18n helper: uses global i18nText (defined by the host template) when available,
+        // otherwise substitutes variables into the English fallback string directly.
+        const t = (key, fallback, vars) => {
+          if (typeof i18nText === 'function') return i18nText(key, fallback, vars);
+          if (!vars) return fallback;
+          return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
+            vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+        };
         const inflMap = new Map();
         const utf8 = new TextDecoder('utf-8', { fatal: false });
         const totalLen = raw.length;
@@ -873,12 +881,6 @@
           }
         }
 
-        log(`MOBI INDX: found ${groups.length} index group(s)` +
-          (groups.length > 0
-            ? '. Tags: ' + groups.map(g =>
-                '[' + g.tagx.tags.map(t => t.tag).join(',') + ']'
-              ).join(' | ')
-            : ' (no INDX records in this file).'));
 
         if (groups.length < 2) return inflMap;
 
@@ -889,21 +891,11 @@
         const orthGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 42));
         const inflGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 26 || t.tag === 27));
 
-        if (!orthGroup) {
-          log('MOBI INDX: ORTH group not found (no tag 42). Not a dictionary INDX.');
-          return inflMap;
-        }
-        if (!inflGroup) {
-          log('MOBI INDX: INFL group not found (no tag 26/27). No inflection index present.');
-          return inflMap;
-        }
-
-        log(`MOBI INDX: ORTH group has ${orthGroup.subRecs.length} sub-record(s), ` +
-            `INFL group has ${inflGroup.subRecs.length} sub-record(s).`);
+        if (!orthGroup) return inflMap;
+        if (!inflGroup) return inflMap;
 
         // Read ORDT from the ORTH control record for correct label decoding.
         const orthOrdt = readOrdt(getRec(orthGroup.ctrlRecIdx));
-        if (orthOrdt) log(`MOBI INDX: ORTH ORDT found (${orthOrdt.length} entries) – using codepoint mapping.`);
 
         // Build ordered ORTH headwords array from all ORTH sub-records.
         // Always decode from binary using ORDT when available, so the array is in
@@ -913,7 +905,6 @@
         let orthHeadwords;
         if (Array.isArray(externalHeadwords) && externalHeadwords.length > 0) {
           orthHeadwords = externalHeadwords;
-          log(`MOBI INDX: using ${orthHeadwords.length} external (caller-supplied, ordinal-ordered) ORTH headwords.`);
         } else {
           orthHeadwords = [];
           for (const ri of orthGroup.subRecs) {
@@ -921,8 +912,6 @@
               orthHeadwords.push(decodeOrthLabel(e.labelBytes, orthOrdt));
             }
           }
-          log(`MOBI INDX: decoded ${orthHeadwords.length} ORTH headwords from binary` +
-              (orthOrdt ? ' (ORDT)' : ' (UTF-8)') + '.');
         }
 
         if (orthHeadwords.length === 0) return inflMap;
@@ -944,7 +933,6 @@
             inflEntries.push(e);
           }
         }
-        log(`MOBI INDX: pre-loaded ${inflEntries.length} INFL entries.`);
 
         // ── Step 2: Build groupHeadwords from ORTH ──────────────────────────────────
         //
@@ -969,16 +957,9 @@
               oOrd++;
             }
           }
-          log(`MOBI INDX: ${groupHeadwords.size} paradigm groups found ` +
-              `(${[...groupHeadwords.values()].reduce((s, a) => s + a.length, 0)} headwords). ` +
-              `Sample: ` + [...groupHeadwords.entries()].slice(0, 3)
-                  .map(([g, ws]) => `G${g}→[${ws.slice(0,2).map(w=>`"${w}"`).join(',')}]`).join(', '));
         }
 
-        if (groupHeadwords.size === 0) {
-          log('MOBI INDX: no tag42 values found in ORTH entries — cannot build inflection map.');
-          return inflMap;
-        }
+        if (groupHeadwords.size === 0) return inflMap;
 
         // ── Step 3: Process paradigm templates → derive inflected forms ─────────────
         //
@@ -996,55 +977,42 @@
         //     form = stem + form_suffix
         //     inflMap.set(form, canonical)   ← unless form == canonical
         //
-        {
-          let templatesProcessed = 0;
-          let formRefsTotal = 0;
-          let formRefsParsed = 0;
+        for (let G = 0; G < inflEntries.length; G++) {
+          const tmpl = inflEntries[G];
+          const t26 = tmpl.tagVals[26];
+          if (!t26 || t26.length === 0) continue; // not a template
 
-          for (let G = 0; G < inflEntries.length; G++) {
-            const tmpl = inflEntries[G];
-            const t26 = tmpl.tagVals[26];
-            if (!t26 || t26.length === 0) continue; // not a template
+          const headwords = groupHeadwords.get(G);
+          if (!headwords || headwords.length === 0) continue;
 
-            const headwords = groupHeadwords.get(G);
-            if (!headwords || headwords.length === 0) continue;
+          for (const formOrd of t26) {
+            if (formOrd >= inflEntries.length) continue;
+            const formEntry = inflEntries[formOrd];
+            const parsed = parseFormLabel(formEntry.labelBytes);
+            if (!parsed) continue;
 
-            templatesProcessed++;
-            formRefsTotal += t26.length;
+            const { formSuffix, canonicalSuffix } = parsed;
 
-            for (const formOrd of t26) {
-              if (formOrd >= inflEntries.length) continue;
-              const formEntry = inflEntries[formOrd];
-              const parsed = parseFormLabel(formEntry.labelBytes);
-              if (!parsed) continue;
-
-              formRefsParsed++;
-              const { formSuffix, canonicalSuffix } = parsed;
-
-              for (const canonical of headwords) {
-                let stem;
-                if (canonicalSuffix) {
-                  if (!canonical.endsWith(canonicalSuffix)) continue;
-                  stem = canonical.slice(0, canonical.length - canonicalSuffix.length);
-                } else {
-                  stem = canonical;
-                }
-                const form = stem + formSuffix;
-                if (form && form !== canonical) {
-                  inflMap.set(form, canonical);
-                }
+            for (const canonical of headwords) {
+              let stem;
+              if (canonicalSuffix) {
+                if (!canonical.endsWith(canonicalSuffix)) continue;
+                stem = canonical.slice(0, canonical.length - canonicalSuffix.length);
+              } else {
+                stem = canonical;
+              }
+              const form = stem + formSuffix;
+              if (form && form !== canonical) {
+                inflMap.set(form, canonical);
               }
             }
           }
-
-          log(`MOBI INDX DIAG: templates=${templatesProcessed}, ` +
-              `formRefs=${formRefsTotal}, parsed=${formRefsParsed}, mapped=${inflMap.size}`);
         }
 
-        log(`MOBI INDX: mapped ${inflMap.size} inflected forms.` +
-          (inflMap.size > 0
-            ? ' Sample: ' + [...inflMap.entries()].slice(0, 5).map(([k, v]) => `${k}→${v}`).join(', ')
-            : ''));
+        if (inflMap.size > 0) {
+          const sample = [...inflMap.entries()].slice(0, 5).map(([k, v]) => `${k}→${v}`).join(', ');
+          log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample }));
+        }
 
         return inflMap;
       }
@@ -1210,32 +1178,20 @@
           const recBase = this._getRecord0Base();
 
           // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
-          const hdrLen = this.u32(recBase + 0x14);
-          const mobiType = this.u32(recBase + 0x18);
+          const hdrLen  = this.u32(recBase + 0x14);
           const mobiVer = this.u32(recBase + 0x68);
-          addLog(
-            this.t(
-              "logRecord0",
-              "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
-              {
-                mobiType,
-                headerLen: hdrLen.toString(16),
-              },
-            ),
-          );
+          const encoding = hdrLen >= 0x10 ? this.u32(recBase + 0x1c) : 0;
+
+          const verLabel = mobiVer >= 8 ? 'KF8' : mobiVer >= 6 ? 'MOBI6' : `MOBI${mobiVer}`;
+          const encLabel = encoding === 65001 || encoding === 0
+            ? 'UTF-8'
+            : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
+          addLog(this.t('logMobiFormat', 'MOBI: {label} (v{ver}), encoding: {enc}',
+            { label: verLabel, ver: mobiVer, enc: encLabel }));
 
           let flags = 0x0001;
           if (hdrLen >= 0xe4 && mobiVer >= 5) {
             const raw = this.u16(recBase + 0xf2);
-            addLog(
-              this.t(
-                "logExtraDataFromHeader",
-                "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
-                {
-                  raw: raw.toString(16),
-                },
-              ),
-            );
             flags = this._normalizeExtraDataFlags(raw, "MOBI header");
           }
 
@@ -1256,11 +1212,6 @@
               const len = this.u32(pos + 4);
               if (tag === 121 && len === 12) {
                 const kf8Bound = this.u32(pos + 8);
-                addLog(
-                  this.t("logKf8BoundaryRecord", "KF8 boundary record: {kf8Bound}", {
-                    kf8Bound,
-                  }),
-                );
                 const kf8RecIdx = kf8Bound + 1;
                 if (kf8RecIdx < recs.length) {
                   const kf8Off = recs[kf8RecIdx];
@@ -1280,15 +1231,6 @@
                   if (kl >= 0xe4 && kv >= 5) {
                     const raw = this.u16(kf8Base + 0xf2);
                     flags = this._normalizeExtraDataFlags(raw, "KF8 override");
-                    addLog(
-                      this.t(
-                        "logKf8FlagsOverride",
-                        "KF8 section flags override: 0x{flags}",
-                        {
-                          flags: flags.toString(16),
-                        },
-                      ),
-                    );
                   }
                 }
               }
@@ -1296,11 +1238,6 @@
             }
           }
 
-          addLog(
-            this.t("logFinalExtraDataFlags", "Final ExtraDataFlags: 0x{flags}", {
-              flags: flags.toString(16),
-            }),
-          );
           return flags;
         }
 
@@ -2641,12 +2578,7 @@
             "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
           logTextRecordsClamp:
             "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
-          logRecord0: "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
-          logExtraDataFromHeader:
-            "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
-          logKf8BoundaryRecord: "KF8 boundary record: {kf8Bound}",
-          logKf8FlagsOverride: "KF8 section flags override: 0x{flags}",
-          logFinalExtraDataFlags: "Final ExtraDataFlags: 0x{flags}",
+          logMobiFormat: "MOBI: {label} (v{ver}), encoding: {enc}",
           logHuffLoaded: "HUFF loaded. off1=0x{off1} off2=0x{off2}",
           logCdicLoaded:
             "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
@@ -2668,6 +2600,7 @@
           logParsingMobiIndex: "Parsing MOBI INDX inflection index...",
           logMobiIndexResult: "MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.",
           logMobiIndexNone: "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
+          logMobiIndexSample: "Inflection examples: {sample}",
           logSynonymsCollected: "Synonyms collected: {count}",
           logSynonymFile: "Synonym file: {count} entries.",
           validatorSynonymBadge: "{count} synonyms",
@@ -2727,12 +2660,7 @@
             "⚠️ {source}: maskowanie ExtraDataFlags 0x{from} -> 0x{to}",
           logTextRecordsClamp:
             "⚠️ text_records ({headerCount}) przekracza granicę HUFF ({huffBound}); ograniczam.",
-          logRecord0: "Rekord 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
-          logExtraDataFromHeader:
-            "ExtraDataFlags z nagłówka MOBI (offset 0xF2): 0x{raw}",
-          logKf8BoundaryRecord: "Rekord graniczny KF8: {kf8Bound}",
-          logKf8FlagsOverride: "Nadpisanie flag sekcji KF8: 0x{flags}",
-          logFinalExtraDataFlags: "Końcowe ExtraDataFlags: 0x{flags}",
+          logMobiFormat: "MOBI: {label} (wersja {ver}), kodowanie: {enc}",
           logHuffLoaded: "Wczytano HUFF. off1=0x{off1} off2=0x{off2}",
           logCdicLoaded:
             "Wczytano {count} rekordów CDIC -> {symbols} symboli w słowniku.",
@@ -2753,6 +2681,7 @@
           logParsingMobiIndex: "Parsowanie indeksu odmiany MOBI INDX...",
           logMobiIndexResult: "MOBI INDX: zdekodowano {total} form odmiany, dodano {added} nowych wpisów syn.",
           logMobiIndexNone: "MOBI INDX: brak indeksu ORTH/INFL (normalne dla plików innych niż SJP2).",
+          logMobiIndexSample: "Przykłady odmian: {sample}",
           logSynonymsCollected: "Zebrane odmiany: {count}",
           logSynonymFile: "Plik odmian: {count} wpisów.",
           validatorSynonymBadge: "{count} odmian",

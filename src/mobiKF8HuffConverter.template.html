@@ -651,12 +651,7 @@
             "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
           logTextRecordsClamp:
             "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
-          logRecord0: "Record 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
-          logExtraDataFromHeader:
-            "ExtraDataFlags from MOBI header (offset 0xF2): 0x{raw}",
-          logKf8BoundaryRecord: "KF8 boundary record: {kf8Bound}",
-          logKf8FlagsOverride: "KF8 section flags override: 0x{flags}",
-          logFinalExtraDataFlags: "Final ExtraDataFlags: 0x{flags}",
+          logMobiFormat: "MOBI: {label} (v{ver}), encoding: {enc}",
           logHuffLoaded: "HUFF loaded. off1=0x{off1} off2=0x{off2}",
           logCdicLoaded:
             "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
@@ -678,6 +673,7 @@
           logParsingMobiIndex: "Parsing MOBI INDX inflection index...",
           logMobiIndexResult: "MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.",
           logMobiIndexNone: "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
+          logMobiIndexSample: "Inflection examples: {sample}",
           logSynonymsCollected: "Synonyms collected: {count}",
           logSynonymFile: "Synonym file: {count} entries.",
           validatorSynonymBadge: "{count} synonyms",
@@ -737,12 +733,7 @@
             "⚠️ {source}: maskowanie ExtraDataFlags 0x{from} -> 0x{to}",
           logTextRecordsClamp:
             "⚠️ text_records ({headerCount}) przekracza granicę HUFF ({huffBound}); ograniczam.",
-          logRecord0: "Rekord 0: MOBI type={mobiType}, headerLen=0x{headerLen}",
-          logExtraDataFromHeader:
-            "ExtraDataFlags z nagłówka MOBI (offset 0xF2): 0x{raw}",
-          logKf8BoundaryRecord: "Rekord graniczny KF8: {kf8Bound}",
-          logKf8FlagsOverride: "Nadpisanie flag sekcji KF8: 0x{flags}",
-          logFinalExtraDataFlags: "Końcowe ExtraDataFlags: 0x{flags}",
+          logMobiFormat: "MOBI: {label} (wersja {ver}), kodowanie: {enc}",
           logHuffLoaded: "Wczytano HUFF. off1=0x{off1} off2=0x{off2}",
           logCdicLoaded:
             "Wczytano {count} rekordów CDIC -> {symbols} symboli w słowniku.",
@@ -763,6 +754,7 @@
           logParsingMobiIndex: "Parsowanie indeksu odmiany MOBI INDX...",
           logMobiIndexResult: "MOBI INDX: zdekodowano {total} form odmiany, dodano {added} nowych wpisów syn.",
           logMobiIndexNone: "MOBI INDX: brak indeksu ORTH/INFL (normalne dla plików innych niż SJP2).",
+          logMobiIndexSample: "Przykłady odmian: {sample}",
           logSynonymsCollected: "Zebrane odmiany: {count}",
           logSynonymFile: "Plik odmian: {count} wpisów.",
           validatorSynonymBadge: "{count} odmian",

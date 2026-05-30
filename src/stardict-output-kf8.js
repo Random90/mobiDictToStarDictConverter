@@ -1,5 +1,5 @@
 // StarDict output renderer for KF8 converter.
-function renderOutput(finalMap, synMap, generateSyn) {
+async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
   document.getElementById("downloadArea").style.display = "block";
   const links = document.getElementById("links");
   links.innerHTML = "";
@@ -91,6 +91,42 @@ function renderOutput(finalMap, synMap, generateSyn) {
   const dictBytes = concatChunks(dictChunks, dictTotalSize);
   const synBytesArr = synCount > 0 ? concatChunks(synChunks, synTotalSize) : null;
 
+  // Optionally compress the .dict data into .dict.dz (dictzip / gzip with RA index)
+  let dictFileBytes = dictBytes;
+  let dictFileName = "dictionary.dict";
+  let dictDzLength = null;
+
+  if (compress) {
+    addLog(
+      i18nText("logCompressingDict", "Compressing dictionary data ({dictBytes} B)…", {
+        dictBytes: dictTotalSize,
+      }),
+    );
+    const dictDzBytes = await compressDictzip(dictBytes, (done, total) => {
+      if (done % 200 === 0 || done === total) {
+        addLog(
+          i18nText("logCompressingProgress", "Compression: {done}/{total} chunks…", {
+            done,
+            total,
+          }),
+        );
+      }
+    });
+    const ratio = dictTotalSize > 0
+      ? Math.round((1 - dictDzBytes.length / dictTotalSize) * 100)
+      : 0;
+    addLog(
+      i18nText(
+        "logCompressingDone",
+        "✅ Compressed: {dictDzBytes} B (saved {ratio}%)",
+        { dictDzBytes: dictDzBytes.length, ratio },
+      ),
+    );
+    dictFileBytes = dictDzBytes;
+    dictFileName = "dictionary.dict.dz";
+    dictDzLength = dictDzBytes.length;
+  }
+
   // Download links
   const dl = (name, data) => {
     const a = document.createElement("a");
@@ -102,7 +138,7 @@ function renderOutput(finalMap, synMap, generateSyn) {
   };
   dl("dictionary.ifo", ifoBytes);
   dl("dictionary.idx", idxBytes);
-  dl("dictionary.dict", dictBytes);
+  dl(dictFileName, dictFileBytes);
   if (synCount > 0) {
     dl("dictionary.syn", synBytesArr);
     const badge = document.createElement("span");
@@ -175,16 +211,18 @@ function renderOutput(finalMap, synMap, generateSyn) {
   const synPart = synCount
     ? i18nText("logOutputReadySynPart", ", syn={synCount}", { synCount })
     : "";
+  const dictSizePart = compress
+    ? i18nText(
+        "logOutputReadyDictDz",
+        "dict={dictBytes} B → dict.dz={dictDzBytes} B",
+        { dictBytes: dictTotalSize, dictDzBytes: dictDzLength },
+      )
+    : i18nText("logOutputReadyDict", "dict={dictBytes} B", { dictBytes: dictTotalSize });
   addLog(
     i18nText(
       "logOutputReady",
-      "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
-      {
-        count,
-        idxBytes: idxTotalSize,
-        dictBytes: dictTotalSize,
-        synPart,
-      },
+      "✅ Output ready. {count} entries, idx={idxBytes} B, {dictSizePart}{synPart}.",
+      { count, idxBytes: idxTotalSize, dictSizePart, synPart },
     ),
   );
 }

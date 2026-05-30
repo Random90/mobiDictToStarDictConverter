@@ -245,6 +245,12 @@
         </div>
         <div class="style-preview" id="stylePreview"></div>
         <div class="style-note" data-i18n-html="styleCompatibilityNote"></div>
+
+        <div class="check-item" style="margin-top:10px">
+          <input type="checkbox" id="compressCheck" checked />
+          <label for="compressCheck" data-i18n="compressLabel"></label>
+        </div>
+        <div class="style-note" data-i18n-html="compressNote"></div>
       </div>
 
       <button
@@ -568,6 +574,8 @@
       // ─────────────────────────────────────────────────────────────────────────────
       // StarDict output
       // ─────────────────────────────────────────────────────────────────────────────
+      // @@include(node_modules/pako/dist/pako_deflate.min.js)
+      // @@include(src/stardict-dictzip-core.js)
       // @@include(src/stardict-validator-core.js)
       // @@include(src/stardict-output-kf8.js)
 
@@ -590,7 +598,8 @@
           try {
             const { finalMap, synMap } = await conv.run();
             if (finalMap.size > 0) {
-              renderOutput(finalMap, synMap, true);
+              const compress = document.getElementById("compressCheck").checked;
+              await renderOutput(finalMap, synMap, true, compress);
               btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
               addLog(
@@ -691,8 +700,16 @@
           validatorFallbackSynonym:
             "Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>",
           logOutputReady:
-            "✅ Output ready. {count} entries, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+            "✅ Output ready. {count} entries, idx={idxBytes} B, {dictSizePart}{synPart}.",
           logOutputReadySynPart: ", syn={synCount}",
+          logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
+          logOutputReadyDict: "dict={dictBytes} B",
+          logCompressingDict: "Compressing dictionary data ({dictBytes} B)…",
+          logCompressingProgress: "  Compression: {done}/{total} chunks…",
+          logCompressingDone: "✅ Compressed: {dictDzBytes} B (saved {ratio}%)",
+          compressLabel: "Compress dictionary → .dict.dz (smaller file, recommended)",
+          compressNote:
+            "If your reader cannot open the dictionary, uncheck this and re-run to get an uncompressed <b>.dict</b> file.",
           errInvalidHuffHeader: "invalid huff header",
           errInvalidHuffTableZeroCodeLen: "invalid huff table: zero codelen",
           errInvalidHuffTableShortNonTerminal:
@@ -772,8 +789,16 @@
           validatorFallbackSynonym:
             "Odmiana -> fallback odmiany: <b>{query}</b> -> <b>{word}</b>",
           logOutputReady:
-            "✅ Dane wyjściowe gotowe. {count} wpisów, idx={idxBytes} B, dict={dictBytes} B{synPart}.",
+            "✅ Dane wyjściowe gotowe. {count} wpisów, idx={idxBytes} B, {dictSizePart}{synPart}.",
           logOutputReadySynPart: ", syn={synCount}",
+          logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
+          logOutputReadyDict: "dict={dictBytes} B",
+          logCompressingDict: "Kompresja danych słownika ({dictBytes} B)…",
+          logCompressingProgress: "  Kompresja: {done}/{total} chunków…",
+          logCompressingDone: "✅ Skompresowano: {dictDzBytes} B (zaoszczędzono {ratio}%)",
+          compressLabel: "Kompresuj słownik → .dict.dz (mniejszy plik, zalecane)",
+          compressNote:
+            "Jeśli czytnik nie może otworzyć słownika, odznacz tę opcję i uruchom ponownie, aby uzyskać nieskompresowany plik <b>.dict</b>.",
           errInvalidHuffHeader: "nieprawidłowy nagłówek HUFF",
           errInvalidHuffTableZeroCodeLen:
             "nieprawidłowa tabela HUFF: zerowa długość kodu",

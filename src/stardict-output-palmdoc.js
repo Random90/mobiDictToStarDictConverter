@@ -1,5 +1,5 @@
 // StarDict output renderer for PalmDoc converter.
-function renderOutput(finalMap, synMap, encoder, generateSyn) {
+async function renderOutput(finalMap, synMap, encoder, generateSyn, compress = true) {
   document.getElementById("downloadArea").style.display = "block";
   const links = document.getElementById("links");
   links.innerHTML = "";
@@ -87,6 +87,27 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
   const dictBytes = concatChunks(dictChunks, dictTotalSize);
   const synBytesArr = synCount > 0 ? concatChunks(synChunks, synTotalSize) : null;
 
+  // Optionally compress the .dict data into .dict.dz (dictzip / gzip with RA index)
+  let dictFileBytes = dictBytes;
+  let dictFileName = "dictionary.dict";
+  let dictDzLength = null;
+
+  if (compress) {
+    addLog(`🗜 Compressing dictionary data (${dictTotalSize} B)…`);
+    const dictDzBytes = await compressDictzip(dictBytes, (done, total) => {
+      if (done % 200 === 0 || done === total) {
+        addLog(`  Compression: ${done}/${total} chunks…`);
+      }
+    });
+    const ratio = dictTotalSize > 0
+      ? Math.round((1 - dictDzBytes.length / dictTotalSize) * 100)
+      : 0;
+    addLog(`✅ Compressed: ${dictDzBytes.length} B (saved ${ratio}%)`);
+    dictFileBytes = dictDzBytes;
+    dictFileName = "dictionary.dict.dz";
+    dictDzLength = dictDzBytes.length;
+  }
+
   // Download links
   const dl = (name, data) => {
     const a = document.createElement("a");
@@ -98,7 +119,7 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
   };
   dl("dictionary.ifo", ifoBytes);
   dl("dictionary.idx", idxBytes);
-  dl("dictionary.dict", dictBytes);
+  dl(dictFileName, dictFileBytes);
   if (synCount > 0) {
     dl("dictionary.syn", synBytesArr);
     const badge = document.createElement("span");
@@ -107,8 +128,11 @@ function renderOutput(finalMap, synMap, encoder, generateSyn) {
     links.appendChild(badge);
   }
 
+  const dictSizePart = compress
+    ? `dict: ${dictTotalSize} B → dict.dz: ${dictDzLength} B`
+    : `dict: ${dictTotalSize} B`;
   addLog(
-    `✅ Done. Entries: ${count}, idx: ${idxTotalSize} B, dict: ${dictTotalSize} B${synCount ? `, syn: ${synCount}` : ""}.`,
+    `✅ Done. Entries: ${count}, idx: ${idxTotalSize} B, ${dictSizePart}${synCount ? `, syn: ${synCount}` : ""}.`,
   );
 
   // Preview

@@ -176,8 +176,8 @@
           <input type="file" id="idxFile" accept=".idx"
         /></label>
         <label
-          >3. <b>dictionary.dict</b>
-          <input type="file" id="dictFile" accept=".dict"
+          >3. <b>dictionary.dict</b> / <b>dictionary.dict.dz</b>
+          <input type="file" id="dictFile" accept=".dict,.dz"
         /></label>
         <label
           >4. <b>dictionary.syn</b>
@@ -189,7 +189,7 @@
       </div>
 
       <div id="status" class="status" data-i18n="waiting">
-        Waiting for files (ifo + idx + dict required)…
+        Waiting for files (ifo + idx + dict / dict.dz required)…
       </div>
       <input
         type="text"
@@ -223,6 +223,8 @@
     </div>
 
     <script>
+      // @@include(node_modules/pako/dist/pako_deflate.min.js)
+      // @@include(src/stardict-dictzip-core.js)
       // @@include(src/stardict-validator-core.js)
 
       let validatorApi = null;
@@ -232,7 +234,7 @@
           title: "StarDict Local Validator",
           desc: "Upload your converted files to test them before moving to Onyx Boox.",
           optional: "(optional)",
-          waiting: "Waiting for files (ifo + idx + dict required)…",
+          waiting: "Waiting for files (ifo + idx + dict / dict.dz required)…",
           searchPh: "🔍 Type a word to search…",
           copyBtn: "📋 Copy HTML",
           copied: "✅ Copied!",
@@ -243,7 +245,7 @@
           title: "Lokalny walidator StarDict",
           desc: "Wczytaj skonwertowane pliki, aby sprawdzić je przed przeniesieniem na Onyx Boox.",
           optional: "(opcjonalny)",
-          waiting: "Oczekiwanie na pliki (wymagane: ifo + idx + dict)…",
+          waiting: "Oczekiwanie na pliki (wymagane: ifo + idx + dict / dict.dz)…",
           searchPh: "🔍 Wpisz szukane słowo…",
           copyBtn: "📋 Kopiuj HTML",
           copied: "✅ Skopiowano!",

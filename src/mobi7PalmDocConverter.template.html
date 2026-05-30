@@ -275,6 +275,12 @@
           </div>
           <div class="style-preview" id="stylePreview"></div>
           <div class="style-note" data-i18n-html="styleCompatibilityNote"></div>
+
+          <div class="check-item" style="margin-top:10px">
+            <input type="checkbox" id="compressCheck" checked />
+            <label for="compressCheck" data-i18n="compressLabel"></label>
+          </div>
+          <div class="style-note" data-i18n-html="compressNote"></div>
         </div>
 
         <button
@@ -508,7 +514,8 @@
         setTimeout(async () => {
           try {
             const { finalMap, synMap } = await converter.run();
-            renderOutput(finalMap, synMap, converter.encoder, true);
+            const compress = document.getElementById("compressCheck").checked;
+            await renderOutput(finalMap, synMap, converter.encoder, true, compress);
             startBtn.classList.remove("processing");
             startBtn.textContent = "✅ DONE";
           } catch (err) {
@@ -521,6 +528,8 @@
       };
 
       // ── Output ────────────────────────────────────────────────────────────────────
+      // @@include(node_modules/pako/dist/pako_deflate.min.js)
+      // @@include(src/stardict-dictzip-core.js)
       // @@include(src/stardict-validator-core.js)
       // @@include(src/stardict-output-palmdoc.js)
 
@@ -541,6 +550,9 @@
           styleRich: "Rich Color – full color-coded sections",
           styleCompatibilityNote:
             "Note: selected theme may not fully apply to every dictionary structure. If formatting looks broken, switch to <b>None</b>.",
+          compressLabel: "Compress dictionary → .dict.dz (smaller file, recommended)",
+          compressNote:
+            "If your reader cannot open the dictionary, uncheck this and re-run to get an uncompressed <b>.dict</b> file.",
           startBtn: "START CONVERSION",
           logIdle: "Status: Idle. Waiting for file...",
           logMobiIndexSample: "Inflection examples: {sample}",
@@ -564,6 +576,9 @@
           styleRich: "Kolorowy – pełne kolorowanie sekcji",
           styleCompatibilityNote:
             "Uwaga: wybrany motyw może nie zadziałać w pełni dla każdego słownika. Jeśli formatowanie wygląda źle, wybierz styl: <b>Brak</b>.",
+          compressLabel: "Kompresuj słownik → .dict.dz (mniejszy plik, zalecane)",
+          compressNote:
+            "Jeśli czytnik nie może otworzyć słownika, odznacz tę opcję i uruchom ponownie, aby uzyskać nieskompresowany plik <b>.dict</b>.",
           startBtn: "ROZPOCZNIJ KONWERSJĘ",
           logIdle: "Status: Bezczynny. Oczekiwanie na plik...",
           logMobiIndexSample: "Przykłady odmian: {sample}",

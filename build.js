@@ -10,9 +10,10 @@
 //
 // Output files are written to the locations defined in OUTPUTS below.
 
-import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -41,6 +42,56 @@ const OUTPUTS = [
 ];
 
 const INCLUDE_RE = /^(\s*)\/\/\s*@@include\(([^)]+)\)\s*$/;
+const WORKER_RE  = /^(\s*)\/\/\s*@@worker\(([^)]+)\)\s*$/;
+
+// ── WASM compilation ──────────────────────────────────────────────────────────
+// Compile src/huff-decoder.wat → src/huff-decoder.wasm once per build,
+// then base64-encode the binary so it can be embedded inline in the worker.
+let _wasmBase64 = null;
+function getWasmBase64() {
+  if (_wasmBase64 !== null) return _wasmBase64;
+  const watPath  = resolve(__dirname, "src/huff-decoder.wat");
+  const wasmPath = resolve(__dirname, "src/huff-decoder.wasm");
+  if (!existsSync(watPath)) { _wasmBase64 = ""; return ""; }
+  try {
+    execSync(
+      `node_modules/.bin/wat2wasm "${watPath}" -o "${wasmPath}"`,
+      { cwd: __dirname, stdio: "pipe" },
+    );
+    _wasmBase64 = readFileSync(wasmPath).toString("base64");
+    console.log(`✅  huff-decoder.wat compiled (${readFileSync(wasmPath).length} bytes → ${_wasmBase64.length} chars base64)`);
+  } catch (e) {
+    console.warn(`⚠   WAT compilation failed: ${e.message}. WASM disabled.`);
+    _wasmBase64 = "";
+  }
+  return _wasmBase64;
+}
+
+// ── Recursive include processor (shared by main templates and worker source) ──
+function processFile(filePath) {
+  const src   = readFileSync(resolve(__dirname, filePath), "utf-8");
+  const lines = src.split("\n");
+  const out   = [];
+  for (const line of lines) {
+    const m = line.match(INCLUDE_RE);
+    if (m) {
+      const [, indent, inc] = m;
+      const included = processFile(inc.trim());
+      out.push(included.split("\n").map(l => (l.length ? indent + l : l)).join("\n"));
+    } else if (/^\s*\/\/\s*@@wasm_b64\s*$/.test(line)) {
+      // Replaced with: HuffCdicBase._wasmBase64 = "...base64...";
+      const b64 = getWasmBase64();
+      if (b64) {
+        out.push(`HuffCdicBase._wasmBase64 = "${b64}";`);
+      } else {
+        out.push(`// WASM unavailable – JS fallback will be used`);
+      }
+    } else {
+      out.push(line);
+    }
+  }
+  return out.join("\n");
+}
 
 // Injected automatically after <body> in every compiled output.
 const NOSCRIPT = `<noscript>
@@ -62,20 +113,24 @@ function processTemplate(templatePath) {
   const result = [];
 
   for (const line of lines) {
-    const m = line.match(INCLUDE_RE);
-    if (m) {
-      const [, indent, includePath] = m;
-      const fullPath = resolve(__dirname, includePath.trim());
-      const included = readFileSync(fullPath, "utf-8");
-      // Indent every line of the included file to match the call-site indentation
-      const indented = included
-        .split("\n")
-        .map((l) => (l.length ? indent + l : l))
-        .join("\n");
-      result.push(indented);
-    } else {
-      result.push(line);
+    // @@include(path) – inline the file content
+    const mi = line.match(INCLUDE_RE);
+    if (mi) {
+      const [, indent, includePath] = mi;
+      const included = processFile(includePath.trim());
+      result.push(included.split("\n").map(l => (l.length ? indent + l : l)).join("\n"));
+      continue;
     }
+    // @@worker(path) – process the worker source and embed as a JS string literal
+    const mw = line.match(WORKER_RE);
+    if (mw) {
+      const [, indent, workerPath] = mw;
+      const workerSrc = processFile(workerPath.trim());
+      // JSON.stringify produces a properly escaped JS string literal.
+      result.push(`${indent}const __KF8_WORKER_SRC__ = ${JSON.stringify(workerSrc)};`);
+      continue;
+    }
+    result.push(line);
   }
 
   // Inject <noscript> right after <body>

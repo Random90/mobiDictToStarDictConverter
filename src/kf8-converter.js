@@ -414,6 +414,46 @@ class KF8Converter extends HuffCdicBase {
       let firstDecodedLogged = false;
       const endExclusive = textRecordMax + 1;
 
+      // ── Worker / Node.js fast path: no setTimeout overhead ───────────────
+      // In a Web Worker (or perf-test.mjs) there is no rendering event loop
+      // to yield to, so we process all records in a single synchronous loop.
+      // This eliminates ~640 × 4 ms = ~2.6 s of forced idle time in Firefox.
+      if (typeof document === 'undefined') {
+        for (; i < endExclusive; i++) {
+          const start = this.recs[i];
+          const end   = i + 1 < this.recs.length ? this.recs[i + 1] : this.buffer.byteLength;
+          let data = this.raw.subarray(start, end);
+          data = this.stripTrailing(data, extraFlags);
+          const dec  = this.decompress(data);
+          const text = utf8.decode(dec, { stream: true });
+
+          if (!firstDecodedLogged && text.length > 0) {
+            firstDecodedLogged = true;
+            const preview = text.substring(0, 300).replace(/[\r\n]+/g, " ");
+            addLog(this.t("logFirstRecordDecoded",
+              "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+              { bytes: dec.length, preview }));
+          }
+
+          const chunk = overlap + text;
+          this.extractEntriesFrom(chunk, false);
+          overlap = chunk.length > OVERLAP ? chunk.slice(-OVERLAP) : chunk;
+
+          if (i % 500 === 1)
+            addLog(this.t("logDecompressing",
+              "Decompressing: {current}/{max}... entries so far: {entries}",
+              { current: i, max: textRecordMax, entries: this.finalMap.size }));
+        }
+        this.extractEntriesFrom(overlap, true);
+        addLog(this.t("logExtractionComplete",
+          "Extraction complete: {entries} unique entries.",
+          { entries: this.finalMap.size }));
+        resolve();
+        return;
+      }
+
+      // ── Browser main-thread path: yield every BATCH records via setTimeout ─
+      // Keeps the UI responsive so log messages are painted between batches.
       const processChunk = () => {
         const lim = Math.min(i + BATCH, endExclusive);
         for (; i < lim; i++) {
@@ -527,6 +567,9 @@ class KF8Converter extends HuffCdicBase {
       );
       return this.finalMap;
     }
+
+    // Initialise WASM decompressor (no-op if WASM is unavailable or already set up).
+    await this._setupWasm();
 
     await this.streamDecompress(textRecordMax, extraFlags);
 

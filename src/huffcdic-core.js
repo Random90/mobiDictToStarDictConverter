@@ -19,10 +19,81 @@ class HuffCdicBase {
     this.mincodeArr = new Uint32Array(33);
     this.maxcodeArr = new Uint32Array(33);
     this.dict = [];
-    // Pre-allocated output buffer reused across top-level decompress() calls.
-    // Avoids 53K × (new Uint8Array + new Array + 80 pushes + copy loop).
-    // 131072 bytes ≫ any single KF8 text record (typically 2-8 KB).
+    // Pre-allocated output buffer reused across top-level decompress() calls
+    // (JS fallback path only; WASM path uses its own linear memory).
     this._decompOutBuf = new Uint8Array(131072);
+  }
+
+  // ── WASM acceleration ─────────────────────────────────────────────────────
+  // _wasmBase64: base64-encoded huff-decoder.wasm binary (injected at build).
+  // Set to null to disable WASM and always use the JS fallback.
+  static _wasmBase64   = null;  // set by build-time injection
+  static _wasmExports  = null;  // WebAssembly.Instance exports (shared)
+  static _wasmMem      = null;  // Uint8Array view of WASM linear memory
+
+  // Called once from run() after loadAllCdic(). Instantiates the WASM module
+  // (once per session) and populates its linear memory with the HUFF tables
+  // and CDIC phrase data for the current file.
+  async _setupWasm() {
+    const b64 = HuffCdicBase._wasmBase64;
+    if (!b64) return; // WASM not embedded or previously disabled
+
+    try {
+      // Instantiate the module only once; subsequent files reuse the instance.
+      if (!HuffCdicBase._wasmExports) {
+        const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const { instance } = await WebAssembly.instantiate(bin, {});
+        HuffCdicBase._wasmExports = instance.exports;
+        HuffCdicBase._wasmMem    = new Uint8Array(instance.exports.mem.buffer);
+      }
+      const exp = HuffCdicBase._wasmExports;
+      const mem = HuffCdicBase._wasmMem;
+
+      // ── Copy HUFF tables into WASM memory ────────────────────────────────
+      mem.set(this.dict1Codelen, exp.CL_OFF.value);
+      mem.set(this.dict1Term,    exp.CT_OFF.value);
+      mem.set(new Uint8Array(this.dict1Maxcode.buffer), exp.CM_OFF.value);
+      mem.set(new Uint8Array(this.mincodeArr.buffer),   exp.MN_OFF.value);
+      mem.set(new Uint8Array(this.maxcodeArr.buffer),   exp.MX_OFF.value);
+
+      // ── Copy CDIC phrase data into WASM memory ────────────────────────────
+      // Layout: cdicOffsets[i] (u32 LE) + cdicLengths[i] (u16 LE) + flat data.
+      const DO_OFF = exp.DO_OFF.value;
+      const DL_OFF = exp.DL_OFF.value;
+      const DD_OFF = exp.DD_OFF.value;
+      const DD_CAP = exp.DD_CAP.value;
+
+      // Pre-flight: check the total phrase data fits in the WASM allocation.
+      let totalData = 0;
+      for (const p of this.dict) if (p) totalData += p.length;
+      if (totalData > DD_CAP) {
+        // Dictionary too large for WASM memory layout – fall back to JS.
+        addLog('ℹ️  CDIC data exceeds WASM capacity – using JS fallback.');
+        HuffCdicBase._wasmBase64 = null;
+        return;
+      }
+
+      // Write offset table, length table and flat phrase bytes.
+      const offView = new DataView(mem.buffer, DO_OFF);
+      const lenView = new DataView(mem.buffer, DL_OFF);
+      let dataOff = 0;
+      for (let i = 0; i < this.dict.length; i++) {
+        const phrase = this.dict[i];
+        offView.setUint32(i * 4, dataOff, /*le=*/true);
+        if (phrase && phrase.length > 0) {
+          lenView.setUint16(i * 2, phrase.length, /*le=*/true);
+          mem.set(phrase, DD_OFF + dataOff);
+          dataOff += phrase.length;
+        } else {
+          lenView.setUint16(i * 2, 0, true);
+        }
+      }
+      exp.setDictLen(this.dict.length);
+    } catch (e) {
+      // Any failure (old browser, unsupported WASM, etc.) → JS fallback.
+      HuffCdicBase._wasmBase64 = null;
+      HuffCdicBase._wasmExports = null;
+    }
   }
 
   t(key, fallback, vars) {
@@ -391,6 +462,24 @@ class HuffCdicBase {
   // Recursive calls (CDIC expansion) use the legacy chunks path and are rare.
   decompress(data, isTopLevel = true) {
     if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
+
+    // ── WASM fast path (top-level calls only) ────────────────────────────────
+    // Pre-conditions: WASM is initialised and the input fits in the 8 KB input
+    // buffer.  Recursive CDIC expansion always uses the JS path (isTopLevel=false),
+    // but after _setupWasm() pre-expands all entries the recursive path is never
+    // reached during normal decompression.
+    if (isTopLevel && HuffCdicBase._wasmExports) {
+      const exp = HuffCdicBase._wasmExports;
+      const mem = HuffCdicBase._wasmMem;
+      const IN_OFF  = exp.IN_OFF.value;
+      const OUT_OFF = exp.OUT_OFF.value;
+      if (data.length <= 8192) {
+        mem.set(data, IN_OFF);
+        const outLen = exp.decompress(data.length);
+        if (outLen >= 0) return mem.subarray(OUT_OFF, OUT_OFF + outLen);
+        // outLen < 0 means a fatal WASM error – fall through to JS path
+      }
+    }
 
     const dlen = data.length;
 

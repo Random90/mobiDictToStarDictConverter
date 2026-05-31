@@ -89,6 +89,13 @@ globalThis.pako         = pako;
 // eslint-disable-next-line no-eval
 eval(combinedSrc);
 
+// ── Load WASM binary (if built) ───────────────────────────────────────────────
+// Set _wasmBase64 so _setupWasm() can instantiate the HUFF decoder.
+try {
+  const wasmBuf = readFileSync(resolve(__dirname, 'src/huff-decoder.wasm'));
+  globalThis.HuffCdicBase._wasmBase64 = wasmBuf.toString('base64');
+} catch { /* WASM not yet compiled – JS fallback will be used */ }
+
 // ── 3. Memory sampler ─────────────────────────────────────────────────────────
 
 function sampleMem() {
@@ -150,6 +157,11 @@ async function run() {
   console.log(`   Records: ${conv.recs.length}, huffIdx: ${huffIdx}, textRecordMax: ${textRecordMax}`);
   console.log(`   Dict symbols: ${conv.dict.length}`);
   console.log(`   Memory after setup: RSS ${fmtMB(process.memoryUsage().rss)}\n`);
+
+  // ── Initialise WASM decoder (async, runs once) ──
+  await conv._setupWasm();
+  const wasmActive = !!HuffCdicBase._wasmExports;
+  console.log(`   WASM decoder: ${wasmActive ? '✅ active' : '⚠️  disabled (JS fallback)'}\n`);
 
   // ── streamDecompress ──
   const tDecompStart = performance.now();

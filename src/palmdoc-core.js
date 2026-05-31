@@ -29,9 +29,9 @@ class PalmDocBase {
     for (let j = 0; j < 15; j++) {
       if ((flags >> (j + 1)) & 1) {
         let size = 0,
-          pos = data.length - 1 - trim;
+            pos = data.length - 1 - trim;
         let v = data[pos],
-          shift = 7;
+            shift = 7;
         size = v & 0x7f;
         while ((v & 0x80) === 0 && pos > 0) {
           v = data[--pos];
@@ -43,33 +43,37 @@ class PalmDocBase {
     }
     if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
     return trim > 0 && trim < data.length
-      ? data.slice(0, data.length - trim)
-      : data;
+        ? data.slice(0, data.length - trim)
+        : data;
   }
 
   // ── PalmDoc LZ77 decompression ────────────────────────────────────────────
   decompressPalmDoc(data) {
-    let out = [];
+    // Pre-allocate worst-case output (PalmDoc records expand to at most 4096
+    // bytes, but we allocate generously).  Using a typed array + index counter
+    // avoids the overhead of Array.push() + the final Array→Uint8Array copy.
+    const out = new Uint8Array(data.length * 8 + 256);
+    let outLen = 0;
     for (let j = 0; j < data.length; j++) {
       let b = data[j];
       if (b >= 1 && b <= 8) {
-        for (let k = 0; k < b; k++) out.push(data[++j]);
+        for (let k = 0; k < b; k++) out[outLen++] = data[++j];
       } else if (b <= 127) {
-        out.push(b);
+        out[outLen++] = b;
       } else if (b >= 192) {
-        out.push(32);
-        out.push(b ^ 128);
+        out[outLen++] = 32;
+        out[outLen++] = b ^ 128;
       } else if (b >= 128 && b <= 191) {
         let next = data[++j];
         let dist = (((b << 8) | next) >> 3) & 0x7ff;
         let len = (next & 7) + 3;
-        let s = out.length - dist;
-        if (s >= 0) for (let k = 0; k < len; k++) out.push(out[s + k]);
+        let s = outLen - dist;
+        if (s >= 0) for (let k = 0; k < len; k++) out[outLen++] = out[s + k];
       } else {
-        out.push(b);
+        out[outLen++] = b;
       }
     }
-    return new Uint8Array(out);
+    return out.subarray(0, outLen);
   }
 
   // ── Read, strip, and decompress a single record; return UTF-8 string ──────
@@ -77,9 +81,9 @@ class PalmDocBase {
     if (idx < 1 || idx >= this.records.length) return "";
     const start = this.records[idx].offset;
     const end = this.records[idx + 1]
-      ? this.records[idx + 1].offset
-      : this.buffer.byteLength;
-    let data = new Uint8Array(this.buffer.slice(start, end));
+        ? this.records[idx + 1].offset
+        : this.buffer.byteLength;
+    let data = new Uint8Array(this.buffer, start, end - start);
     data = this.stripTrailing(data, this.extraFlags);
     const out = this.decompressPalmDoc(data);
     return new TextDecoder("utf-8").decode(out);

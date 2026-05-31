@@ -49,7 +49,7 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
     if (typeof i18nText === 'function') return i18nText(key, fallback, vars);
     if (!vars) return fallback;
     return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
-      vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+        vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
   };
   const inflMap = new Map();
   const utf8 = new TextDecoder('utf-8', { fatal: false });
@@ -58,11 +58,11 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   const getRec = (i) => {
     const s = recsOffsets[i];
     const e = i + 1 < recsOffsets.length ? recsOffsets[i + 1] : totalLen;
-    return raw.slice(s, e);
+    return raw.subarray(s, e); // zero-copy view
   };
 
   const ru32 = (a, o) =>
-    ((a[o] << 24) | (a[o + 1] << 16) | (a[o + 2] << 8) | a[o + 3]) >>> 0;
+      ((a[o] << 24) | (a[o + 1] << 16) | (a[o + 2] << 8) | a[o + 3]) >>> 0;
   const ru16 = (a, o) => ((a[o] << 8) | a[o + 1]) >>> 0;
 
   // Variable-width integer: high bit (0x80) SET = last byte.
@@ -178,11 +178,11 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
       // Single-byte label length, then label bytes
       const labelLen = rec[pos++];
       if (pos + labelLen > rec.length) break;
-      const labelBytes = rec.slice(pos, pos + labelLen);
+      const labelBytes = rec.subarray(pos, pos + labelLen); // zero-copy view
       pos += labelLen;
 
       if (pos + tagx.ctrlByteCount > rec.length) break;
-      const ctrlBytes = rec.slice(pos, pos + tagx.ctrlByteCount);
+      const ctrlBytes = rec.subarray(pos, pos + tagx.ctrlByteCount); // zero-copy view
       pos += tagx.ctrlByteCount;
 
       // Two-pass tag-value parsing (mirrors KindleUnpack's getTagMap design):
@@ -281,8 +281,8 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
 
     const formSuffix      = utf8.decode(reverseBytes(formSuffixBytes));
     const canonicalSuffix = canonicalSuffixBytes
-      ? utf8.decode(reverseBytes(canonicalSuffixBytes))
-      : '';
+        ? utf8.decode(reverseBytes(canonicalSuffixBytes))
+        : '';
 
     return { formSuffix, canonicalSuffix };
   };

@@ -18,7 +18,7 @@ class HuffCdicBase {
   t(key, fallback, vars) {
     if (typeof i18nText === "function") return i18nText(key, fallback, vars);
     return String(fallback || key).replace(/\{(\w+)}/g, (_, k) =>
-      vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+        vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
     );
   }
 
@@ -65,13 +65,13 @@ class HuffCdicBase {
     if (raw === 0xffff) {
       // For sentinel/noisy values, start in conservative mode immediately.
       addLog(
-        this.t(
-          "logExtraDataSentinel",
-          "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
-          {
-            source: sourceLabel,
-          },
-        ),
+          this.t(
+              "logExtraDataSentinel",
+              "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
+              {
+                source: sourceLabel,
+              },
+          ),
       );
       return 0x0001;
     }
@@ -79,15 +79,15 @@ class HuffCdicBase {
     const masked = raw & 0x001f;
     if (masked !== raw) {
       addLog(
-        this.t(
-          "logExtraDataMask",
-          "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
-          {
-            source: sourceLabel,
-            from: raw.toString(16),
-            to: masked.toString(16),
-          },
-        ),
+          this.t(
+              "logExtraDataMask",
+              "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
+              {
+                source: sourceLabel,
+                from: raw.toString(16),
+                to: masked.toString(16),
+              },
+          ),
       );
     }
     return masked || 0x0001;
@@ -106,12 +106,12 @@ class HuffCdicBase {
     const r0 = this.recs[0];
     let mobi = r0 + 16;
     if (
-      !(
-        this.raw[mobi] === 0x4d &&
-        this.raw[mobi + 1] === 0x4f &&
-        this.raw[mobi + 2] === 0x42 &&
-        this.raw[mobi + 3] === 0x49
-      )
+        !(
+            this.raw[mobi] === 0x4d &&
+            this.raw[mobi + 1] === 0x4f &&
+            this.raw[mobi + 2] === 0x42 &&
+            this.raw[mobi + 3] === 0x49
+        )
     ) {
       mobi = r0;
     }
@@ -127,14 +127,14 @@ class HuffCdicBase {
     if (!headerCount) return huffBound;
     if (headerCount > huffBound) {
       addLog(
-        this.t(
-          "logTextRecordsClamp",
-          "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
-          {
-            headerCount,
-            huffBound,
-          },
-        ),
+          this.t(
+              "logTextRecordsClamp",
+              "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+              {
+                headerCount,
+                huffBound,
+              },
+          ),
       );
       return huffBound;
     }
@@ -163,10 +163,10 @@ class HuffCdicBase {
 
     const verLabel = mobiVer >= 8 ? 'KF8' : mobiVer >= 6 ? 'MOBI6' : `MOBI${mobiVer}`;
     const encLabel = encoding === 65001 || encoding === 0
-      ? 'UTF-8'
-      : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
+        ? 'UTF-8'
+        : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
     addLog(this.t('logMobiFormat', 'MOBI: {label} (v{ver}), encoding: {enc}',
-      { label: verLabel, ver: mobiVer, enc: encLabel }));
+        { label: verLabel, ver: mobiVer, enc: encLabel }));
 
     let flags = 0x0001;
     if (hdrLen >= 0xe4 && mobiVer >= 5) {
@@ -177,10 +177,10 @@ class HuffCdicBase {
     // EXTH tag 121 points to the KF8 boundary; when present, use KF8 section flags.
     const exthOff = recBase + 16 + hdrLen;
     if (
-      this.raw[exthOff] === 0x45 &&
-      this.raw[exthOff + 1] === 0x58 &&
-      this.raw[exthOff + 2] === 0x54 &&
-      this.raw[exthOff + 3] === 0x48
+        this.raw[exthOff] === 0x45 &&
+        this.raw[exthOff + 1] === 0x58 &&
+        this.raw[exthOff + 2] === 0x54 &&
+        this.raw[exthOff + 3] === 0x48
     ) {
       const exthLen = this.u32(exthOff + 4);
       const numRec = this.u32(exthOff + 8);
@@ -196,12 +196,12 @@ class HuffCdicBase {
             const kf8Off = recs[kf8RecIdx];
             let kf8Mobi = kf8Off + 16;
             if (
-              !(
-                this.raw[kf8Mobi] === 0x4d &&
-                this.raw[kf8Mobi + 1] === 0x4f &&
-                this.raw[kf8Mobi + 2] === 0x42 &&
-                this.raw[kf8Mobi + 3] === 0x49
-              )
+                !(
+                    this.raw[kf8Mobi] === 0x4d &&
+                    this.raw[kf8Mobi + 1] === 0x4f &&
+                    this.raw[kf8Mobi + 2] === 0x42 &&
+                    this.raw[kf8Mobi + 3] === 0x49
+                )
             )
               kf8Mobi = kf8Off;
             const kf8Base = kf8Mobi === kf8Off + 16 ? kf8Off : kf8Mobi;
@@ -229,14 +229,14 @@ class HuffCdicBase {
   // ── Load HUFF record ──────────────────────────────────────────────────────
   loadHuff(hOff) {
     if (
-      this.raw[hOff] !== 0x48 ||
-      this.raw[hOff + 1] !== 0x55 ||
-      this.raw[hOff + 2] !== 0x46 ||
-      this.raw[hOff + 3] !== 0x46 ||
-      this.raw[hOff + 4] !== 0x00 ||
-      this.raw[hOff + 5] !== 0x00 ||
-      this.raw[hOff + 6] !== 0x00 ||
-      this.raw[hOff + 7] !== 0x18
+        this.raw[hOff] !== 0x48 ||
+        this.raw[hOff + 1] !== 0x55 ||
+        this.raw[hOff + 2] !== 0x46 ||
+        this.raw[hOff + 3] !== 0x46 ||
+        this.raw[hOff + 4] !== 0x00 ||
+        this.raw[hOff + 5] !== 0x00 ||
+        this.raw[hOff + 6] !== 0x00 ||
+        this.raw[hOff + 7] !== 0x18
     ) {
       throw new Error(this.t("errInvalidHuffHeader", "invalid huff header"));
     }
@@ -250,21 +250,21 @@ class HuffCdicBase {
       const term = !!(v & 0x80);
       if (codelen === 0)
         throw new Error(
-          this.t(
-            "errInvalidHuffTableZeroCodeLen",
-            "invalid huff table: zero codelen",
-          ),
+            this.t(
+                "errInvalidHuffTableZeroCodeLen",
+                "invalid huff table: zero codelen",
+            ),
         );
       if (codelen <= 8 && !term)
         throw new Error(
-          this.t(
-            "errInvalidHuffTableShortNonTerminal",
-            "invalid huff table: short non-terminal code",
-          ),
+            this.t(
+                "errInvalidHuffTableShortNonTerminal",
+                "invalid huff table: short non-terminal code",
+            ),
         );
       const mxraw = (v >>> 8) >>> 0;
       const maxcode =
-        Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
+          Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
       this.dict1.push({ codelen, term, maxcode });
     }
     this.mincodeArr = new Array(33).fill(0);
@@ -275,27 +275,27 @@ class HuffCdicBase {
       const shift = 32 - i;
       this.mincodeArr[i] = Number(BigInt(rawMin) << BigInt(shift)) >>> 0;
       this.maxcodeArr[i] =
-        Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
+          Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
     }
     addLog(
-      this.t("logHuffLoaded", "HUFF loaded. off1=0x{off1} off2=0x{off2}", {
-        off1: off1.toString(16),
-        off2: off2.toString(16),
-      }),
+        this.t("logHuffLoaded", "HUFF loaded. off1=0x{off1} off2=0x{off2}", {
+          off1: off1.toString(16),
+          off2: off2.toString(16),
+        }),
     );
   }
 
   // ── Load one CDIC record ──────────────────────────────────────────────────
   loadCdic(rOff) {
     if (
-      this.raw[rOff] !== 0x43 ||
-      this.raw[rOff + 1] !== 0x44 ||
-      this.raw[rOff + 2] !== 0x49 ||
-      this.raw[rOff + 3] !== 0x43 ||
-      this.raw[rOff + 4] !== 0x00 ||
-      this.raw[rOff + 5] !== 0x00 ||
-      this.raw[rOff + 6] !== 0x00 ||
-      this.raw[rOff + 7] !== 0x10
+        this.raw[rOff] !== 0x43 ||
+        this.raw[rOff + 1] !== 0x44 ||
+        this.raw[rOff + 2] !== 0x49 ||
+        this.raw[rOff + 3] !== 0x43 ||
+        this.raw[rOff + 4] !== 0x00 ||
+        this.raw[rOff + 5] !== 0x00 ||
+        this.raw[rOff + 6] !== 0x00 ||
+        this.raw[rOff + 7] !== 0x10
     ) {
       throw new Error(this.t("errInvalidCdicHeader", "invalid cdic header"));
     }
@@ -308,7 +308,7 @@ class HuffCdicBase {
       const blen = this.u16(rOff + 16 + off);
       const flag = !!(blen & 0x8000);
       const slen = blen & 0x7fff;
-      const slice = this.raw.slice(rOff + 18 + off, rOff + 18 + off + slen);
+      const slice = this.raw.subarray(rOff + 18 + off, rOff + 18 + off + slen);
       this.dict.push({ slice, flag });
     }
   }
@@ -320,56 +320,65 @@ class HuffCdicBase {
     for (let i = huffIdx + 1; i < recs.length; i++) {
       const rOff = recs[i];
       const magic = String.fromCharCode(
-        this.raw[rOff],
-        this.raw[rOff + 1],
-        this.raw[rOff + 2],
-        this.raw[rOff + 3],
+          this.raw[rOff],
+          this.raw[rOff + 1],
+          this.raw[rOff + 2],
+          this.raw[rOff + 3],
       );
       if (magic !== "CDIC") break;
       this.loadCdic(rOff);
       count++;
     }
     addLog(
-      this.t(
-        "logCdicLoaded",
-        "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
-        {
-          count,
-          symbols: this.dict.length,
-        },
-      ),
+        this.t(
+            "logCdicLoaded",
+            "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
+            {
+              count,
+              symbols: this.dict.length,
+            },
+        ),
     );
   }
 
   // ── HUFF/CDIC decompression ────────────────────────────────────────────────
+  // Hot-path optimisation: the original used BigInt for 64-bit bitstream
+  // arithmetic. BigInt is ~10x slower than 32-bit integer ops in V8.
+  // We represent the 64-bit sliding window as two 32-bit ints (hi, lo) and
+  // compute the 32-bit code extraction with plain bitwise ops instead.
   decompress(data) {
     if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
 
+    // +8 bytes padding so we can always read 8 bytes without bounds checks.
     const padded = new Uint8Array(data.length + 8);
     padded.set(data);
 
-    const readU64 = (p) => {
-      let x = 0n;
-      for (let i = 0; i < 8; i++) x = (x << 8n) | BigInt(padded[p + i]);
-      return x;
-    };
-
     let bitsleft = data.length * 8;
     let pos = 0;
-    let x = readU64(0);
+
+    // Initialise 64-bit window as two big-endian uint32 halves.
+    let hi = ((padded[0] << 24) | (padded[1] << 16) | (padded[2] << 8) | padded[3]) >>> 0;
+    let lo = ((padded[4] << 24) | (padded[5] << 16) | (padded[6] << 8) | padded[7]) >>> 0;
+    // n = bits remaining in the current "hi" half (1..32).
     let n = 32;
 
     const chunks = [];
     let outLen = 0;
 
     while (true) {
+      // Advance window when hi is exhausted: slide lo → hi, read next 4 bytes → lo.
       if (n <= 0) {
         pos += 4;
-        x = readU64(pos);
+        hi = lo;
+        const p4 = pos + 4;
+        lo = ((padded[p4] << 24) | (padded[p4 + 1] << 16) | (padded[p4 + 2] << 8) | padded[p4 + 3]) >>> 0;
         n += 32;
       }
 
-      const code = Number((x >> BigInt(n)) & 0xffffffffn) >>> 0;
+      // Extract the 32-bit code starting at bit-offset (32-n) within hi:lo.
+      // n==32 → code is exactly hi; otherwise straddles the hi/lo boundary.
+      // Note: JS << wraps at 32, so the n===32 guard avoids `hi << 0` ambiguity.
+      const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
 
       const e = this.dict1[code >>> 24];
       let codelen = e.codelen;

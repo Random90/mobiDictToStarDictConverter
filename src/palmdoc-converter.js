@@ -12,7 +12,7 @@ class Converter extends PalmDocBase {
   async run() {
     const numRecords = this.buildRecords();
     this.log(
-      `Source detected. Extra Data Flags: 0x${this.extraFlags.toString(16)}`,
+        `Source detected. Extra Data Flags: 0x${this.extraFlags.toString(16)}`,
     );
     this.log("Step 1: Extracting text from MOBI records...");
     const html = await this.extractAsync(numRecords);
@@ -52,10 +52,10 @@ class Converter extends PalmDocBase {
         for (; i < limit; i++) {
           const start = this.records[i].offset;
           const end =
-            i + 1 < numRecords
-              ? this.records[i + 1].offset
-              : this.buffer.byteLength;
-          let data = new Uint8Array(this.buffer.slice(start, end));
+              i + 1 < numRecords
+                  ? this.records[i + 1].offset
+                  : this.buffer.byteLength;
+          let data = new Uint8Array(this.buffer, start, end - start);
           data = this.stripTrailing(data, this.extraFlags);
           if (data.length === 0) continue;
           fullHtml += decoder.decode(this.decompressPalmDoc(data));
@@ -91,7 +91,7 @@ class Converter extends PalmDocBase {
     if (hrCount < 100) return "main";
 
     const boldHeadCount = (html.match(
-      /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
+        /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
     ) || []).length;
 
     if (boldHeadCount >= 100) return "hr-bold";
@@ -106,8 +106,8 @@ class Converter extends PalmDocBase {
 
     if (this.options.merge && this.finalMap.has(word)) {
       this.finalMap.set(
-        word,
-        this.finalMap.get(word) + '<hr style="margin:4px 0">' + entryHtml,
+          word,
+          this.finalMap.get(word) + '<hr style="margin:4px 0">' + entryHtml,
       );
     } else {
       this.finalMap.set(word, entryHtml);
@@ -167,7 +167,7 @@ class Converter extends PalmDocBase {
     });
 
     this.log(
-      `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
+        `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
     );
   }
 
@@ -181,9 +181,9 @@ class Converter extends PalmDocBase {
       if (!m) continue;
 
       const word = (m[1] || "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
       if (!word || word.length >= 100) continue;
 
       let contentHtml = seg.slice(m.index + m[0].length);
@@ -195,7 +195,7 @@ class Converter extends PalmDocBase {
 
     this.log(`Found ${found} headwords.`);
     this.log(
-      `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
+        `Entries: ${this.finalMap.size}. Synonyms collected: ${this.synMap.size}.`,
     );
   }
 }

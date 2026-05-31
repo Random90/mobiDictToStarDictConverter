@@ -9,16 +9,26 @@ class HuffCdicBase {
     this.buffer = buffer;
     this.raw = new Uint8Array(buffer);
     this.recs = [];
-    this.dict1 = [];
-    this.mincodeArr = new Array(33).fill(0);
-    this.maxcodeArr = new Array(33).fill(0);
+    // Flat TypedArrays for dict1 (256 entries, indexed by top 8 bits of code).
+    // Using TypedArrays instead of an object array avoids pointer chasing in
+    // the 33M-iteration decompression inner loop and fits in L1 cache.
+    this.dict1Codelen = new Uint8Array(256);
+    this.dict1Term    = new Uint8Array(256); // 1 = terminal, 0 = non-terminal
+    this.dict1Maxcode = new Uint32Array(256);
+    // min/max code arrays for non-terminal codeword lookup (indices 1..32).
+    this.mincodeArr = new Uint32Array(33);
+    this.maxcodeArr = new Uint32Array(33);
     this.dict = [];
+    // Pre-allocated output buffer reused across top-level decompress() calls.
+    // Avoids 53K × (new Uint8Array + new Array + 80 pushes + copy loop).
+    // 131072 bytes ≫ any single KF8 text record (typically 2-8 KB).
+    this._decompOutBuf = new Uint8Array(131072);
   }
 
   t(key, fallback, vars) {
     if (typeof i18nText === "function") return i18nText(key, fallback, vars);
     return String(fallback || key).replace(/\{(\w+)}/g, (_, k) =>
-        vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+      vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
     );
   }
 
@@ -48,14 +58,14 @@ class HuffCdicBase {
     for (let i = 0; i < trailers; i++) {
       const num = getSizeOfTrailingDataEntry(out);
       const keep = Math.max(0, out.length - num);
-      out = out.slice(0, keep);
+      out = out.subarray(0, keep);
     }
 
     if (multibyte) {
       const tail = out.length ? out[out.length - 1] : 0;
       const num = (tail & 3) + 1;
       const keep = Math.max(0, out.length - num);
-      out = out.slice(0, keep);
+      out = out.subarray(0, keep);
     }
 
     return out;
@@ -65,13 +75,13 @@ class HuffCdicBase {
     if (raw === 0xffff) {
       // For sentinel/noisy values, start in conservative mode immediately.
       addLog(
-          this.t(
-              "logExtraDataSentinel",
-              "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
-              {
-                source: sourceLabel,
-              },
-          ),
+        this.t(
+          "logExtraDataSentinel",
+          "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
+          {
+            source: sourceLabel,
+          },
+        ),
       );
       return 0x0001;
     }
@@ -79,15 +89,15 @@ class HuffCdicBase {
     const masked = raw & 0x001f;
     if (masked !== raw) {
       addLog(
-          this.t(
-              "logExtraDataMask",
-              "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
-              {
-                source: sourceLabel,
-                from: raw.toString(16),
-                to: masked.toString(16),
-              },
-          ),
+        this.t(
+          "logExtraDataMask",
+          "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
+          {
+            source: sourceLabel,
+            from: raw.toString(16),
+            to: masked.toString(16),
+          },
+        ),
       );
     }
     return masked || 0x0001;
@@ -106,12 +116,12 @@ class HuffCdicBase {
     const r0 = this.recs[0];
     let mobi = r0 + 16;
     if (
-        !(
-            this.raw[mobi] === 0x4d &&
-            this.raw[mobi + 1] === 0x4f &&
-            this.raw[mobi + 2] === 0x42 &&
-            this.raw[mobi + 3] === 0x49
-        )
+      !(
+        this.raw[mobi] === 0x4d &&
+        this.raw[mobi + 1] === 0x4f &&
+        this.raw[mobi + 2] === 0x42 &&
+        this.raw[mobi + 3] === 0x49
+      )
     ) {
       mobi = r0;
     }
@@ -127,14 +137,14 @@ class HuffCdicBase {
     if (!headerCount) return huffBound;
     if (headerCount > huffBound) {
       addLog(
-          this.t(
-              "logTextRecordsClamp",
-              "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
-              {
-                headerCount,
-                huffBound,
-              },
-          ),
+        this.t(
+          "logTextRecordsClamp",
+          "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+          {
+            headerCount,
+            huffBound,
+          },
+        ),
       );
       return huffBound;
     }
@@ -163,10 +173,10 @@ class HuffCdicBase {
 
     const verLabel = mobiVer >= 8 ? 'KF8' : mobiVer >= 6 ? 'MOBI6' : `MOBI${mobiVer}`;
     const encLabel = encoding === 65001 || encoding === 0
-        ? 'UTF-8'
-        : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
+      ? 'UTF-8'
+      : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
     addLog(this.t('logMobiFormat', 'MOBI: {label} (v{ver}), encoding: {enc}',
-        { label: verLabel, ver: mobiVer, enc: encLabel }));
+      { label: verLabel, ver: mobiVer, enc: encLabel }));
 
     let flags = 0x0001;
     if (hdrLen >= 0xe4 && mobiVer >= 5) {
@@ -177,10 +187,10 @@ class HuffCdicBase {
     // EXTH tag 121 points to the KF8 boundary; when present, use KF8 section flags.
     const exthOff = recBase + 16 + hdrLen;
     if (
-        this.raw[exthOff] === 0x45 &&
-        this.raw[exthOff + 1] === 0x58 &&
-        this.raw[exthOff + 2] === 0x54 &&
-        this.raw[exthOff + 3] === 0x48
+      this.raw[exthOff] === 0x45 &&
+      this.raw[exthOff + 1] === 0x58 &&
+      this.raw[exthOff + 2] === 0x54 &&
+      this.raw[exthOff + 3] === 0x48
     ) {
       const exthLen = this.u32(exthOff + 4);
       const numRec = this.u32(exthOff + 8);
@@ -196,12 +206,12 @@ class HuffCdicBase {
             const kf8Off = recs[kf8RecIdx];
             let kf8Mobi = kf8Off + 16;
             if (
-                !(
-                    this.raw[kf8Mobi] === 0x4d &&
-                    this.raw[kf8Mobi + 1] === 0x4f &&
-                    this.raw[kf8Mobi + 2] === 0x42 &&
-                    this.raw[kf8Mobi + 3] === 0x49
-                )
+              !(
+                this.raw[kf8Mobi] === 0x4d &&
+                this.raw[kf8Mobi + 1] === 0x4f &&
+                this.raw[kf8Mobi + 2] === 0x42 &&
+                this.raw[kf8Mobi + 3] === 0x49
+              )
             )
               kf8Mobi = kf8Off;
             const kf8Base = kf8Mobi === kf8Off + 16 ? kf8Off : kf8Mobi;
@@ -229,73 +239,75 @@ class HuffCdicBase {
   // ── Load HUFF record ──────────────────────────────────────────────────────
   loadHuff(hOff) {
     if (
-        this.raw[hOff] !== 0x48 ||
-        this.raw[hOff + 1] !== 0x55 ||
-        this.raw[hOff + 2] !== 0x46 ||
-        this.raw[hOff + 3] !== 0x46 ||
-        this.raw[hOff + 4] !== 0x00 ||
-        this.raw[hOff + 5] !== 0x00 ||
-        this.raw[hOff + 6] !== 0x00 ||
-        this.raw[hOff + 7] !== 0x18
+      this.raw[hOff] !== 0x48 ||
+      this.raw[hOff + 1] !== 0x55 ||
+      this.raw[hOff + 2] !== 0x46 ||
+      this.raw[hOff + 3] !== 0x46 ||
+      this.raw[hOff + 4] !== 0x00 ||
+      this.raw[hOff + 5] !== 0x00 ||
+      this.raw[hOff + 6] !== 0x00 ||
+      this.raw[hOff + 7] !== 0x18
     ) {
       throw new Error(this.t("errInvalidHuffHeader", "invalid huff header"));
     }
 
     const off1 = this.u32(hOff + 8);
     const off2 = this.u32(hOff + 12);
-    this.dict1 = [];
+    // Populate flat TypedArray tables (one entry per top-byte value 0-255).
     for (let i = 0; i < 256; i++) {
       const v = this.u32(hOff + off1 + i * 4);
       const codelen = v & 0x1f;
       const term = !!(v & 0x80);
       if (codelen === 0)
         throw new Error(
-            this.t(
-                "errInvalidHuffTableZeroCodeLen",
-                "invalid huff table: zero codelen",
-            ),
+          this.t(
+            "errInvalidHuffTableZeroCodeLen",
+            "invalid huff table: zero codelen",
+          ),
         );
       if (codelen <= 8 && !term)
         throw new Error(
-            this.t(
-                "errInvalidHuffTableShortNonTerminal",
-                "invalid huff table: short non-terminal code",
-            ),
+          this.t(
+            "errInvalidHuffTableShortNonTerminal",
+            "invalid huff table: short non-terminal code",
+          ),
         );
       const mxraw = (v >>> 8) >>> 0;
       const maxcode =
-          Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
-      this.dict1.push({ codelen, term, maxcode });
+        Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
+      this.dict1Codelen[i] = codelen;
+      this.dict1Term[i]    = term ? 1 : 0;
+      this.dict1Maxcode[i] = maxcode;
     }
-    this.mincodeArr = new Array(33).fill(0);
-    this.maxcodeArr = new Array(33).fill(0);
+    this.mincodeArr = new Uint32Array(33);
+    this.maxcodeArr = new Uint32Array(33);
     for (let i = 1; i <= 32; i++) {
       const rawMin = this.u32(hOff + off2 + (i - 1) * 8);
       const rawMax = this.u32(hOff + off2 + (i - 1) * 8 + 4);
       const shift = 32 - i;
       this.mincodeArr[i] = Number(BigInt(rawMin) << BigInt(shift)) >>> 0;
       this.maxcodeArr[i] =
-          Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
+        Number((BigInt(rawMax + 1) << BigInt(shift)) - 1n) >>> 0;
     }
     addLog(
-        this.t("logHuffLoaded", "HUFF loaded. off1=0x{off1} off2=0x{off2}", {
-          off1: off1.toString(16),
-          off2: off2.toString(16),
-        }),
+      this.t("logHuffLoaded", "HUFF loaded. off1=0x{off1} off2=0x{off2}", {
+        off1: off1.toString(16),
+        off2: off2.toString(16),
+      }),
     );
   }
 
   // ── Load one CDIC record ──────────────────────────────────────────────────
   loadCdic(rOff) {
     if (
-        this.raw[rOff] !== 0x43 ||
-        this.raw[rOff + 1] !== 0x44 ||
-        this.raw[rOff + 2] !== 0x49 ||
-        this.raw[rOff + 3] !== 0x43 ||
-        this.raw[rOff + 4] !== 0x00 ||
-        this.raw[rOff + 5] !== 0x00 ||
-        this.raw[rOff + 6] !== 0x00 ||
-        this.raw[rOff + 7] !== 0x10
+      this.raw[rOff] !== 0x43 ||
+      this.raw[rOff + 1] !== 0x44 ||
+      this.raw[rOff + 2] !== 0x49 ||
+      this.raw[rOff + 3] !== 0x43 ||
+      this.raw[rOff + 4] !== 0x00 ||
+      this.raw[rOff + 5] !== 0x00 ||
+      this.raw[rOff + 6] !== 0x00 ||
+      this.raw[rOff + 7] !== 0x10
     ) {
       throw new Error(this.t("errInvalidCdicHeader", "invalid cdic header"));
     }
@@ -309,35 +321,52 @@ class HuffCdicBase {
       const flag = !!(blen & 0x8000);
       const slen = blen & 0x7fff;
       const slice = this.raw.subarray(rOff + 18 + off, rOff + 18 + off + slen);
-      this.dict.push({ slice, flag });
+      // Store as [slice, flagBit] to defer expansion until loadAllCdic finishes.
+      this.dict.push(flag ? slice : { slice, flag: false });
     }
   }
 
   // ── Load all consecutive CDIC records after a HUFF record ────────────────
+  // After all records are loaded, pre-expand every non-terminal (compressed)
+  // CDIC entry so the hot decompress loop only ever sees plain Uint8Arrays.
+  // This eliminates the per-symbol flag check and {slice,flag} object wrapper
+  // from ~33M inner-loop iterations, improving cache locality significantly.
   loadAllCdic(huffIdx) {
     const recs = this.recs;
     let count = 0;
     for (let i = huffIdx + 1; i < recs.length; i++) {
       const rOff = recs[i];
       const magic = String.fromCharCode(
-          this.raw[rOff],
-          this.raw[rOff + 1],
-          this.raw[rOff + 2],
-          this.raw[rOff + 3],
+        this.raw[rOff],
+        this.raw[rOff + 1],
+        this.raw[rOff + 2],
+        this.raw[rOff + 3],
       );
       if (magic !== "CDIC") break;
       this.loadCdic(rOff);
       count++;
     }
+    // Pre-expand all non-terminal entries (flag=false means still compressed).
+    // After this loop, every this.dict[i] is a plain Uint8Array.
+    const dict = this.dict;
+    for (let i = 0; i < dict.length; i++) {
+      const e = dict[i];
+      if (e && !(e instanceof Uint8Array)) {
+        // Guard against circular references: set null before recursing so any
+        // re-entrant access to dict[i] hits the null-break and returns empty.
+        dict[i] = null;
+        dict[i] = this.decompress(e.slice, false);
+      }
+    }
     addLog(
-        this.t(
-            "logCdicLoaded",
-            "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
-            {
-              count,
-              symbols: this.dict.length,
-            },
-        ),
+      this.t(
+        "logCdicLoaded",
+        "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
+        {
+          count,
+          symbols: this.dict.length,
+        },
+      ),
     );
   }
 
@@ -346,75 +375,129 @@ class HuffCdicBase {
   // arithmetic. BigInt is ~10x slower than 32-bit integer ops in V8.
   // We represent the 64-bit sliding window as two 32-bit ints (hi, lo) and
   // compute the 32-bit code extraction with plain bitwise ops instead.
-  decompress(data) {
+  //
+  // We also eliminate the "padded" Uint8Array copy by using bounds-checked
+  // reads of the raw data directly: the slow branch only fires for the last
+  // ~4 reads per record, saving 53K allocations per conversion.
+  //
+  // dict1 is now stored as three flat Uint8/Uint32Arrays instead of an object
+  // array, eliminating property-lookup overhead and pointer chasing in the
+  // 33M-iteration inner loop.
+  //
+  // Top-level calls (isTopLevel = true, the default) write directly into a
+  // pre-allocated this._decompOutBuf, returning a zero-copy subarray view.
+  // This avoids 53K × (new Array chunks + new Uint8Array result + copy loop),
+  // reducing ~212 MB of temporary allocations and major GC pressure.
+  // Recursive calls (CDIC expansion) use the legacy chunks path and are rare.
+  decompress(data, isTopLevel = true) {
     if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
 
-    // +8 bytes padding so we can always read 8 bytes without bounds checks.
-    const padded = new Uint8Array(data.length + 8);
-    padded.set(data);
+    const dlen = data.length;
 
-    let bitsleft = data.length * 8;
+    // Read 4 bytes big-endian at byte offset p.
+    // Fast path (p+3 < dlen): direct byte access.
+    // Slow path (near end of data): byte-by-byte with zero padding.
+    const read32 = (p) => {
+      if (p + 3 < dlen) {
+        return ((data[p] << 24) | (data[p + 1] << 16) | (data[p + 2] << 8) | data[p + 3]) >>> 0;
+      }
+      return (
+        ((p     < dlen ? data[p]     : 0) << 24) |
+        ((p + 1 < dlen ? data[p + 1] : 0) << 16) |
+        ((p + 2 < dlen ? data[p + 2] : 0) << 8)  |
+         (p + 3 < dlen ? data[p + 3] : 0)
+      ) >>> 0;
+    };
+
+    // Cache TypedArray references in locals to avoid repeated property lookups.
+    const dict1Codelen = this.dict1Codelen;
+    const dict1Term    = this.dict1Term;
+    const dict1Maxcode = this.dict1Maxcode;
+    const mincodeArr   = this.mincodeArr;
+    const maxcodeArr   = this.maxcodeArr;
+    const dict         = this.dict;
+
+    let bitsleft = dlen * 8;
     let pos = 0;
 
     // Initialise 64-bit window as two big-endian uint32 halves.
-    let hi = ((padded[0] << 24) | (padded[1] << 16) | (padded[2] << 8) | padded[3]) >>> 0;
-    let lo = ((padded[4] << 24) | (padded[5] << 16) | (padded[6] << 8) | padded[7]) >>> 0;
+    let hi = read32(0);
+    let lo = read32(4);
     // n = bits remaining in the current "hi" half (1..32).
     let n = 32;
 
+    if (isTopLevel) {
+      // ── Fast path: write directly into the pre-allocated output buffer ──────
+      // Avoids 53K × (chunks array + Uint8Array allocation + copy loop).
+      // The caller immediately decodes the returned subarray to a string, so the
+      // buffer is safe to reuse for the next record.
+      let outBuf = this._decompOutBuf;
+      let outLen = 0;
+
+      while (true) {
+        if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
+        const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+        const idx = code >>> 24;
+        let codelen = dict1Codelen[idx];
+        let maxcode = dict1Maxcode[idx];
+        if (!dict1Term[idx]) {
+          while (code < mincodeArr[codelen]) codelen++;
+          maxcode = maxcodeArr[codelen];
+        }
+        n -= codelen; bitsleft -= codelen;
+        if (bitsleft < 0) break;
+        const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
+        if (r >= dict.length) break;
+        const slice = dict[r];
+        if (!slice) break;
+        const needed = outLen + slice.length;
+        if (needed > outBuf.length) {
+          // Grow the reusable buffer (rare: only if a record expands beyond 128 KB).
+          const bigger = new Uint8Array(Math.max(outBuf.length * 2, needed));
+          bigger.set(outBuf.subarray(0, outLen));
+          outBuf = this._decompOutBuf = bigger;
+        }
+        outBuf.set(slice, outLen);
+        outLen += slice.length;
+      }
+      return outBuf.subarray(0, outLen); // zero-copy view, valid until next call
+    }
+
+    // ── Legacy/recursive path: used only during CDIC expansion ─────────────
     const chunks = [];
     let outLen = 0;
 
     while (true) {
-      // Advance window when hi is exhausted: slide lo → hi, read next 4 bytes → lo.
-      if (n <= 0) {
-        pos += 4;
-        hi = lo;
-        const p4 = pos + 4;
-        lo = ((padded[p4] << 24) | (padded[p4 + 1] << 16) | (padded[p4 + 2] << 8) | padded[p4 + 3]) >>> 0;
-        n += 32;
-      }
-
-      // Extract the 32-bit code starting at bit-offset (32-n) within hi:lo.
-      // n==32 → code is exactly hi; otherwise straddles the hi/lo boundary.
-      // Note: JS << wraps at 32, so the n===32 guard avoids `hi << 0` ambiguity.
+      if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
       const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
-
-      const e = this.dict1[code >>> 24];
-      let codelen = e.codelen;
-      let maxcode = e.maxcode;
-
-      if (!e.term) {
-        while (code < this.mincodeArr[codelen]) codelen++;
-        maxcode = this.maxcodeArr[codelen];
+      const idx = code >>> 24;
+      let codelen = dict1Codelen[idx];
+      let maxcode = dict1Maxcode[idx];
+      if (!dict1Term[idx]) {
+        while (code < mincodeArr[codelen]) codelen++;
+        maxcode = maxcodeArr[codelen];
       }
-
-      n -= codelen;
-      bitsleft -= codelen;
+      n -= codelen; bitsleft -= codelen;
       if (bitsleft < 0) break;
-
       const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
-      if (r >= this.dict.length) break;
-
-      let entry = this.dict[r];
+      if (r >= dict.length) break;
+      let entry = dict[r];
       if (!entry) break;
-      if (!entry.flag) {
-        // KindleUnpack sets temporary None sentinel before recursive expansion.
-        this.dict[r] = null;
-        const expanded = this.decompress(entry.slice);
-        entry = { slice: expanded, flag: true };
-        this.dict[r] = entry;
+      // During recursive CDIC expansion (called from loadAllCdic pre-expansion),
+      // some entries may still be unexpanded objects. Expand them lazily here.
+      if (!(entry instanceof Uint8Array)) {
+        dict[r] = null;
+        const expanded = this.decompress(entry.slice, false);
+        entry = expanded;
+        dict[r] = entry;
       }
-      chunks.push(entry.slice);
-      outLen += entry.slice.length;
+      chunks.push(entry);
+      outLen += entry.length;
     }
 
     const result = new Uint8Array(outLen);
     let off = 0;
-    for (const c of chunks) {
-      result.set(c, off);
-      off += c.length;
-    }
+    for (const c of chunks) { result.set(c, off); off += c.length; }
     return result;
   }
 
@@ -423,7 +506,11 @@ class HuffCdicBase {
   // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
   // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
   // order, and would cause wrong headword↔group mappings.
+  //
+  // synMap is passed as outputMap so inflected forms are written directly,
+  // avoiding a large intermediate Map of 2M+ entries.
   parseMobiIndexes() {
-    return parseMobiIndexes(this.raw, this.recs, addLog, null);
+    const synMap = this.synMap || null;
+    return parseMobiIndexes(this.raw, this.recs, addLog, null, synMap);
   }
 }

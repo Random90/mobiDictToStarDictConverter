@@ -387,10 +387,20 @@
           this.buffer = buffer;
           this.raw = new Uint8Array(buffer);
           this.recs = [];
-          this.dict1 = [];
-          this.mincodeArr = new Array(33).fill(0);
-          this.maxcodeArr = new Array(33).fill(0);
+          // Flat TypedArrays for dict1 (256 entries, indexed by top 8 bits of code).
+          // Using TypedArrays instead of an object array avoids pointer chasing in
+          // the 33M-iteration decompression inner loop and fits in L1 cache.
+          this.dict1Codelen = new Uint8Array(256);
+          this.dict1Term    = new Uint8Array(256); // 1 = terminal, 0 = non-terminal
+          this.dict1Maxcode = new Uint32Array(256);
+          // min/max code arrays for non-terminal codeword lookup (indices 1..32).
+          this.mincodeArr = new Uint32Array(33);
+          this.maxcodeArr = new Uint32Array(33);
           this.dict = [];
+          // Pre-allocated output buffer reused across top-level decompress() calls.
+          // Avoids 53K × (new Uint8Array + new Array + 80 pushes + copy loop).
+          // 131072 bytes ≫ any single KF8 text record (typically 2-8 KB).
+          this._decompOutBuf = new Uint8Array(131072);
         }
 
         t(key, fallback, vars) {
@@ -426,14 +436,14 @@
           for (let i = 0; i < trailers; i++) {
             const num = getSizeOfTrailingDataEntry(out);
             const keep = Math.max(0, out.length - num);
-            out = out.slice(0, keep);
+            out = out.subarray(0, keep);
           }
 
           if (multibyte) {
             const tail = out.length ? out[out.length - 1] : 0;
             const num = (tail & 3) + 1;
             const keep = Math.max(0, out.length - num);
-            out = out.slice(0, keep);
+            out = out.subarray(0, keep);
           }
 
           return out;
@@ -621,7 +631,7 @@
 
           const off1 = this.u32(hOff + 8);
           const off2 = this.u32(hOff + 12);
-          this.dict1 = [];
+          // Populate flat TypedArray tables (one entry per top-byte value 0-255).
           for (let i = 0; i < 256; i++) {
             const v = this.u32(hOff + off1 + i * 4);
             const codelen = v & 0x1f;
@@ -643,10 +653,12 @@
             const mxraw = (v >>> 8) >>> 0;
             const maxcode =
               Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
-            this.dict1.push({ codelen, term, maxcode });
+            this.dict1Codelen[i] = codelen;
+            this.dict1Term[i]    = term ? 1 : 0;
+            this.dict1Maxcode[i] = maxcode;
           }
-          this.mincodeArr = new Array(33).fill(0);
-          this.maxcodeArr = new Array(33).fill(0);
+          this.mincodeArr = new Uint32Array(33);
+          this.maxcodeArr = new Uint32Array(33);
           for (let i = 1; i <= 32; i++) {
             const rawMin = this.u32(hOff + off2 + (i - 1) * 8);
             const rawMax = this.u32(hOff + off2 + (i - 1) * 8 + 4);
@@ -686,12 +698,17 @@
             const blen = this.u16(rOff + 16 + off);
             const flag = !!(blen & 0x8000);
             const slen = blen & 0x7fff;
-            const slice = this.raw.slice(rOff + 18 + off, rOff + 18 + off + slen);
-            this.dict.push({ slice, flag });
+            const slice = this.raw.subarray(rOff + 18 + off, rOff + 18 + off + slen);
+            // Store as [slice, flagBit] to defer expansion until loadAllCdic finishes.
+            this.dict.push(flag ? slice : { slice, flag: false });
           }
         }
 
         // ── Load all consecutive CDIC records after a HUFF record ────────────────
+        // After all records are loaded, pre-expand every non-terminal (compressed)
+        // CDIC entry so the hot decompress loop only ever sees plain Uint8Arrays.
+        // This eliminates the per-symbol flag check and {slice,flag} object wrapper
+        // from ~33M inner-loop iterations, improving cache locality significantly.
         loadAllCdic(huffIdx) {
           const recs = this.recs;
           let count = 0;
@@ -707,6 +724,18 @@
             this.loadCdic(rOff);
             count++;
           }
+          // Pre-expand all non-terminal entries (flag=false means still compressed).
+          // After this loop, every this.dict[i] is a plain Uint8Array.
+          const dict = this.dict;
+          for (let i = 0; i < dict.length; i++) {
+            const e = dict[i];
+            if (e && !(e instanceof Uint8Array)) {
+              // Guard against circular references: set null before recursing so any
+              // re-entrant access to dict[i] hits the null-break and returns empty.
+              dict[i] = null;
+              dict[i] = this.decompress(e.slice, false);
+            }
+          }
           addLog(
             this.t(
               "logCdicLoaded",
@@ -720,70 +749,133 @@
         }
 
         // ── HUFF/CDIC decompression ────────────────────────────────────────────────
-        decompress(data) {
+        // Hot-path optimisation: the original used BigInt for 64-bit bitstream
+        // arithmetic. BigInt is ~10x slower than 32-bit integer ops in V8.
+        // We represent the 64-bit sliding window as two 32-bit ints (hi, lo) and
+        // compute the 32-bit code extraction with plain bitwise ops instead.
+        //
+        // We also eliminate the "padded" Uint8Array copy by using bounds-checked
+        // reads of the raw data directly: the slow branch only fires for the last
+        // ~4 reads per record, saving 53K allocations per conversion.
+        //
+        // dict1 is now stored as three flat Uint8/Uint32Arrays instead of an object
+        // array, eliminating property-lookup overhead and pointer chasing in the
+        // 33M-iteration inner loop.
+        //
+        // Top-level calls (isTopLevel = true, the default) write directly into a
+        // pre-allocated this._decompOutBuf, returning a zero-copy subarray view.
+        // This avoids 53K × (new Array chunks + new Uint8Array result + copy loop),
+        // reducing ~212 MB of temporary allocations and major GC pressure.
+        // Recursive calls (CDIC expansion) use the legacy chunks path and are rare.
+        decompress(data, isTopLevel = true) {
           if (data.length === 0 || this.dict.length === 0) return new Uint8Array(0);
 
-          const padded = new Uint8Array(data.length + 8);
-          padded.set(data);
+          const dlen = data.length;
 
-          const readU64 = (p) => {
-            let x = 0n;
-            for (let i = 0; i < 8; i++) x = (x << 8n) | BigInt(padded[p + i]);
-            return x;
+          // Read 4 bytes big-endian at byte offset p.
+          // Fast path (p+3 < dlen): direct byte access.
+          // Slow path (near end of data): byte-by-byte with zero padding.
+          const read32 = (p) => {
+            if (p + 3 < dlen) {
+              return ((data[p] << 24) | (data[p + 1] << 16) | (data[p + 2] << 8) | data[p + 3]) >>> 0;
+            }
+            return (
+              ((p     < dlen ? data[p]     : 0) << 24) |
+              ((p + 1 < dlen ? data[p + 1] : 0) << 16) |
+              ((p + 2 < dlen ? data[p + 2] : 0) << 8)  |
+               (p + 3 < dlen ? data[p + 3] : 0)
+            ) >>> 0;
           };
 
-          let bitsleft = data.length * 8;
+          // Cache TypedArray references in locals to avoid repeated property lookups.
+          const dict1Codelen = this.dict1Codelen;
+          const dict1Term    = this.dict1Term;
+          const dict1Maxcode = this.dict1Maxcode;
+          const mincodeArr   = this.mincodeArr;
+          const maxcodeArr   = this.maxcodeArr;
+          const dict         = this.dict;
+
+          let bitsleft = dlen * 8;
           let pos = 0;
-          let x = readU64(0);
+
+          // Initialise 64-bit window as two big-endian uint32 halves.
+          let hi = read32(0);
+          let lo = read32(4);
+          // n = bits remaining in the current "hi" half (1..32).
           let n = 32;
 
+          if (isTopLevel) {
+            // ── Fast path: write directly into the pre-allocated output buffer ──────
+            // Avoids 53K × (chunks array + Uint8Array allocation + copy loop).
+            // The caller immediately decodes the returned subarray to a string, so the
+            // buffer is safe to reuse for the next record.
+            let outBuf = this._decompOutBuf;
+            let outLen = 0;
+
+            while (true) {
+              if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
+              const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+              const idx = code >>> 24;
+              let codelen = dict1Codelen[idx];
+              let maxcode = dict1Maxcode[idx];
+              if (!dict1Term[idx]) {
+                while (code < mincodeArr[codelen]) codelen++;
+                maxcode = maxcodeArr[codelen];
+              }
+              n -= codelen; bitsleft -= codelen;
+              if (bitsleft < 0) break;
+              const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
+              if (r >= dict.length) break;
+              const slice = dict[r];
+              if (!slice) break;
+              const needed = outLen + slice.length;
+              if (needed > outBuf.length) {
+                // Grow the reusable buffer (rare: only if a record expands beyond 128 KB).
+                const bigger = new Uint8Array(Math.max(outBuf.length * 2, needed));
+                bigger.set(outBuf.subarray(0, outLen));
+                outBuf = this._decompOutBuf = bigger;
+              }
+              outBuf.set(slice, outLen);
+              outLen += slice.length;
+            }
+            return outBuf.subarray(0, outLen); // zero-copy view, valid until next call
+          }
+
+          // ── Legacy/recursive path: used only during CDIC expansion ─────────────
           const chunks = [];
           let outLen = 0;
 
           while (true) {
-            if (n <= 0) {
-              pos += 4;
-              x = readU64(pos);
-              n += 32;
+            if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
+            const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+            const idx = code >>> 24;
+            let codelen = dict1Codelen[idx];
+            let maxcode = dict1Maxcode[idx];
+            if (!dict1Term[idx]) {
+              while (code < mincodeArr[codelen]) codelen++;
+              maxcode = maxcodeArr[codelen];
             }
-
-            const code = Number((x >> BigInt(n)) & 0xffffffffn) >>> 0;
-
-            const e = this.dict1[code >>> 24];
-            let codelen = e.codelen;
-            let maxcode = e.maxcode;
-
-            if (!e.term) {
-              while (code < this.mincodeArr[codelen]) codelen++;
-              maxcode = this.maxcodeArr[codelen];
-            }
-
-            n -= codelen;
-            bitsleft -= codelen;
+            n -= codelen; bitsleft -= codelen;
             if (bitsleft < 0) break;
-
             const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
-            if (r >= this.dict.length) break;
-
-            let entry = this.dict[r];
+            if (r >= dict.length) break;
+            let entry = dict[r];
             if (!entry) break;
-            if (!entry.flag) {
-              // KindleUnpack sets temporary None sentinel before recursive expansion.
-              this.dict[r] = null;
-              const expanded = this.decompress(entry.slice);
-              entry = { slice: expanded, flag: true };
-              this.dict[r] = entry;
+            // During recursive CDIC expansion (called from loadAllCdic pre-expansion),
+            // some entries may still be unexpanded objects. Expand them lazily here.
+            if (!(entry instanceof Uint8Array)) {
+              dict[r] = null;
+              const expanded = this.decompress(entry.slice, false);
+              entry = expanded;
+              dict[r] = entry;
             }
-            chunks.push(entry.slice);
-            outLen += entry.slice.length;
+            chunks.push(entry);
+            outLen += entry.length;
           }
 
           const result = new Uint8Array(outLen);
           let off = 0;
-          for (const c of chunks) {
-            result.set(c, off);
-            off += c.length;
-          }
+          for (const c of chunks) { result.set(c, off); off += c.length; }
           return result;
         }
 
@@ -792,8 +884,12 @@
         // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
         // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
         // order, and would cause wrong headword↔group mappings.
+        //
+        // synMap is passed as outputMap so inflected forms are written directly,
+        // avoiding a large intermediate Map of 2M+ entries.
         parseMobiIndexes() {
-          return parseMobiIndexes(this.raw, this.recs, addLog, null);
+          const synMap = this.synMap || null;
+          return parseMobiIndexes(this.raw, this.recs, addLog, null, synMap);
         }
       }
 

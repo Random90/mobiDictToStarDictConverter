@@ -6,73 +6,91 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
 
   const enc = new TextEncoder();
 
-  // StarDict .idx must be sorted alphabetically (case-insensitive)
+  // StarDict requires .idx/.syn to be sorted in strcmp() order (UTF-8 byte
+  // order), not Unicode locale order.  Simple JS string comparison is ~100x
+  // faster than localeCompare and matches the required strcmp semantics.
   const sorted = Array.from(finalMap.entries()).sort(([a], [b]) =>
-    a.toLowerCase().localeCompare(b.toLowerCase()),
+    a < b ? -1 : a > b ? 1 : 0,
   );
+  const count = sorted.length;
 
-  const concatChunks = (chunks, total) => {
-    const out = new Uint8Array(total);
-    let pos = 0;
-    for (const c of chunks) { out.set(c, pos); pos += c.length; }
-    return out;
-  };
-
-  const wordToOrdinal = new Map();
-  const nullByte = new Uint8Array(1);
-  let dictChunks = [], idxChunks = [],
-    dictTotalSize = 0, idxTotalSize = 0,
-    offset = 0, count = 0;
-
-  for (const [word, def] of sorted) {
-    wordToOrdinal.set(word, count);
-    const db = enc.encode(def);
-    const wb = enc.encode(word);
-    dictChunks.push(db);
-    dictTotalSize += db.length;
-    idxChunks.push(wb);
-    idxTotalSize += wb.length;
-    idxChunks.push(nullByte);
-    idxTotalSize += 1;
-    const dv = new DataView(new ArrayBuffer(8));
-    dv.setUint32(0, offset, false);
-    dv.setUint32(4, db.length, false);
-    idxChunks.push(new Uint8Array(dv.buffer));
-    idxTotalSize += 8;
-    offset += db.length;
-    count++;
+  // ── Encode words + defs, compute sizes, build idx/dict in two passes ────────
+  // encodeInto writes words/defs directly into pre-sized buffers, avoiding
+  // 2 × count intermediate Uint8Array allocations and the GC pressure from them.
+  // Size estimates: words ≤ 80 chars × 3 bytes + 9; defs ≈ ASCII HTML (length+16).
+  let idxEstimate = 0, dictEstimate = 0;
+  for (let i = 0; i < count; i++) {
+    idxEstimate  += sorted[i][0].length * 3 + 9;
+    dictEstimate += sorted[i][1].length + 16;
   }
+  const idxBytes  = new Uint8Array(idxEstimate);
+  const dictBytes = new Uint8Array(dictEstimate);
+  const wordToOrdinal = new Map();
+  let idxPos = 0, dictOff = 0;
+  for (let i = 0; i < count; i++) {
+    wordToOrdinal.set(sorted[i][0], i);
+    const wr = enc.encodeInto(sorted[i][0], idxBytes.subarray(idxPos));
+    idxPos += wr.written;
+    idxBytes[idxPos++] = 0;                // NUL terminator
+    const hdr = idxPos; idxPos += 8;       // reserve header slot
+    const dr = enc.encodeInto(sorted[i][1], dictBytes.subarray(dictOff));
+    const dLen = dr.written;
+    idxBytes[hdr]   = (dictOff >>> 24) & 0xFF; idxBytes[hdr+1] = (dictOff >>> 16) & 0xFF;
+    idxBytes[hdr+2] = (dictOff >>>  8) & 0xFF; idxBytes[hdr+3] =  dictOff         & 0xFF;
+    idxBytes[hdr+4] = (dLen    >>> 24) & 0xFF; idxBytes[hdr+5] = (dLen    >>> 16) & 0xFF;
+    idxBytes[hdr+6] = (dLen    >>>  8) & 0xFF; idxBytes[hdr+7] =  dLen            & 0xFF;
+    dictOff += dLen;
+  }
+  const idxTotalSize  = idxPos;
+  const dictTotalSize = dictOff;
 
   // Build .syn
-  let synChunks = [], synTotalSize = 0, synCount = 0;
+  let synBytesArr = null, synCount = 0;
   if (generateSyn && synMap.size > 0) {
-    const validSyns = [];
+    // Use parallel arrays instead of [alt, ordinal] pair objects to avoid
+    // 2.4M small array allocations and improve sort cache locality.
+    const synWords = [];
+    const synOrdinals = [];
     for (const [alt, canonical] of synMap.entries()) {
       if (!wordToOrdinal.has(canonical)) continue;
       if (wordToOrdinal.has(alt)) continue;
-      validSyns.push([alt, wordToOrdinal.get(canonical)]);
+      synWords.push(alt);
+      synOrdinals.push(wordToOrdinal.get(canonical));
     }
-    validSyns.sort(([a], [b]) =>
-      a.toLowerCase().localeCompare(b.toLowerCase()),
-    );
-    for (const [alt, ordinal] of validSyns) {
-      const ab = enc.encode(alt);
-      synChunks.push(ab);
-      synTotalSize += ab.length;
-      synChunks.push(nullByte);
-      synTotalSize += 1;
-      const dv = new DataView(new ArrayBuffer(4));
-      dv.setUint32(0, ordinal, false);
-      synChunks.push(new Uint8Array(dv.buffer));
-      synTotalSize += 4;
+    synCount = synWords.length;
+
+    // Sort an index array by word value — avoids moving large string objects.
+    const synIdx = new Uint32Array(synCount);
+    for (let i = 0; i < synCount; i++) synIdx[i] = i;
+    synIdx.sort((a, b) => {
+      const wa = synWords[a], wb = synWords[b];
+      return wa < wb ? -1 : wa > wb ? 1 : 0;
+    });
+
+    // Pre-estimate syn buffer (alt.length * 2 is safe upper bound for UTF-8
+    // Polish text + NUL + 4-byte ordinal); encodeInto avoids 2.4M temp allocs.
+    let synEstimate = 0;
+    for (let i = 0; i < synCount; i++)
+      synEstimate += synWords[i].length * 2 + 5;
+    synBytesArr = new Uint8Array(synEstimate);
+    let synPos = 0;
+    for (let i = 0; i < synCount; i++) {
+      const si = synIdx[i];
+      const r = enc.encodeInto(synWords[si], synBytesArr.subarray(synPos));
+      synPos += r.written;
+      synBytesArr[synPos++] = 0;
+      const ord = synOrdinals[si];
+      synBytesArr[synPos++] = (ord >>> 24) & 0xFF; synBytesArr[synPos++] = (ord >>> 16) & 0xFF;
+      synBytesArr[synPos++] = (ord >>>  8) & 0xFF; synBytesArr[synPos++] =  ord         & 0xFF;
     }
-    synCount = validSyns.length;
+    synBytesArr = synBytesArr.subarray(0, synPos); // trim to actual size
     addLog(
       i18nText("logSynonymFile", "Synonym file: {count} entries.", {
         count: synCount,
       }),
     );
   }
+
 
   // .ifo
   const ifoLines = [
@@ -85,11 +103,7 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
   ];
   if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
   const ifo = ifoLines.join("\n") + "\n";
-
   const ifoBytes = enc.encode(ifo);
-  const idxBytes = concatChunks(idxChunks, idxTotalSize);
-  const dictBytes = concatChunks(dictChunks, dictTotalSize);
-  const synBytesArr = synCount > 0 ? concatChunks(synChunks, synTotalSize) : null;
 
   // Optionally compress the .dict data into .dict.dz (dictzip / gzip with RA index)
   let dictFileBytes = dictBytes;
@@ -98,10 +112,14 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
 
   if (compress) {
     addLog(
-      i18nText("logCompressingDict", "Compressing dictionary data ({dictBytes} B)…", {
+      i18nText("logCompressingDict", "🗜 Compressing dictionary data ({dictBytes} B) – please wait…", {
         dictBytes: dictTotalSize,
       }),
     );
+    // Yield to the browser so the log message is painted before the
+    // synchronous pako deflation loop starts (compressDictzip is async in
+    // name only – all CPU work happens inside a single synchronous loop).
+    await new Promise(r => setTimeout(r, 0));
     const dictDzBytes = await compressDictzip(dictBytes, (done, total) => {
       if (done % 200 === 0 || done === total) {
         addLog(

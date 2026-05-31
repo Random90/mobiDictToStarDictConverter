@@ -33,9 +33,17 @@ class KF8Converter extends HuffCdicBase {
     return h || 1; // ensure non-zero (0 reserved as "empty/invalid")
   }
 
-  _sanitizeEntryHtml(html) {    if (!html) return html;
-    // Legacy Mobipocket width attributes on <p> are invalid in modern HTML output.
-    return html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, "");
+  _sanitizeEntryHtml(html) {
+    if (!html) return html;
+    // Fast-path: SJP2 and most header-block dicts use literal 'width="0"'.
+    // String.replaceAll with a literal is ~10x faster than a regex for common cases.
+    if (html.indexOf('width') === -1) return html;
+    // Try the literal replacement first (covers most cases).
+    html = html.replaceAll('width="0"', '').replaceAll("width='0'", '');
+    // Fallback regex for other width= values (rare; e.g. width="-20", width="100%").
+    if (html.indexOf('width') !== -1)
+      html = html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, "");
+    return html;
   }
 
   _ingestEntry(word, def, synHtml = "") {
@@ -76,12 +84,12 @@ class KF8Converter extends HuffCdicBase {
     if (/<p\b[^>]*width\s*=\s*["']?-20/i.test(html)) return "main";
 
     const headerHeadCount = (
-        html.match(/<h[1-3]\b[^>]*>\s*<b[^>]*>[\s\S]*?<\/b>\s*<\/h[1-3]>/gi) || []
+      html.match(/<h[1-3]\b[^>]*>\s*<b[^>]*>[\s\S]*?<\/b>\s*<\/h[1-3]>/gi) || []
     ).length;
     if (
-        headerHeadCount >= 3 &&
-        /<blockquote\b/i.test(html) &&
-        /<hr\b/i.test(html)
+      headerHeadCount >= 3 &&
+      /<blockquote\b/i.test(html) &&
+      /<hr\b/i.test(html)
     )
       return "header-block";
 
@@ -95,9 +103,9 @@ class KF8Converter extends HuffCdicBase {
     if (detected && !this.detectedEntryFormat) {
       this.detectedEntryFormat = detected;
       addLog(
-          this.t("logDetectedEntryFormat", "Detected entry format: {format}", {
-            format: detected,
-          }),
+        this.t("logDetectedEntryFormat", "Detected entry format: {format}", {
+          format: detected,
+        }),
       );
     }
 
@@ -124,11 +132,11 @@ class KF8Converter extends HuffCdicBase {
       const word = valueM[1].trim();
       if (!word || word.length >= 120) continue;
       let def = block
-          .replace(/<idx:entry[^>]*>/gi, "")
-          .replace(/<\/idx:entry>/gi, "")
-          .replace(/<idx:orth[^>]*>[\s\S]*?<\/idx:orth>/gi, "")
-          .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, "")
-          .trim();
+        .replace(/<idx:entry[^>]*>/gi, "")
+        .replace(/<\/idx:entry>/gi, "")
+        .replace(/<idx:orth[^>]*>[\s\S]*?<\/idx:orth>/gi, "")
+        .replace(/<idx:infl[\s\S]*?<\/idx:infl>/gi, "")
+        .trim();
       def = styleFn(word, `<span><b>${word}</b></span> ${def}`);
       // Keep raw idx block for synonym extraction (idx:iform inflections).
       this._ingestEntry(word, def, block);
@@ -174,7 +182,7 @@ class KF8Converter extends HuffCdicBase {
 
       // Defensive guard: reject overlap/boundary fragments unless headword starts the paragraph.
       const headAtStart = pContent.match(
-          /^\s*<p\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i,
+        /^\s*<p\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i,
       );
       if (!headAtStart) continue;
 
@@ -183,28 +191,28 @@ class KF8Converter extends HuffCdicBase {
       if (headInner.includes("<")) {
         // Boundary-fragment paragraphs sometimes leak POS markup into the headword field.
         const plain = headInner
-            .replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
         const candidate = plain.split("/")[0].trim();
         if (!candidate || candidate.length >= 120) continue;
         if (
-            /\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(
-                plain,
-            )
+          /\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(
+            plain,
+          )
         )
           continue;
         word = candidate;
         pContent = pContent.replace(
-            /(^\s*<p\b[^>]*>\s*<span\s*>\s*<b>)[\s\S]*?(<\/b>\s*<\/span>)/i,
-            `$1${word}$2`,
+          /(^\s*<p\b[^>]*>\s*<span\s*>\s*<b>)[\s\S]*?(<\/b>\s*<\/span>)/i,
+          `$1${word}$2`,
         );
       } else {
         word = headInner.replace(/\s+/g, " ").trim();
         if (
-            /\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(
-                word,
-            )
+          /\/\s*(?:adj|adv|n|v|prep|conj|pron|interj|biol|fin|am)\.?\b/i.test(
+            word,
+          )
         )
           continue;
       }
@@ -228,21 +236,33 @@ class KF8Converter extends HuffCdicBase {
     for (let i = 0; i < starts.length; i++) {
       const s = starts[i];
       const headInner = (s.headInner || "")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
       if (!headInner || headInner.length > 120) continue;
 
       const blockStart = s.index;
       const blockEnd =
-          i + 1 < starts.length ? starts[i + 1].index : html.length;
+        i + 1 < starts.length ? starts[i + 1].index : html.length;
 
       if (!isFinal && i === starts.length - 1) break;
 
       let block = html.slice(blockStart, blockEnd);
-      block = block
-          .replace(/\s*<hr\b[^>]*>\s*(?:<div\b[^>]*>\s*)?$/i, "")
-          .trim();
+
+      // Trim trailing <hr> separator (and optional trailing <div>) using lastIndexOf
+      // instead of scanning the whole block with a regex from position 0.
+      // This avoids O(|block|) regex scan on every entry and eliminates backtracking.
+      const hrPos = block.lastIndexOf('<hr');
+      if (hrPos !== -1) {
+        const suffix = block.slice(hrPos);
+        if (/^<hr\b[^>]*>\s*(?:<div\b[^>]*>\s*)?$/i.test(suffix)) {
+          // Trim any leading whitespace before the <hr> too
+          let cut = hrPos;
+          while (cut > 0 && (block[cut-1] === ' ' || block[cut-1] === '\n' || block[cut-1] === '\r' || block[cut-1] === '\t')) cut--;
+          block = block.slice(0, cut);
+        }
+      }
+      block = block.trim();
       if (!block) continue;
 
       const def = styleFn(headInner, block);
@@ -257,15 +277,15 @@ class KF8Converter extends HuffCdicBase {
     const normalizeCandidate = (raw) => {
       if (!raw) return "";
       return raw
-          .replace(/<[^>]+>/g, " ")
-          .replace(/&nbsp;/gi, " ")
-          .replace(/&amp;/gi, "&")
-          .replace(/&quot;/gi, '"')
-          .replace(/&#39;/gi, "'")
-          .normalize("NFKC")
-          .replace(/^[\s,;:()\[\]{}"'`]+|[\s,;:()\[\]{}"'`]+$/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .normalize("NFKC")
+        .replace(/^[\s,;:()\[\]{}"'`]+|[\s,;:()\[\]{}"'`]+$/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
     };
 
     const maybeAddSyn = (candidate) => {
@@ -288,10 +308,10 @@ class KF8Converter extends HuffCdicBase {
       if (c === b + "s" || c === b + "ed" || c === b + "ing") return true;
       if (/(s|x|z|ch|sh|o)$/.test(b) && c === b + "es") return true;
       if (
-          b.endsWith("y") &&
-          b.length > 2 &&
-          !/[aeiou]y$/.test(b) &&
-          c === b.slice(0, -1) + "ies"
+        b.endsWith("y") &&
+        b.length > 2 &&
+        !/[aeiou]y$/.test(b) &&
+        c === b.slice(0, -1) + "ies"
       )
         return true;
       return false;
@@ -299,70 +319,76 @@ class KF8Converter extends HuffCdicBase {
 
     // 1. Subscript-stripped variant: word1 / word2 -> word
     const stripped = canonicalWord
-        .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3\u2070]$/, "")
-        .trim();
+      .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3\u2070]$/, "")
+      .trim();
     if (
-        stripped !== canonicalWord &&
-        stripped.length > 1 &&
-        !this.synMap.has(stripped)
+      stripped !== canonicalWord &&
+      stripped.length > 1 &&
+      !this.synMap.has(stripped)
     )
       this.synMap.set(stripped, canonicalWord);
 
-    // 1b. KF8 inflections from idx metadata, e.g. <idx:iform value="workers">
-    if (/<idx:entry\b/i.test(html)) this.synStats.idxBlocks++;
-    const extractIformValue = (attrs, inner) => {
-      const vm = attrs.match(
+    // 1b & 2: idx:iform and <span><b> patterns are only present in the KF8
+    // "main" (idx:entry-based) format.  Skip entirely for header-block dicts
+    // (e.g. SJP2) to avoid 600K+ pointless regex scans.
+    const isHeaderBlock = this.detectedEntryFormat === "header-block";
+
+    if (!isHeaderBlock) {
+      // 1b. KF8 inflections from idx metadata, e.g. <idx:iform value="workers">
+      if (/<idx:entry\b/i.test(html)) this.synStats.idxBlocks++;
+      const extractIformValue = (attrs, inner) => {
+        const vm = attrs.match(
           /\bvalue\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i,
-      );
-      return vm ? vm[1] || vm[2] || vm[3] || "" : inner || "";
-    };
-    const iformPairRe = /<idx:iform\b([^>]*)>([\s\S]*?)<\/idx:iform>/gi;
-    let ifm;
-    while ((ifm = iformPairRe.exec(html)) !== null) {
-      this.synStats.idxIformsSeen++;
-      if (maybeAddSyn(extractIformValue(ifm[1] || "", ifm[2] || "")))
-        this.synStats.idxIformsAdded++;
-    }
-    const iformSelfRe = /<idx:iform\b([^>]*)\/>/gi;
-    while ((ifm = iformSelfRe.exec(html)) !== null) {
-      this.synStats.idxIformsSeen++;
-      if (maybeAddSyn(extractIformValue(ifm[1] || "", "")))
-        this.synStats.idxIformsAdded++;
-    }
+        );
+        return vm ? vm[1] || vm[2] || vm[3] || "" : inner || "";
+      };
+      const iformPairRe = /<idx:iform\b([^>]*)>([\s\S]*?)<\/idx:iform>/gi;
+      let ifm;
+      while ((ifm = iformPairRe.exec(html)) !== null) {
+        this.synStats.idxIformsSeen++;
+        if (maybeAddSyn(extractIformValue(ifm[1] || "", ifm[2] || "")))
+          this.synStats.idxIformsAdded++;
+      }
+      const iformSelfRe = /<idx:iform\b([^>]*)\/>/gi;
+      while ((ifm = iformSelfRe.exec(html)) !== null) {
+        this.synStats.idxIformsSeen++;
+        if (maybeAddSyn(extractIformValue(ifm[1] || "", "")))
+          this.synStats.idxIformsAdded++;
+      }
 
-    // 2. Sub-phrase <span><b>phrase</b></span> entries (multi-word or different from headword)
-    for (const m of html.matchAll(
+      // 2. Sub-phrase <span><b>phrase</b></span> entries (multi-word or different from headword)
+      for (const m of html.matchAll(
         /<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/gi,
-    )) {
-      const phrase = m[1].replace(/<[^>]+>/g, "").trim();
-      if (!phrase || phrase.toLowerCase() === canonicalWord.toLowerCase())
-        continue;
-      if (phrase.length < 2 || phrase.length > 80) continue;
-      if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
+      )) {
+        const phrase = m[1].replace(/<[^>]+>/g, "").trim();
+        if (!phrase || phrase.toLowerCase() === canonicalWord.toLowerCase())
+          continue;
+        if (phrase.length < 2 || phrase.length > 80) continue;
+        if (!this.synMap.has(phrase)) this.synMap.set(phrase, canonicalWord);
 
-      // Fallback for dictionaries that strip idx:iform metadata: derive tail inflection from phrases.
-      // Example: "core workers" -> add "workers" as alias of "worker".
-      const toks = phrase.split(/\s+/).filter(Boolean);
-      if (toks.length >= 2) {
-        const tail = toks[toks.length - 1].replace(
+        // Fallback for dictionaries that strip idx:iform metadata.
+        const toks = phrase.split(/\s+/).filter(Boolean);
+        if (toks.length >= 2) {
+          const tail = toks[toks.length - 1].replace(
             /^[^A-Za-z0-9'-]+|[^A-Za-z0-9'-]+$/g,
             "",
-        );
-        if (looksLikeInflectionOf(tail, canonicalWord) && maybeAddSyn(tail))
-          this.synStats.phraseTailAdded++;
+          );
+          if (looksLikeInflectionOf(tail, canonicalWord) && maybeAddSyn(tail))
+            this.synStats.phraseTailAdded++;
+        }
       }
     }
 
     // 3. Plural markers in parentheses, e.g. (<i>l.m.</i> <b>visionaries</b>)
     for (const m of html.matchAll(
-        /\(\s*<i[^>]*>\s*(?:l\.?\s*m\.?|liczba\s+mnoga|plural|pl\.?)\s*<\/i>\s*<b[^>]*>([\s\S]*?)<\/b>\s*\)/gi,
+      /\(\s*<i[^>]*>\s*(?:l\.?\s*m\.?|liczba\s+mnoga|plural|pl\.?)\s*<\/i>\s*<b[^>]*>([\s\S]*?)<\/b>\s*\)/gi,
     )) {
       maybeAddSyn(m[1]);
     }
 
     // 4. "tez X" / "also X" alternate forms
     for (const m of html.matchAll(
-        /\((?:też|also)\s+<b[^>]*>([\s\S]*?)<\/b>/gi,
+      /\((?:też|also)\s+<b[^>]*>([\s\S]*?)<\/b>/gi,
     )) {
       maybeAddSyn(m[1]);
     }
@@ -393,9 +419,9 @@ class KF8Converter extends HuffCdicBase {
         for (; i < lim; i++) {
           const start = this.recs[i];
           const end =
-              i + 1 < this.recs.length
-                  ? this.recs[i + 1]
-                  : this.buffer.byteLength;
+            i + 1 < this.recs.length
+              ? this.recs[i + 1]
+              : this.buffer.byteLength;
           let data = this.raw.subarray(start, end);
           data = this.stripTrailing(data, extraFlags);
           const dec = this.decompress(data);
@@ -405,11 +431,11 @@ class KF8Converter extends HuffCdicBase {
             firstDecodedLogged = true;
             const preview = text.substring(0, 300).replace(/[\r\n]+/g, " ");
             addLog(
-                this.t(
-                    "logFirstRecordDecoded",
-                    "First record decoded ({bytes} bytes). Preview:\n  {preview}",
-                    { bytes: dec.length, preview },
-                ),
+              this.t(
+                "logFirstRecordDecoded",
+                "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+                { bytes: dec.length, preview },
+              ),
             );
           }
 
@@ -421,25 +447,25 @@ class KF8Converter extends HuffCdicBase {
         if (i < endExclusive) {
           if (i % 500 < BATCH)
             addLog(
-                this.t(
-                    "logDecompressing",
-                    "Decompressing: {current}/{max}... entries so far: {entries}",
-                    {
-                      current: i,
-                      max: textRecordMax,
-                      entries: this.finalMap.size,
-                    },
-                ),
+              this.t(
+                "logDecompressing",
+                "Decompressing: {current}/{max}... entries so far: {entries}",
+                {
+                  current: i,
+                  max: textRecordMax,
+                  entries: this.finalMap.size,
+                },
+              ),
             );
           setTimeout(processChunk, 0);
         } else {
           this.extractEntriesFrom(overlap, true);
           addLog(
-              this.t(
-                  "logExtractionComplete",
-                  "Extraction complete: {entries} unique entries.",
-                  { entries: this.finalMap.size },
-              ),
+            this.t(
+              "logExtractionComplete",
+              "Extraction complete: {entries} unique entries.",
+              { entries: this.finalMap.size },
+            ),
           );
           resolve();
         }
@@ -452,9 +478,9 @@ class KF8Converter extends HuffCdicBase {
   async run() {
     this.buildRecords();
     addLog(
-        this.t("logPdbRecords", "PDB records: {count}", {
-          count: this.recs.length,
-        }),
+      this.t("logPdbRecords", "PDB records: {count}", {
+        count: this.recs.length,
+      }),
     );
 
     const extraFlags = this.findExtraDataFlags();
@@ -464,10 +490,10 @@ class KF8Converter extends HuffCdicBase {
     for (let i = 0; i < this.recs.length; i++) {
       const o = this.recs[i];
       if (
-          this.raw[o] === 72 &&
-          this.raw[o + 1] === 85 &&
-          this.raw[o + 2] === 70 &&
-          this.raw[o + 3] === 70
+        this.raw[o] === 72 &&
+        this.raw[o + 1] === 85 &&
+        this.raw[o + 2] === 70 &&
+        this.raw[o + 3] === 70
       ) {
         huffIdx = i;
         break;
@@ -479,14 +505,14 @@ class KF8Converter extends HuffCdicBase {
     }
     const textRecordMax = this.getTextRecordMax(huffIdx);
     addLog(
-        this.t(
-            "logHuffRecord",
-            "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
-            {
-              huffIdx,
-              textRecordMax,
-            },
-        ),
+      this.t(
+        "logHuffRecord",
+        "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
+        {
+          huffIdx,
+          textRecordMax,
+        },
+      ),
     );
 
     this.loadHuff(this.recs[huffIdx]);
@@ -494,10 +520,10 @@ class KF8Converter extends HuffCdicBase {
 
     if (this.dict.length === 0) {
       addLog(
-          this.t(
-              "logErrorEmptySymbolDict",
-              "ERROR: Symbol dictionary is empty. Cannot decompress.",
-          ),
+        this.t(
+          "logErrorEmptySymbolDict",
+          "ERROR: Symbol dictionary is empty. Cannot decompress.",
+        ),
       );
       return this.finalMap;
     }
@@ -508,18 +534,13 @@ class KF8Converter extends HuffCdicBase {
     if (this.options.generateSyn) {
       try {
         addLog(this.t('logParsingMobiIndex', 'Parsing MOBI INDX inflection index...'));
-        const inflMap = this.parseMobiIndexes();
-        let added = 0;
-        for (const [form, headword] of inflMap) {
-          if (!this.synMap.has(form) && form !== headword) {
-            this.synMap.set(form, headword);
-            added++;
-          }
-        }
-        if (inflMap.size > 0) {
+        // parseMobiIndexes writes directly into synMap (via outputMap parameter),
+        // so no merge loop is needed; inflAdded is reported via .size on the proxy.
+        const result = this.parseMobiIndexes();
+        if (result.size > 0) {
           addLog(this.t('logMobiIndexResult',
-              'MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.',
-              { total: inflMap.size, added }));
+            'MOBI INDX: {added} new syn entries added.',
+            { added: result.size }));
         } else {
           addLog(this.t('logMobiIndexNone', 'MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).'));
         }
@@ -530,22 +551,22 @@ class KF8Converter extends HuffCdicBase {
 
     if (this.options.generateSyn) {
       addLog(
-          this.t(
-              "logSynStats",
-              "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
-              {
-                idxBlocks: this.synStats.idxBlocks,
-                idxIformsSeen: this.synStats.idxIformsSeen,
-                idxIformsAdded: this.synStats.idxIformsAdded,
-                phraseTailAdded: this.synStats.phraseTailAdded,
-              },
-          ),
+        this.t(
+          "logSynStats",
+          "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+          {
+            idxBlocks: this.synStats.idxBlocks,
+            idxIformsSeen: this.synStats.idxIformsSeen,
+            idxIformsAdded: this.synStats.idxIformsAdded,
+            phraseTailAdded: this.synStats.phraseTailAdded,
+          },
+        ),
       );
     }
     addLog(
-        this.t("logSynonymsCollected", "Synonyms collected: {count}", {
-          count: this.synMap.size,
-        }),
+      this.t("logSynonymsCollected", "Synonyms collected: {count}", {
+        count: this.synMap.size,
+      }),
     );
     return { finalMap: this.finalMap, synMap: this.synMap };
   }

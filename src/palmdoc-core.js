@@ -29,9 +29,9 @@ class PalmDocBase {
     for (let j = 0; j < 15; j++) {
       if ((flags >> (j + 1)) & 1) {
         let size = 0,
-            pos = data.length - 1 - trim;
+          pos = data.length - 1 - trim;
         let v = data[pos],
-            shift = 7;
+          shift = 7;
         size = v & 0x7f;
         while ((v & 0x80) === 0 && pos > 0) {
           v = data[--pos];
@@ -43,8 +43,8 @@ class PalmDocBase {
     }
     if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
     return trim > 0 && trim < data.length
-        ? data.slice(0, data.length - trim)
-        : data;
+      ? data.subarray(0, data.length - trim)
+      : data;
   }
 
   // ── PalmDoc LZ77 decompression ────────────────────────────────────────────
@@ -81,8 +81,8 @@ class PalmDocBase {
     if (idx < 1 || idx >= this.records.length) return "";
     const start = this.records[idx].offset;
     const end = this.records[idx + 1]
-        ? this.records[idx + 1].offset
-        : this.buffer.byteLength;
+      ? this.records[idx + 1].offset
+      : this.buffer.byteLength;
     let data = new Uint8Array(this.buffer, start, end - start);
     data = this.stripTrailing(data, this.extraFlags);
     const out = this.decompressPalmDoc(data);
@@ -94,10 +94,10 @@ class PalmDocBase {
   // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
   // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
   // order, and would cause wrong headword↔group mappings.
-  parseMobiIndexes() {
+  parseMobiIndexes(outputMap) {
     const raw = new Uint8Array(this.buffer);
     const offsets = this.records.map(r => r.offset);
     const logFn = typeof addLog === 'function' ? addLog : (typeof this.log === 'function' ? this.log : null);
-    return parseMobiIndexes(raw, offsets, logFn, null);
+    return parseMobiIndexes(raw, offsets, logFn, null, outputMap);
   }
 }

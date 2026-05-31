@@ -525,7 +525,7 @@
       //        Label bytes starting with 0x01 are grammar/metadata entries (skipped).
       //        INFL labels are always plain UTF-8 (never ORDT-encoded).
       // ─────────────────────────────────────────────────────────────────────────────
-      function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
+      function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap) {
         const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
         // i18n helper: uses global i18nText (defined by the host template) when available,
         // otherwise substitutes variables into the English fallback string directly.
@@ -535,14 +535,16 @@
           return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
             vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
         };
-        const inflMap = new Map();
+        // outputMap: when provided, inflected forms are written directly into this
+        // Map (e.g. the converter's synMap), avoiding a large intermediate collection.
+        const inflMap = outputMap instanceof Map ? outputMap : new Map();
         const utf8 = new TextDecoder('utf-8', { fatal: false });
         const totalLen = raw.length;
 
         const getRec = (i) => {
           const s = recsOffsets[i];
           const e = i + 1 < recsOffsets.length ? recsOffsets[i + 1] : totalLen;
-          return raw.slice(s, e);
+          return raw.subarray(s, e); // zero-copy view
         };
 
         const ru32 = (a, o) =>
@@ -662,11 +664,11 @@
             // Single-byte label length, then label bytes
             const labelLen = rec[pos++];
             if (pos + labelLen > rec.length) break;
-            const labelBytes = rec.slice(pos, pos + labelLen);
+            const labelBytes = rec.subarray(pos, pos + labelLen); // zero-copy view
             pos += labelLen;
 
             if (pos + tagx.ctrlByteCount > rec.length) break;
-            const ctrlBytes = rec.slice(pos, pos + tagx.ctrlByteCount);
+            const ctrlBytes = rec.subarray(pos, pos + tagx.ctrlByteCount); // zero-copy view
             pos += tagx.ctrlByteCount;
 
             // Two-pass tag-value parsing (mirrors KindleUnpack's getTagMap design):
@@ -810,19 +812,41 @@
         // Read ORDT from the ORTH control record for correct label decoding.
         const orthOrdt = readOrdt(getRec(orthGroup.ctrlRecIdx));
 
-        // Build ordered ORTH headwords array from all ORTH sub-records.
-        // Always decode from binary using ORDT when available, so the array is in
-        // the correct ORTH index ordinal order (critical for group→headword mapping).
-        // The optional externalHeadwords is accepted only when the caller guarantees
-        // it is indexed by ORTH ordinal (i.e. same order as the binary ORTH index).
+        // Build orthHeadwords AND groupHeadwords in a single pass over ORTH sub-records.
+        // Previously this was two separate passes; combining them halves the ORTH
+        // parsing work and reduces getRec() calls.
         let orthHeadwords;
+        const groupHeadwords = new Map(); // G → string[]
+
         if (Array.isArray(externalHeadwords) && externalHeadwords.length > 0) {
+          // Caller supplied pre-decoded headwords; still need one pass for groupHeadwords.
           orthHeadwords = externalHeadwords;
+          let oOrd = 0;
+          for (const ri of orthGroup.subRecs) {
+            for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
+              const t42 = e.tagVals[42];
+              if (t42 && t42.length > 0) {
+                const g = t42[0];
+                if (!groupHeadwords.has(g)) groupHeadwords.set(g, []);
+                const hw = orthHeadwords[oOrd];
+                if (hw) groupHeadwords.get(g).push(hw);
+              }
+              oOrd++;
+            }
+          }
         } else {
+          // Single combined pass: decode labels AND collect groupHeadwords together.
           orthHeadwords = [];
           for (const ri of orthGroup.subRecs) {
             for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
-              orthHeadwords.push(decodeOrthLabel(e.labelBytes, orthOrdt));
+              const hw = decodeOrthLabel(e.labelBytes, orthOrdt);
+              orthHeadwords.push(hw);
+              const t42 = e.tagVals[42];
+              if (t42 && t42.length > 0) {
+                const g = t42[0];
+                if (!groupHeadwords.has(g)) groupHeadwords.set(g, []);
+                if (hw) groupHeadwords.get(g).push(hw);
+              }
             }
           }
         }
@@ -847,34 +871,9 @@
           }
         }
 
-        // ── Step 2: Build groupHeadwords from ORTH ──────────────────────────────────
-        //
-        // For every ORTH entry that carries tag42=G, store its headword text
-        // in groupHeadwords[G].  We collect ALL headwords per group (not just the
-        // first) so we can generate inflected forms for each headword separately
-        // (e.g., for group 5566: 'arcypies', 'kunopies', 'pies' each get their own
-        // inflected forms 'arcypsa', 'kunopsa', 'psa' etc.).
-        //
-        const groupHeadwords = new Map(); // G → string[]
-        {
-          let oOrd = 0;
-          for (const ri of orthGroup.subRecs) {
-            for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
-              const t42 = e.tagVals[42];
-              if (t42 && t42.length > 0) {
-                const g = t42[0];
-                if (!groupHeadwords.has(g)) groupHeadwords.set(g, []);
-                const hw = orthHeadwords[oOrd];
-                if (hw) groupHeadwords.get(g).push(hw);
-              }
-              oOrd++;
-            }
-          }
-        }
-
         if (groupHeadwords.size === 0) return inflMap;
 
-        // ── Step 3: Process paradigm templates → derive inflected forms ─────────────
+        // ── Step 2: Process paradigm templates → derive inflected forms ─────────────
         //
         // A paradigm template entry at INFL ordinal G corresponds to group G.
         // Its tag26 list contains ordinals of form entries.  Each form entry's label
@@ -890,6 +889,7 @@
         //     form = stem + form_suffix
         //     inflMap.set(form, canonical)   ← unless form == canonical
         //
+        let inflAdded = 0;
         for (let G = 0; G < inflEntries.length; G++) {
           const tmpl = inflEntries[G];
           const t26 = tmpl.tagVals[26];
@@ -915,16 +915,32 @@
                 stem = canonical;
               }
               const form = stem + formSuffix;
-              if (form && form !== canonical) {
+              // !inflMap.has(form) check: first-one-wins deduplication.
+              // When inflMap IS the caller's synMap this also avoids overwriting
+              // synonyms that were already collected from the HTML.
+              if (form && form !== canonical && !inflMap.has(form)) {
                 inflMap.set(form, canonical);
+                inflAdded++;
               }
             }
           }
         }
 
-        if (inflMap.size > 0) {
-          const sample = [...inflMap.entries()].slice(0, 5).map(([k, v]) => `${k}→${v}`).join(', ');
-          log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample }));
+        if (inflAdded > 0) {
+          const sampleEntries = [];
+          let sampled = 0;
+          for (const [k, v] of inflMap) {
+            if (sampled++ >= 5) break;
+            sampleEntries.push(`${k}→${v}`);
+          }
+          log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample: sampleEntries.join(', ') }));
+        }
+
+        // When writing directly into an external map, return a lightweight proxy
+        // object whose .size reports only the newly added count so callers can
+        // still use `inflMap.size > 0` for logging without confusion.
+        if (outputMap instanceof Map) {
+          return { size: inflAdded, entries: () => [][Symbol.iterator]() };
         }
 
         return inflMap;
@@ -977,33 +993,37 @@
           }
           if (flags & 1) trim += (data[data.length - 1 - trim] & 3) + 1;
           return trim > 0 && trim < data.length
-            ? data.slice(0, data.length - trim)
+            ? data.subarray(0, data.length - trim)
             : data;
         }
 
         // ── PalmDoc LZ77 decompression ────────────────────────────────────────────
         decompressPalmDoc(data) {
-          let out = [];
+          // Pre-allocate worst-case output (PalmDoc records expand to at most 4096
+          // bytes, but we allocate generously).  Using a typed array + index counter
+          // avoids the overhead of Array.push() + the final Array→Uint8Array copy.
+          const out = new Uint8Array(data.length * 8 + 256);
+          let outLen = 0;
           for (let j = 0; j < data.length; j++) {
             let b = data[j];
             if (b >= 1 && b <= 8) {
-              for (let k = 0; k < b; k++) out.push(data[++j]);
+              for (let k = 0; k < b; k++) out[outLen++] = data[++j];
             } else if (b <= 127) {
-              out.push(b);
+              out[outLen++] = b;
             } else if (b >= 192) {
-              out.push(32);
-              out.push(b ^ 128);
+              out[outLen++] = 32;
+              out[outLen++] = b ^ 128;
             } else if (b >= 128 && b <= 191) {
               let next = data[++j];
               let dist = (((b << 8) | next) >> 3) & 0x7ff;
               let len = (next & 7) + 3;
-              let s = out.length - dist;
-              if (s >= 0) for (let k = 0; k < len; k++) out.push(out[s + k]);
+              let s = outLen - dist;
+              if (s >= 0) for (let k = 0; k < len; k++) out[outLen++] = out[s + k];
             } else {
-              out.push(b);
+              out[outLen++] = b;
             }
           }
-          return new Uint8Array(out);
+          return out.subarray(0, outLen);
         }
 
         // ── Read, strip, and decompress a single record; return UTF-8 string ──────
@@ -1013,7 +1033,7 @@
           const end = this.records[idx + 1]
             ? this.records[idx + 1].offset
             : this.buffer.byteLength;
-          let data = new Uint8Array(this.buffer.slice(start, end));
+          let data = new Uint8Array(this.buffer, start, end - start);
           data = this.stripTrailing(data, this.extraFlags);
           const out = this.decompressPalmDoc(data);
           return new TextDecoder("utf-8").decode(out);
@@ -1024,11 +1044,11 @@
         // ORDT decoding is handled inside parseMobiIndexes itself, so we do NOT pass
         // finalMap keys here – those are in HTML extraction order, not ORTH ordinal
         // order, and would cause wrong headword↔group mappings.
-        parseMobiIndexes() {
+        parseMobiIndexes(outputMap) {
           const raw = new Uint8Array(this.buffer);
           const offsets = this.records.map(r => r.offset);
           const logFn = typeof addLog === 'function' ? addLog : (typeof this.log === 'function' ? this.log : null);
-          return parseMobiIndexes(raw, offsets, logFn, null);
+          return parseMobiIndexes(raw, offsets, logFn, null, outputMap);
         }
       }
 
@@ -1059,16 +1079,10 @@
           // Step 3: Parse MOBI binary INDX for inflected forms (ORTH+INFL indexes).
           if (this.options.generateSyn) {
             try {
-              const inflMap = this.parseMobiIndexes();
-              let added = 0;
-              for (const [form, headword] of inflMap) {
-                if (!this.synMap.has(form) && form !== headword) {
-                  this.synMap.set(form, headword);
-                  added++;
-                }
-              }
-              if (inflMap.size > 0)
-                this.log(`MOBI INDX: ${inflMap.size} inflected forms decoded, ${added} new syn entries added.`);
+              // Pass synMap directly so forms are written without an intermediate Map.
+              const result = this.parseMobiIndexes(this.synMap);
+              if (result.size > 0)
+                this.log(`MOBI INDX: ${result.size} new syn entries added.`);
               else
                 this.log('MOBI INDX: no ORTH/INFL index found (normal for many MOBI7 files).');
             } catch (e) {
@@ -1092,7 +1106,7 @@
                   i + 1 < numRecords
                     ? this.records[i + 1].offset
                     : this.buffer.byteLength;
-                let data = new Uint8Array(this.buffer.slice(start, end));
+                let data = new Uint8Array(this.buffer, start, end - start);
                 data = this.stripTrailing(data, this.extraFlags);
                 if (data.length === 0) continue;
                 fullHtml += decoder.decode(this.decompressPalmDoc(data));
@@ -1917,68 +1931,80 @@
         links.innerHTML = "";
 
         // Build .dict and .idx
-        // StarDict requires .idx to be sorted alphabetically (case-insensitive)
+        // StarDict requires .idx/.syn to be sorted in strcmp() order (UTF-8 byte
+        // order), not Unicode locale order.  Simple JS string comparison is ~100x
+        // faster than localeCompare and matches the required strcmp semantics.
         const sortedEntries = Array.from(finalMap.entries()).sort(([a], [b]) =>
-          a.toLowerCase().localeCompare(b.toLowerCase()),
+          a < b ? -1 : a > b ? 1 : 0,
         );
+        const count = sortedEntries.length;
 
-        const concatChunks = (chunks, total) => {
-          const out = new Uint8Array(total);
-          let pos = 0;
-          for (const c of chunks) { out.set(c, pos); pos += c.length; }
-          return out;
-        };
-
-        const wordToOrdinal = new Map();
-        const nullByte = new Uint8Array(1);
-        let dictChunks = [], idxChunks = [],
-          dictTotalSize = 0, idxTotalSize = 0,
-          offset = 0, count = 0;
-
-        for (const [word, def] of sortedEntries) {
-          wordToOrdinal.set(word, count);
-          const db = encoder.encode(def);
-          const wb = encoder.encode(word);
-          dictChunks.push(db);
-          dictTotalSize += db.length;
-          idxChunks.push(wb);
-          idxTotalSize += wb.length;
-          idxChunks.push(nullByte);
-          idxTotalSize += 1;
-          const dv = new DataView(new ArrayBuffer(8));
-          dv.setUint32(0, offset, false);
-          dv.setUint32(4, db.length, false);
-          idxChunks.push(new Uint8Array(dv.buffer));
-          idxTotalSize += 8;
-          offset += db.length;
-          count++;
+        // ── encodeInto idx/dict build (no per-entry allocations) ───────────────────
+        let idxEstimate = 0, dictEstimate = 0;
+        for (let i = 0; i < count; i++) {
+          idxEstimate  += sortedEntries[i][0].length * 3 + 9;
+          dictEstimate += sortedEntries[i][1].length + 16;
         }
+        const idxBytes  = new Uint8Array(idxEstimate);
+        const dictBytes = new Uint8Array(dictEstimate);
+        const wordToOrdinal = new Map();
+        let idxPos = 0, dictOff = 0;
+        for (let i = 0; i < count; i++) {
+          wordToOrdinal.set(sortedEntries[i][0], i);
+          const wr = encoder.encodeInto(sortedEntries[i][0], idxBytes.subarray(idxPos));
+          idxPos += wr.written;
+          idxBytes[idxPos++] = 0;
+          const hdr = idxPos; idxPos += 8;
+          const dr = encoder.encodeInto(sortedEntries[i][1], dictBytes.subarray(dictOff));
+          const dLen = dr.written;
+          idxBytes[hdr]   = (dictOff >>> 24) & 0xFF; idxBytes[hdr+1] = (dictOff >>> 16) & 0xFF;
+          idxBytes[hdr+2] = (dictOff >>>  8) & 0xFF; idxBytes[hdr+3] =  dictOff         & 0xFF;
+          idxBytes[hdr+4] = (dLen    >>> 24) & 0xFF; idxBytes[hdr+5] = (dLen    >>> 16) & 0xFF;
+          idxBytes[hdr+6] = (dLen    >>>  8) & 0xFF; idxBytes[hdr+7] =  dLen            & 0xFF;
+          dictOff += dLen;
+        }
+        const idxTotalSize  = idxPos;
+        const dictTotalSize = dictOff;
 
         // Build .syn only from real alternate -> canonical mappings.
         let synCount = 0;
-        let synChunks = [], synTotalSize = 0;
+        let synBytesArr = null;
 
         if (generateSyn && synMap && synMap.size > 0) {
-          const validSyns = [];
+          // Use parallel arrays to avoid 2.4M [alt, ordinal] pair object allocations.
+          const synWords = [];
+          const synOrdinals = [];
           for (const [alt, canonical] of synMap.entries()) {
             if (!wordToOrdinal.has(canonical)) continue;
             if (wordToOrdinal.has(alt)) continue;
-            validSyns.push([alt, wordToOrdinal.get(canonical)]);
+            synWords.push(alt);
+            synOrdinals.push(wordToOrdinal.get(canonical));
           }
-          validSyns.sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
+          // Sort index array by word — avoids moving large string objects.
+          const synIdx = new Uint32Array(synWords.length);
+          for (let i = 0; i < synWords.length; i++) synIdx[i] = i;
+          synIdx.sort((a, b) => {
+            const wa = synWords[a], wb = synWords[b];
+            return wa < wb ? -1 : wa > wb ? 1 : 0;
+          });
+          synCount = synWords.length;
 
-          for (const [alt, ordinal] of validSyns) {
-            const ab = encoder.encode(alt);
-            synChunks.push(ab);
-            synTotalSize += ab.length;
-            synChunks.push(nullByte);
-            synTotalSize += 1;
-            const dv = new DataView(new ArrayBuffer(4));
-            dv.setUint32(0, ordinal, false);
-            synChunks.push(new Uint8Array(dv.buffer));
-            synTotalSize += 4;
+          let synEstimate = 0;
+          for (let i = 0; i < synCount; i++)
+            synEstimate += synWords[i].length * 2 + 5;
+          synBytesArr = new Uint8Array(synEstimate);
+          const synDv = new DataView(synBytesArr.buffer);
+          let synPos = 0;
+          for (let i = 0; i < synCount; i++) {
+            const si = synIdx[i];
+            const r = encoder.encodeInto(synWords[si], synBytesArr.subarray(synPos));
+            synPos += r.written;
+            synBytesArr[synPos++] = 0;
+            const ord = synOrdinals[si];
+            synBytesArr[synPos++] = (ord >>> 24) & 0xFF; synBytesArr[synPos++] = (ord >>> 16) & 0xFF;
+            synBytesArr[synPos++] = (ord >>>  8) & 0xFF; synBytesArr[synPos++] =  ord         & 0xFF;
           }
-          synCount = validSyns.length;
+          synBytesArr = synBytesArr.subarray(0, synPos);
           addLog(`Synonym file: ${synCount} entries written.`);
         }
 
@@ -1995,9 +2021,6 @@
         const ifo = ifoLines.join("\n") + "\n";
 
         const ifoBytes = new TextEncoder().encode(ifo);
-        const idxBytes = concatChunks(idxChunks, idxTotalSize);
-        const dictBytes = concatChunks(dictChunks, dictTotalSize);
-        const synBytesArr = synCount > 0 ? concatChunks(synChunks, synTotalSize) : null;
 
         // Optionally compress the .dict data into .dict.dz (dictzip / gzip with RA index)
         let dictFileBytes = dictBytes;
@@ -2005,7 +2028,10 @@
         let dictDzLength = null;
 
         if (compress) {
-          addLog(`🗜 Compressing dictionary data (${dictTotalSize} B)…`);
+          addLog(`🗜 Compressing dictionary data (${dictTotalSize} B) – please wait…`);
+          // Yield to the browser so the log message renders before the synchronous
+          // pako deflation loop begins.
+          await new Promise(r => setTimeout(r, 0));
           const dictDzBytes = await compressDictzip(dictBytes, (done, total) => {
             if (done % 200 === 0 || done === total) {
               addLog(`  Compression: ${done}/${total} chunks…`);

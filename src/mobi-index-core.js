@@ -41,7 +41,7 @@
 //        Label bytes starting with 0x01 are grammar/metadata entries (skipped).
 //        INFL labels are always plain UTF-8 (never ORDT-encoded).
 // ─────────────────────────────────────────────────────────────────────────────
-function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
+function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap) {
   const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
   // i18n helper: uses global i18nText (defined by the host template) when available,
   // otherwise substitutes variables into the English fallback string directly.
@@ -49,9 +49,11 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
     if (typeof i18nText === 'function') return i18nText(key, fallback, vars);
     if (!vars) return fallback;
     return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
-        vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+      vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
   };
-  const inflMap = new Map();
+  // outputMap: when provided, inflected forms are written directly into this
+  // Map (e.g. the converter's synMap), avoiding a large intermediate collection.
+  const inflMap = outputMap instanceof Map ? outputMap : new Map();
   const utf8 = new TextDecoder('utf-8', { fatal: false });
   const totalLen = raw.length;
 
@@ -62,7 +64,7 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   };
 
   const ru32 = (a, o) =>
-      ((a[o] << 24) | (a[o + 1] << 16) | (a[o + 2] << 8) | a[o + 3]) >>> 0;
+    ((a[o] << 24) | (a[o + 1] << 16) | (a[o + 2] << 8) | a[o + 3]) >>> 0;
   const ru16 = (a, o) => ((a[o] << 8) | a[o + 1]) >>> 0;
 
   // Variable-width integer: high bit (0x80) SET = last byte.
@@ -281,8 +283,8 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
 
     const formSuffix      = utf8.decode(reverseBytes(formSuffixBytes));
     const canonicalSuffix = canonicalSuffixBytes
-        ? utf8.decode(reverseBytes(canonicalSuffixBytes))
-        : '';
+      ? utf8.decode(reverseBytes(canonicalSuffixBytes))
+      : '';
 
     return { formSuffix, canonicalSuffix };
   };
@@ -326,19 +328,41 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   // Read ORDT from the ORTH control record for correct label decoding.
   const orthOrdt = readOrdt(getRec(orthGroup.ctrlRecIdx));
 
-  // Build ordered ORTH headwords array from all ORTH sub-records.
-  // Always decode from binary using ORDT when available, so the array is in
-  // the correct ORTH index ordinal order (critical for group→headword mapping).
-  // The optional externalHeadwords is accepted only when the caller guarantees
-  // it is indexed by ORTH ordinal (i.e. same order as the binary ORTH index).
+  // Build orthHeadwords AND groupHeadwords in a single pass over ORTH sub-records.
+  // Previously this was two separate passes; combining them halves the ORTH
+  // parsing work and reduces getRec() calls.
   let orthHeadwords;
+  const groupHeadwords = new Map(); // G → string[]
+
   if (Array.isArray(externalHeadwords) && externalHeadwords.length > 0) {
+    // Caller supplied pre-decoded headwords; still need one pass for groupHeadwords.
     orthHeadwords = externalHeadwords;
+    let oOrd = 0;
+    for (const ri of orthGroup.subRecs) {
+      for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
+        const t42 = e.tagVals[42];
+        if (t42 && t42.length > 0) {
+          const g = t42[0];
+          if (!groupHeadwords.has(g)) groupHeadwords.set(g, []);
+          const hw = orthHeadwords[oOrd];
+          if (hw) groupHeadwords.get(g).push(hw);
+        }
+        oOrd++;
+      }
+    }
   } else {
+    // Single combined pass: decode labels AND collect groupHeadwords together.
     orthHeadwords = [];
     for (const ri of orthGroup.subRecs) {
       for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
-        orthHeadwords.push(decodeOrthLabel(e.labelBytes, orthOrdt));
+        const hw = decodeOrthLabel(e.labelBytes, orthOrdt);
+        orthHeadwords.push(hw);
+        const t42 = e.tagVals[42];
+        if (t42 && t42.length > 0) {
+          const g = t42[0];
+          if (!groupHeadwords.has(g)) groupHeadwords.set(g, []);
+          if (hw) groupHeadwords.get(g).push(hw);
+        }
       }
     }
   }
@@ -363,34 +387,9 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
     }
   }
 
-  // ── Step 2: Build groupHeadwords from ORTH ──────────────────────────────────
-  //
-  // For every ORTH entry that carries tag42=G, store its headword text
-  // in groupHeadwords[G].  We collect ALL headwords per group (not just the
-  // first) so we can generate inflected forms for each headword separately
-  // (e.g., for group 5566: 'arcypies', 'kunopies', 'pies' each get their own
-  // inflected forms 'arcypsa', 'kunopsa', 'psa' etc.).
-  //
-  const groupHeadwords = new Map(); // G → string[]
-  {
-    let oOrd = 0;
-    for (const ri of orthGroup.subRecs) {
-      for (const e of parseSubRec(getRec(ri), orthGroup.tagx)) {
-        const t42 = e.tagVals[42];
-        if (t42 && t42.length > 0) {
-          const g = t42[0];
-          if (!groupHeadwords.has(g)) groupHeadwords.set(g, []);
-          const hw = orthHeadwords[oOrd];
-          if (hw) groupHeadwords.get(g).push(hw);
-        }
-        oOrd++;
-      }
-    }
-  }
-
   if (groupHeadwords.size === 0) return inflMap;
 
-  // ── Step 3: Process paradigm templates → derive inflected forms ─────────────
+  // ── Step 2: Process paradigm templates → derive inflected forms ─────────────
   //
   // A paradigm template entry at INFL ordinal G corresponds to group G.
   // Its tag26 list contains ordinals of form entries.  Each form entry's label
@@ -406,6 +405,7 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
   //     form = stem + form_suffix
   //     inflMap.set(form, canonical)   ← unless form == canonical
   //
+  let inflAdded = 0;
   for (let G = 0; G < inflEntries.length; G++) {
     const tmpl = inflEntries[G];
     const t26 = tmpl.tagVals[26];
@@ -431,16 +431,32 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords) {
           stem = canonical;
         }
         const form = stem + formSuffix;
-        if (form && form !== canonical) {
+        // !inflMap.has(form) check: first-one-wins deduplication.
+        // When inflMap IS the caller's synMap this also avoids overwriting
+        // synonyms that were already collected from the HTML.
+        if (form && form !== canonical && !inflMap.has(form)) {
           inflMap.set(form, canonical);
+          inflAdded++;
         }
       }
     }
   }
 
-  if (inflMap.size > 0) {
-    const sample = [...inflMap.entries()].slice(0, 5).map(([k, v]) => `${k}→${v}`).join(', ');
-    log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample }));
+  if (inflAdded > 0) {
+    const sampleEntries = [];
+    let sampled = 0;
+    for (const [k, v] of inflMap) {
+      if (sampled++ >= 5) break;
+      sampleEntries.push(`${k}→${v}`);
+    }
+    log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample: sampleEntries.join(', ') }));
+  }
+
+  // When writing directly into an external map, return a lightweight proxy
+  // object whose .size reports only the newly added count so callers can
+  // still use `inflMap.size > 0` for logging without confusion.
+  if (outputMap instanceof Map) {
+    return { size: inflAdded, entries: () => [][Symbol.iterator]() };
   }
 
   return inflMap;

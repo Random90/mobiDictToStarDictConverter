@@ -14,14 +14,14 @@
       }
 
       :root {
-        --bg: #0d1710;
-        --surface: #152319;
-        --surface2: #1b2e20;
-        --accent: #3ecf76;
-        --accent2: #7dd9a4;
-        --text: #e2e8f0;
-        --muted: #8baa98;
-        --border: #2a4232;
+        --bg: #1c2812;
+        --surface: #2e4220;
+        --surface2: #384e26;
+        --accent: #8acc4a;
+        --accent2: #9ab858;
+        --text: #dfe6da;
+        --muted: #c1cabc;
+        --border: #4a6830;
         --radius: 14px;
         --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
       }
@@ -83,9 +83,9 @@
       .main-header {
         background: linear-gradient(
           135deg,
-          #0a1f10 0%,
-          #0d2b18 60%,
-          #0d1710 100%
+          #283c18 0%,
+          #304820 60%,
+          #1c2812 100%
         );
         padding: 80px 24px 64px;
         text-align: center;
@@ -99,7 +99,7 @@
         inset: 0;
         background: radial-gradient(
           ellipse 70% 60% at 50% 0%,
-          rgba(108, 142, 245, 0.15) 0%,
+          rgba(138, 174, 96, 0.14) 0%,
           transparent 70%
         );
         pointer-events: none;
@@ -112,7 +112,7 @@
       .main-header h1 {
         font-size: clamp(1.8rem, 5vw, 3rem);
         font-weight: 700;
-        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        background: linear-gradient(90deg, #e7ece1, #d6ddcf);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -126,9 +126,9 @@
       }
       .badge {
         display: inline-block;
-        background: rgba(108, 142, 245, 0.15);
-        border: 1px solid rgba(108, 142, 245, 0.4);
-        color: var(--accent);
+        background: rgba(122, 149, 70, 0.22);
+        border: 1px solid rgba(150, 180, 95, 0.45);
+        color: #dbe2d3;
         border-radius: 999px;
         font-size: 0.78rem;
         font-weight: 600;
@@ -177,11 +177,14 @@
       }
 
       .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        border: 1px solid #596f3d;
+        border-top-color: #728c50;
         border-radius: var(--radius);
         padding: 28px 24px;
-        box-shadow: var(--shadow);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
         transition:
           border-color 0.2s,
           transform 0.2s;
@@ -190,8 +193,8 @@
         gap: 12px;
       }
       .card:hover {
-        border-color: var(--accent);
-        transform: translateY(-3px);
+        border-color: #728c50;
+        transform: none;
       }
 
       .card-icon {
@@ -222,8 +225,10 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: linear-gradient(135deg, var(--accent), var(--accent2));
-        color: #fff;
+        background: linear-gradient(135deg, #6f8452 0%, #5c7042 100%);
+        color: #f2f6ee;
+        border: 1px solid #4b5e37;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
         border-radius: 8px;
         padding: 10px 20px;
         font-size: 0.9rem;
@@ -234,9 +239,11 @@
           opacity 0.2s,
           transform 0.15s;
         align-self: flex-start;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
       }
       .btn:hover {
-        opacity: 0.88;
+        background: linear-gradient(135deg, #778c58 0%, #627747 100%);
+        opacity: 1;
         transform: translateY(-1px);
       }
       .btn-ghost {
@@ -259,17 +266,24 @@
         display: flex;
         gap: 16px;
         align-items: flex-start;
-        background: var(--surface);
-        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        border: 1px solid #596f3d;
+        border-top-color: #728c50;
         border-radius: var(--radius);
         padding: 20px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
       }
       .step-num {
         flex-shrink: 0;
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        background: linear-gradient(135deg, #708553 0%, #5a6f41 100%);
+        border: 1px solid #4b5e37;
+        color: #f1f6eb;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -295,11 +309,14 @@
 
       /* ── THEME SHOWCASE ── */
       .theme-showcase {
-        background: var(--surface);
-        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        border: 1px solid #596f3d;
+        border-top-color: #728c50;
         border-radius: var(--radius);
         padding: 20px;
-        box-shadow: var(--shadow);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
         margin-top: 20px;
       }
       .theme-controls {
@@ -317,10 +334,12 @@
       .theme-controls select {
         padding: 6px 10px;
         border-radius: 8px;
-        border: 1px solid var(--border);
-        background: var(--surface2);
+        border: 1px solid #596f3d;
+        border-top-color: #2c3b1e;
+        background: #243118;
         color: var(--text);
         font-size: 0.9rem;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
       }
       .theme-preview {
         border: 1px solid var(--border);
@@ -333,20 +352,24 @@
         line-height: 1.5;
       }
       .tool-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        border: 1px solid #596f3d;
+        border-top-color: #728c50;
         border-radius: var(--radius);
         padding: 20px;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
         transition:
           border-color 0.2s,
           transform 0.2s;
       }
       .tool-card:hover {
-        border-color: var(--accent2);
-        transform: translateY(-2px);
+        border-color: #728c50;
+        transform: none;
       }
       .tool-card h4 {
         font-size: 0.95rem;
@@ -358,7 +381,7 @@
       }
       .tool-card a {
         font-size: 0.85rem;
-        color: var(--accent);
+        color: #dbe2d3;
         text-decoration: none;
         font-weight: 600;
       }
@@ -368,15 +391,18 @@
 
       /* ── DISCLAIMER ── */
       .disclaimer {
-        background: var(--surface);
-        border: 1px solid #3d2a00;
-        border-left: 4px solid #f59e0b;
+        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        border: 1px solid #596f3d;
+        border-top-color: #728c50;
         border-radius: var(--radius);
         padding: 20px 24px;
         font-size: 0.9rem;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
       }
       .disclaimer p {
-        color: #fcd34d;
+        color: #dfe6da;
       }
       .disclaimer p + p {
         color: var(--muted);
@@ -392,7 +418,7 @@
         font-size: 0.85rem;
       }
       footer a {
-        color: var(--accent);
+        color: #dbe2d3;
         text-decoration: none;
       }
       footer a:hover {

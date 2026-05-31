@@ -12,14 +12,14 @@
     <title data-i18n="pageTitle">MOBI Reader</title>
     <style>
       :root {
-        --bg:      #0d1710;
-        --surface: #152319;
-        --surface2:#1b2e20;
-        --accent:  #3ecf76;
-        --accent2: #7dd9a4;
-        --text:    #e2e8f0;
-        --muted:   #8baa98;
-        --border:  #2a4232;
+        --bg:       #1c2812;
+        --surface:  #2e4220;
+        --surface2: #384e26;
+        --accent:   #8acc4a;
+        --accent2:  #9ab858;
+        --text:     #f7ffe1;
+        --muted:    #8a9e68;
+        --border:   #4a6830;
       }
       #langToggle {
         position: fixed;
@@ -70,23 +70,31 @@
         margin-bottom: 12px;
       }
       #formatBadge.kf8    { background:#0f2d18; border:1px solid #3ecf76; color:#7dd9a4; }
-      #formatBadge.palmdoc{ background:#0d2030; border:1px solid #4da6d9; color:#90caf9; }
+      #formatBadge.palmdoc{ background:#1a2830; border:1px solid #4da6d9; color:#90caf9; }
       #formatBadge.unknown{ background:#2b2000; border:1px solid #ffca28; color:#fff59d; }
       /* ── Shared buttons ── */
       .btn {
         padding: 8px 20px;
-        background: var(--accent);
-        color: #0a1510;
-        border: none;
+        background: linear-gradient(180deg, #84a447 0%, #73903a 54%, #617a2d 100%);
+        color: #1b2a0a;
+        border: 1px solid #405f1c;
+        border-top-color: #6e9038;
+        border-bottom: 2px solid #2e4312;
         border-radius: 6px;
         cursor: pointer;
         font-weight: bold;
         margin: 2px;
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.22),
+          inset 0 -1px 0 rgba(0,0,0,.28),
+          0 2px 5px rgba(0,0,0,.42);
       }
+      .btn:hover { filter: brightness(1.07); }
+      .btn:active { transform: translateY(1px); border-bottom-width: 1px; }
       .btn:disabled { opacity: 0.4; cursor: not-allowed; }
       .btn-sm { font-size: 12px; padding: 5px 12px; border-radius: 5px; }
       #log {
-        background: #0a0f0b;
+        background: #1a260e;
         color: #a5d6a7;
         padding: 12px;
         font-family: monospace;
@@ -129,10 +137,14 @@
         min-width: 160px;
         padding: 6px 10px;
         border-radius: 6px;
-        border: 2px solid var(--accent);
-        background: var(--surface2);
+        border: 1px solid #556f35;
+        border-top-color: #273718;
+        background: #1f2b13;
         color: var(--text);
         font-size: 14px;
+        box-shadow:
+          inset 0 2px 6px rgba(0,0,0,.64),
+          inset 0 1px 0 rgba(255,255,255,.04);
       }
       #searchHits { font-size: 12px; color: var(--muted); }
       mark { background: #ffe066; color: #1c1e21; border-radius: 2px; }
@@ -153,7 +165,7 @@
       .pane { display: none; }
       .pane.active { display: block; }
       #rawOutput {
-        background: #0a0f0b;
+        background: #1a260e;
         color: #e8e8e8;
         padding: 15px;
         font-family: monospace;
@@ -174,7 +186,7 @@
         border: 1px solid var(--border);
         font-size: 13px;
       }
-      .badge { background: var(--accent); color: #0a1510; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:bold; }
+      .badge { background: var(--accent); color: #071206; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:bold; }
 
       /* ── PalmDoc reader controls ── */
       #palmSection { display: none; }
@@ -286,7 +298,7 @@
         <div>
           <input type="number" id="jumpTo" data-i18n-ph="jumpPh" placeholder="Record no."
                  style="width:100px;padding:7px;border-radius:4px;border:1px solid #ddd" />
-          <button class="btn" id="jumpBtn" style="background:var(--accent2);color:#0a1510" data-i18n="jumpBtn"></button>
+          <button class="btn" id="jumpBtn" style="background:var(--accent2);color:#071206" data-i18n="jumpBtn"></button>
           <button class="btn" id="palmDownloadHtmlBtn" data-i18n="downloadHtmlBtn"></button>
         </div>
       </div>

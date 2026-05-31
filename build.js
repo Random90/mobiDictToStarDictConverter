@@ -19,20 +19,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Map: template path → output path (both relative to project root)
 const OUTPUTS = [
   {
-    template: "src/mobiKF8HuffConverter.template.html",
-    output: "mobiKF8HuffConverter.html",
+    template: "src/mobiConverter.template.html",
+    output: "mobiConverter.html",
   },
   {
-    template: "src/MobiReader-Huff-KF8.template.html",
-    output: "Tools/MobiReader-Huff-KF8.html",
-  },
-  {
-    template: "src/mobi7PalmDocConverter.template.html",
-    output: "mobi7PalmDocConverter.html",
-  },
-  {
-    template: "src/MobiReader-PalmDoc.template.html",
-    output: "Tools/MobiReader-PalmDoc.html",
+    template: "src/MobiReader.template.html",
+    output: "Tools/MobiReader.html",
   },
   {
     template: "src/StarDictReaderValidator.template.html",

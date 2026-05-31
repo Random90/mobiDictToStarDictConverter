@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PalmDocBase – shared PalmDoc decompression logic
-// Used by mobi7PalmDocConverter.html and Tools/MobiReader-PalmDoc.html
+// Used by mobiConverter.html and Tools/MobiReader.html
 // DO NOT edit the compiled HTML files directly – edit this file and the
 // templates, then run:  node build.js
 // ─────────────────────────────────────────────────────────────────────────────

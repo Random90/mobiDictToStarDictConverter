@@ -14,14 +14,14 @@
       }
 
       :root {
-        --bg: #0f1117;
-        --surface: #1a1d27;
-        --surface2: #22263a;
-        --accent: #6c8ef5;
-        --accent2: #a78bfa;
+        --bg: #0d1710;
+        --surface: #152319;
+        --surface2: #1b2e20;
+        --accent: #3ecf76;
+        --accent2: #7dd9a4;
         --text: #e2e8f0;
-        --muted: #94a3b8;
-        --border: #2d3148;
+        --muted: #8baa98;
+        --border: #2a4232;
         --radius: 14px;
         --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
       }
@@ -83,9 +83,9 @@
       .main-header {
         background: linear-gradient(
           135deg,
-          #12162b 0%,
-          #1e1040 60%,
-          #0f1117 100%
+          #0a1f10 0%,
+          #0d2b18 60%,
+          #0d1710 100%
         );
         padding: 80px 24px 64px;
         text-align: center;
@@ -483,33 +483,21 @@
         </div>
       </section>
 
-      <!-- CONVERTERS -->
+      <!-- CONVERTER -->
       <section>
         <h2 data-i18n="conv.heading"></h2>
         <p data-i18n-html="conv.desc"></p>
 
-        <div class="card-grid" style="margin-top: 24px">
+        <div style="margin-top: 24px">
           <div class="card">
-            <div class="card-icon">⚡</div>
-            <span class="tag" data-i18n="kf8.tag"></span>
-            <h3 data-i18n="kf8.title"></h3>
-            <p data-i18n-html="kf8.desc"></p>
+            <div class="card-icon">📖</div>
+            <span class="tag" data-i18n="conv.tag"></span>
+            <h3 data-i18n="conv.title"></h3>
+            <p data-i18n-html="conv.cardDesc"></p>
             <a
               class="btn"
-              href="mobiKF8HuffConverter.html"
-              data-i18n="kf8.btn"
-            ></a>
-          </div>
-
-          <div class="card">
-            <div class="card-icon">📜</div>
-            <span class="tag" data-i18n="palm.tag"></span>
-            <h3 data-i18n="palm.title"></h3>
-            <p data-i18n-html="palm.desc"></p>
-            <a
-              class="btn"
-              href="mobi7PalmDocConverter.html"
-              data-i18n="palm.btn"
+              href="mobiConverter.html"
+              data-i18n="conv.btn"
             ></a>
           </div>
         </div>
@@ -565,16 +553,9 @@
 
           <div class="tool-card">
             <div style="font-size: 1.4rem">📄</div>
-            <h4 data-i18n="mr.kf8.title"></h4>
-            <p data-i18n="mr.kf8.desc"></p>
-            <a href="Tools/MobiReader-Huff-KF8.html" data-i18n="tool.link"></a>
-          </div>
-
-          <div class="tool-card">
-            <div style="font-size: 1.4rem">📄</div>
-            <h4 data-i18n="mr.palm.title"></h4>
-            <p data-i18n="mr.palm.desc"></p>
-            <a href="Tools/MobiReader-PalmDoc.html" data-i18n="tool.link"></a>
+            <h4 data-i18n="mr.title"></h4>
+            <p data-i18n="mr.desc"></p>
+            <a href="Tools/MobiReader.html" data-i18n="tool.link"></a>
           </div>
 
           <div class="tool-card">
@@ -671,7 +652,7 @@
             .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
             .replace(
               /(<i>(?:[a-z]{2,5})\.<\/i>)/g,
-              '<span style="color:#7c3aed;font-size:.83em">$1</span>',
+              '<span style="color:#059669;font-size:.83em">$1</span>',
             );
 
           let seenHead = false;
@@ -738,19 +719,14 @@
           "main-header.desc":
             'Converter for Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> dictionaries to <strong>StarDict</strong> format I\'ve designed with converting the "Wielki Slownik Angielsko Polski" dictionary to the StarDict format used on other e-readers in mind, such as <strong>Onyx Boox</strong>, <strong>Kobo</strong>, or in the <strong>KOReader</strong> app. Just download the .html file (or use the link below), choose your dictionary, and convert it.',
           "main-header.badge": "✨ 100% client-side code",
-          "conv.heading": "🔄 Converters",
+          "conv.heading": "🔄 Converter",
           "conv.desc":
-            'Two converters are available depending on the <code>.mobi</code> format. Tested compatibility now includes <b>Wielki Slownik Angielsko-Polski</b>, free <b>SJP2 (KF8)</b> from <a style="color:var(--accent);text-decoration:none;" href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>, and free dictionaries (PalmDoc) from <a style="color:var(--accent);text-decoration:none;" href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a> (e.g. zbiorczy slownik czesko-polski, zbiorczy slownik wlosko-polski).',
-          "kf8.tag": "KF8 · Newer editions",
-          "kf8.title": "KF8 / Huff Converter",
-          "kf8.desc":
-            'For dictionaries in modern <b>KF8</b> format with HUFF/CDIC compression. Tested with Wielki Slownik Ang-Pol 2023+ and free <b>SJP2</b> from <a style="color:var(--accent);text-decoration:none;" href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>.',
-          "kf8.btn": "Open Converter →",
-          "palm.tag": "Mobi 7 · Older editions",
-          "palm.title": "PalmDoc Converter",
-          "palm.desc":
-            'For older <b>Mobi 7 / PalmDoc</b> dictionaries. Tested with Wielki Slownik Ang-Pol 2014 and dictionaries from <a style="color:var(--accent);text-decoration:none;" href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a> such as zbiorczy slownik czesko-polski and zbiorczy slownik wlosko-polski.',
-          "palm.btn": "Open Converter →",
+            'Tested compatibility includes <b>Wielki Slownik Angielsko-Polski</b> (2014 PalmDoc &amp; 2023+ KF8), <b> e-słownik SJP2 (KF8)</b> from <a style="color:var(--accent);text-decoration:none;" href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>, and free PalmDoc dictionaries from <a style="color:var(--accent);text-decoration:none;" href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>.',
+          "conv.tag": "KF8 · PalmDoc · Auto-detect",
+          "conv.title": "MOBI → StarDict Converter",
+          "conv.cardDesc":
+            'Supports both modern <b>KF8/HUFF</b> and legacy <b>PalmDoc/Mobi7</b> formats. Upload your <code>.mobi</code> file and the format is detected automatically.',
+          "conv.btn": "Open Converter →",
           "theme.heading": "🎨 Style Showcase",
           "theme.desc":
             "You can choose additional entry styles beyond the original dictionary formatting to improve readability on e-ink devices.",
@@ -760,12 +736,12 @@
           "theme.eink": "E-ink mono - high contrast, no color styling",
           "theme.rich": "Rich Color - full color-coded sections",
           "how.heading": "🚀 How to use",
-          "s1.title": "Pick the right converter",
+          "s1.title": "Open the converter",
           "s1.desc":
-            "Choose KF8 for newer editions or PalmDoc for older ones. If you are unsure, start with KF8 or use the version tester below.",
-          "s2.title": "Open the converter & select your file",
+            "There is one converter that supports all .mobi dictionary formats. Click <em>Open Converter</em> to start.",
+          "s2.title": "Select your file",
           "s2.desc":
-            "Click <em>Open Converter</em>, then choose your purchased <code>.mobi</code> dictionary file from your device.",
+            "Choose your purchased or downloaded <code>.mobi</code> dictionary file. The format (KF8 or PalmDoc) is detected automatically.",
           "s3.title": "Choose entry style & convert",
           "s3.desc":
             "Choose the StarDict entry style you prefer and click <strong>Start conversion</strong>.",
@@ -779,12 +755,9 @@
           "vt.desc":
             "Detect the format and version of a .mobi file and display its internal metadata.",
           "tool.link": "Open tool →",
-          "mr.kf8.title": "Mobi Reader - KF8",
-          "mr.kf8.desc":
-            "Browse the contents of a KF8 .mobi file. Shows raw HTML and rendered view side by side.",
-          "mr.palm.title": "Mobi Reader - PalmDoc",
-          "mr.palm.desc":
-            "The same reader for older PalmDoc .mobi files. Inspect entries and internal structure.",
+          "mr.title": "Mobi Reader",
+          "mr.desc":
+            "Browse the contents of any .mobi file (KF8 or PalmDoc). Format is auto-detected. Shows raw HTML and rendered view.",
           "sd.title": "StarDict Validator",
           "sd.desc":
             "Load converted StarDict files, search entries, and verify the conversion result.",
@@ -809,19 +782,14 @@
           "main-header.desc":
             'Konwerter dla słowników Kindle <code style="font-family:monospace;color:var(--accent)">.mobi</code> do formatu <strong>StarDict</strong>, który zaprojektowałem z myślą o przekonwertowaniu „Wielkiego Słownika Angielsko Polskiego” do formatu StarDict używanego na innych czytnikach, takich jak <strong>Onyx Boox</strong>, <strong>Kobo</strong> czy w aplikacji <strong>KOReader</strong>.  Wystarczy pobrać plik .html (lub użyć linka poniżej), wybrać swój słownik i przekonwertować. ',
           "main-header.badge": "✨ Kod 100% działający po stronie użytkownika",
-          "conv.heading": "🔄 Konwertery",
+          "conv.heading": "🔄 Konwerter",
           "conv.desc":
-            'Dostępne są dwa konwertery w zależności od formatu <code>.mobi</code>. Potwierdzona kompatybilność obejmuje teraz <b>Wielki Slownik Angielsko-Polski</b>, darmowy <b>SJP2 (KF8)</b> ze strony <a style="color:var(--accent);text-decoration:none;" href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a> oraz darmowe slowniki (PalmDoc) z <a style="color:var(--accent);text-decoration:none;" href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a> (np. zbiorczy słownik czesko-polski, zbiorczy słownik wlosko-polski).',
-          "kf8.tag": "KF8 · Nowsze wydania",
-          "kf8.title": "Konwerter KF8 / Huff",
-          "kf8.desc":
-            'Dla słowników w nowoczesnym formacie <b>KF8</b> z kompresją HUFF/CDIC. Przetestowany z Wielkim Słownikiem Ang-Pol 2023+ oraz darmowym <b>SJP2</b> ze strony <a style="color:var(--accent);text-decoration:none;" href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>.',
-          "kf8.btn": "Otwórz konwerter →",
-          "palm.tag": "Mobi 7 · Starsze wydania",
-          "palm.title": "Konwerter PalmDoc",
-          "palm.desc":
-            'Dla starszych słownikow <b>Mobi 7 / PalmDoc</b>. Przetestowany z Wielkim Slownikiem Ang-Pol 2014 oraz słownikami ze strony <a style="color:var(--accent);text-decoration:none;" href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>, np. zbiorczy słownik czesko-polski i zbiorczy słownik wlosko-polski.',
-          "palm.btn": "Otwórz konwerter →",
+            'Przetestowana kompatybilność obejmuje <b>Wielki Słownik Angielsko-Polski</b> (2014 PalmDoc i 2023+ KF8), darmowy <b>SJP2 (KF8)</b> ze strony <a style="color:var(--accent);text-decoration:none;" href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a> oraz darmowe słowniki PalmDoc z <a style="color:var(--accent);text-decoration:none;" href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>.',
+          "conv.tag": "KF8 · PalmDoc · Auto-wykrywanie",
+          "conv.title": "Konwerter MOBI → StarDict",
+          "conv.cardDesc":
+            'Obsługuje zarówno nowoczesny format <b>KF8/HUFF</b>, jak i starszy <b>PalmDoc/Mobi7</b>. Wgraj plik <code>.mobi</code> - format zostanie wykryty automatycznie.',
+          "conv.btn": "Otwórz konwerter →",
           "theme.heading": "🎨 Podgląd stylów",
           "theme.desc":
             "Możesz wybrać dodatkowe style wpisów poza oryginalnym formatowaniem słownika, aby poprawić czytelność na urządzeniach e-ink.",
@@ -831,12 +799,12 @@
           "theme.eink": "E-ink mono - wysoki kontrast, bez kolorowania",
           "theme.rich": "Kolorowy - pełne kolorowanie sekcji",
           "how.heading": "🚀 Jak używać",
-          "s1.title": "Wybierz odpowiedni konwerter",
+          "s1.title": "Otwórz konwerter",
           "s1.desc":
-            "Wybierz KF8 dla nowszych wydań lub PalmDoc dla starszych. W razie wątpliwości zacznij od KF8 lub użyj testera wersji poniżej.",
-          "s2.title": "Otwórz konwerter i wybierz plik",
+            "Jest jeden konwerter obsługujący wszystkie formaty .mobi. Kliknij <em>Otwórz konwerter</em>, aby rozpocząć.",
+          "s2.title": "Wybierz plik",
           "s2.desc":
-            "Kliknij <em>Otwórz konwerter</em>, następnie wybierz zakupiony plik słownika <code>.mobi</code> ze swojego urządzenia.",
+            "Wybierz zakupiony lub pobrany plik słownika <code>.mobi</code>. Format (KF8 lub PalmDoc) jest wykrywany automatycznie.",
           "s3.title": "Wybierz styl wpisów i konwertuj",
           "s3.desc":
             "Wybierz styl wpisów StarDict który ci odpowiada i kliknij <strong>Rozpocznij konwersję</strong>.",
@@ -850,12 +818,9 @@
           "vt.desc":
             "Wykryj format i wersję pliku .mobi oraz wyświetl jego wewnętrzne metadane.",
           "tool.link": "Otwórz narzędzie →",
-          "mr.kf8.title": "Przeglądarka Mobi - KF8",
-          "mr.kf8.desc":
-            "Przeglądaj zawartość pliku KF8 .mobi. Wyświetla widok HTML i podgląd renderowania obok siebie.",
-          "mr.palm.title": "Przeglądarka Mobi - PalmDoc",
-          "mr.palm.desc":
-            "Ta sama przeglądarka dla starszych plików PalmDoc .mobi. Sprawdź wpisy i strukturę wewnętrzną.",
+          "mr.title": "Przeglądarka Mobi",
+          "mr.desc":
+            "Przeglądaj zawartość dowolnego pliku .mobi (KF8 lub PalmDoc). Format wykrywany automatycznie. Wyświetla widok HTML i podgląd renderowania.",
           "sd.title": "Walidator StarDict",
           "sd.desc":
             "Wczytaj skonwertowane pliki StarDict, przeszukuj wpisy i weryfikuj wynik konwersji.",

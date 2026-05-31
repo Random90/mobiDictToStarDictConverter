@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // HuffCdicBase – shared HUFF/CDIC decompression logic
-// Used by mobiKF8HuffConverter.html and Tools/MobiReader-Huff-KF8.html
+// Used by mobiConverter.html and Tools/MobiReader.html
 // DO NOT edit the compiled HTML files directly – edit this file and the
 // templates, then run:  node build.js
 // ─────────────────────────────────────────────────────────────────────────────

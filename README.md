@@ -8,26 +8,23 @@
 
 ## 🇵🇱 Informacja o projekcie [Polish note]
 
-Najlepszy słownik angielsko-polski na czytniki, [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e), jest dostępny wyłącznie w formatach dla Kindle i Pocketbook. Celem tego projektu jest umożliwienie korzystania z tego słownika na innych czytnikach, takich jak np. Onyx Boox, które obsługują format StarDict. Repozytorium zawiera tylko skrypt do konwersji, **słownik należy zakupić samodzielnie**. Jeżeli wystąpią błędy to daj znać, postaram się poprawić. 
+Najlepszy słownik angielsko-polski na czytniki, [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e), jest dostępny wyłącznie w formatach dla Kindle i Pocketbook. Celem tego projektu jest umożliwienie korzystania z tego i innych słowników na innych czytnikach, takich jak np. Onyx Boox, które obsługują format StarDict. Repozytorium zawiera tylko skrypt do konwersji, **słowniki należy zakupić samodzielnie**. Jeżeli wystąpią błędy to daj znać, postaram się poprawić.
 
-Istnieją dwa konwertery w zależności od wersji słownika:
+**Od wersji v2 nie trzeba już wybierać konwertera ręcznie** - format jest wykrywany automatycznie po wczytaniu pliku.
 
-- [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - dla słownika w formacie KF8 (**nowsze wydania**), działa z wersją 2023-2026
-- [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - dla słownika w formacie PalmDoc (**starsze wydania**), działa z wersją 2014 (i prawdopodobnie częcią aktualizcji)
+Konwerter obsługuje też darmowy słownik języka polskiego SJP2, który jest dostępny na [https://cc-sjp.zabałaganionemiejsce.pl/](https://cc-sjp.zabałaganionemiejsce.pl/) oraz słowniki zbiorcze z [https://sowaczyta.pl/slowniki-zbiorcze/](https://sowaczyta.pl/slowniki-zbiorcze/) (np. `zbiorczy słownik czesko-polski`, `zbiorczy słownik włosko-polski`). Jeżeli posiadasz inny słownik w formacie .mobi, możesz spróbować go przekonwertować, ale nie gwarantuję, że będzie działać poprawnie.
 
-Konwerter obsługuje też darmowy słownik języka polskiego SJP2, który jest dostępny na [https://cc-sjp.zabałaganionemiejsce.pl/](https://cc-sjp.zabałaganionemiejsce.pl/) oraz słowniki zbiorcze z [https://sowaczyta.pl/slowniki-zbiorcze/](https://sowaczyta.pl/slowniki-zbiorcze/) (np. `zbiorczy slownik czesko-polski`, `zbiorczy slownik wlosko-polski`).
-Jeżeli posiadasz inny słownik w formacie .mobi, możesz spróbować go przekonwertować, ale nie gwarantuję, że będzie działać poprawnie.
-
-Plik konwertera wysarczy otworzyć w nowym oknie przeglądarki, wybrać plik słownika i kliknąć Convert/Begin. Potem należy pobrać wygenerowane pliki osobno i umieścić w osobnym folderze w katalogu /dict (na Onyx Boox).
+Plik konwertera wystarczy otworzyć w nowym oknie przeglądarki, wybrać plik słownika i kliknąć "Rozpocznij konwersję". Potem należy pobrać wygenerowane pliki osobno i umieścić w osobnym folderze w katalogu /dict (na Onyx Boox; może się różnić na innych czytnikach).
 
 Oprócz samej konwersji, narzędzie oferuje **możliwość ulepszenia wyglądu słownika** poprzez wybór stylu wpisów, które oferują lepszą czytelność i estetykę na ekranach e-ink czarno-białych jak i kolorowych.
 
 ## 📋 Project description
 
-One click offline web converter for .mobi kindle dictionaries to StarDict format. Just grab html file, select you dict and convert.
-Main focus is to convert [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e) to use on other e-readers like Onyx Boox, Kobo or KOReader app which support StarDict format. It might work with other dictionaries in .mobi format, but I've only tested it with that one.
+One click offline web converter for .mobi Kindle dictionaries to StarDict format. Just grab the HTML file, select your dictionary and convert. 
 
-The main motivation for this project was to build a simple tool I would use once for myself, then delete and forget. But I decided to have some fun, quickly build a page, and share it on GitHub.
+**Since v2 The format is detected automatically** - both KF8 and PalmDoc/Mobi7 are handled by a single converter.
+
+Main focus is to convert [Wielki Słownik Angielsko Polski](https://ebookpoint.pl/ksiazki/wielki-slownik-angielsko-polski-zastepuje-slownik-wbudowany-w-kindle-dariusz-jemielniak-marcin-milkowski-red,s_01jj.htm#format/e) to use on other e-readers like Onyx Boox, Kobo or KOReader app which support StarDict format.
 
 Apart from the conversion itself, the tool offers **the ability to enhance the appearance of the dictionary** by choosing entry styles that provide better readability and aesthetics on both black-and-white and color e-ink screens.
 
@@ -37,51 +34,41 @@ Decompress algorithm is based on [KindleUnpack](https://github.com/kevinhendrick
 
 ## 🚀 Usage
 
-Use one of the two converters depending on the version of your dictionary:
+Open [mobiConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiConverter.html), select your `.mobi` dictionary file and click **Start Conversion**. 
 
-- [mobiKF8HuffConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobiKF8HuffConverter.html) - for KF8 format (newer editions)
-- [mobi7PalmDocConverter.html](https://random90.github.io/mobiDictToStarDictConverter/mobi7PalmDocConverter.html) - for PalmDoc format (older editions)
-
-Pick a mobi file, select StarDict entry style and click Convert/Begin. Then download the generated files separately and place them in a separate folder in the /dict directory of your reader (on Onyx Boox, might differ on others).
+Then download the generated files and place them in a separate folder inside the `/dict` directory of your reader (on Onyx Boox; may differ on other readers).
 
 ## ✅ Compatibility (tested)
 
-The converters were tested with the dictionaries below:
-
-- **KF8 / HUFF converter** (`mobiKF8HuffConverter.html`)
-  - Wielki Slownik Angielsko-Polski 2023+
-  - Free SJP2 dictionary: [https://cc-sjp.zabałaganionemiejsce.pl/](https://cc-sjp.zabałaganionemiejsce.pl/)
-
-- **Mobi7 / PalmDoc converter** (`mobi7PalmDocConverter.html`)
-  - Wielki Slownik Angielsko-Polski 2014
-  - Free dictionaries from: [https://sowaczyta.pl/slowniki-zbiorcze/](https://sowaczyta.pl/slowniki-zbiorcze/)
-	- for example: `zbiorczy slownik czesko-polski`, `zbiorczy slownik wlosko-polski`
+| Dictionary                            | Format | Notes |
+|---------------------------------------|---|--|
+| Wielki Słownik Angielsko-Polski 2023+ | **KF8** |  |
+| e-słownik SJP2                        | **KF8** | from [cc-sjp.zabalaganionemiejsce.pl](https://cc-sjp.zabałaganionemiejsce.pl/) |
+| Wielki Słownik Angielsko-Polski 2014  | **PalmDoc** |  |
+| zbiorczy słownik czesko-polski        | **PalmDoc** | from [sowaczyta.pl/slowniki-zbiorcze](https://sowaczyta.pl/slowniki-zbiorcze/) |
+| zbiorczy słownik włosko-polski        | **PalmDoc** | from [sowaczyta.pl/slowniki-zbiorcze](https://sowaczyta.pl/slowniki-zbiorcze/) |
 
 If a dictionary uses a different internal HTML structure, conversion may still work, but please treat it as best-effort and verify the output with the included validator tool.
 
 ## 🧰 Additional tools
 
-Repo contains some additional tools used to inspect and analyze the dictionary files, such as a simple HTML viewer for the .mobi files. These tools are meant to assist in understanding the structure of the .mobi files and to facilitate the conversion process. They are not essential for the conversion itself, but can be helpful for debugging and learning purposes.
-
 ### versionTester.html
 
-Check the version of the .mobi file and shows some additional information about the file.
+Check the version and compression format of any `.mobi` file and show internal metadata.
 
-### MobiReader.html (Huff/PalmDoc)
+### MobiReader.html
 
 Allows you to open and view the contents of a .mobi file in your browser. It provides a basic interface for navigating through the dictionary entries and inspecting the structure of the .mobi file. It shows raw HTML and rendered view side by side.
 
 ### StardictReaderValidator.html
 
-Allows to view the converted StarDict files and validate the conversion process. It has a search functionality to quickly find specific entries and shows them in side by side view of raw HTML and rendered view.
+Load converted StarDict files, search entries, and verify the conversion result.
 
 ## ⚠️ Disclaimer
 
 This project is provided "as is" without any warranties. The conversion process may not be perfect and may result in some loss of formatting or functionality and is not intended for commercial use. The original dictionary is a paid product, and this project does not aim to distribute it in any way. It is solely meant to enable users who have legally purchased the dictionary to use it on different devices.
 
 **No DRM removal is involved in this process**, the tool only extracts and converts the content of the .mobi file. Use at your own risk.
-
-Also note that this tool has been basically written by vibe-coding. It's not the best way to write complicated software, but it useful for one-time use utilities like that. I don't know much about decompressing algorithms. It started out as a typical "google and do the monkey-see-monkey-do" kind of programming, but then I cut out the middle-man, **me**, and just used the LLM to write most of the code.
 
 ## 🛠️ Development
 
@@ -91,33 +78,37 @@ The HTML files served by GitHub Pages are **compiled outputs** - do not edit the
 
 ```
 src/
-├── huffcdic-core.js                      # Shared HUFF/CDIC decompression (HuffCdicBase class)
-├── palmdoc-core.js                       # Shared PalmDoc decompression (PalmDocBase class)
-├── mobiKF8HuffConverter.template.html    # Template → mobiKF8HuffConverter.html
-├── MobiReader-Huff-KF8.template.html     # Template → Tools/MobiReader-Huff-KF8.html
-├── mobi7PalmDocConverter.template.html   # Template → mobi7PalmDocConverter.html
-└── MobiReader-PalmDoc.template.html      # Template → Tools/MobiReader-PalmDoc.html
+├── mobi-detect-core.js                # Shared format detection (detectMobiFormat)
+├── huffcdic-core.js                   # HUFF/CDIC decompression (HuffCdicBase)
+├── palmdoc-core.js                    # PalmDoc decompression (PalmDocBase)
+├── mobi-index-core.js                 # MOBI INDX inflection index parser
+├── kf8-converter.js                   # KF8 converter (KF8Converter)
+├── palmdoc-converter.js               # PalmDoc converter (Converter)
+├── stardict-dictzip-core.js           # StarDict dictzip compression
+├── stardict-validator-core.js         # Inline StarDict validator widget
+├── stardict-output.js                 # Unified StarDict output renderer
+├── i18n-core.js                       # Shared i18n (EN/PL)
+├── mobiConverter.template.html        # Template → mobiConverter.html
+└── MobiReader.template.html           # Template → Tools/MobiReader.html
 
-build.js                                  # Build script (Node.js, no dependencies)
+build.js                               # Build script (Node.js, no external deps)
 
-mobiKF8HuffConverter.html                 # Compiled – KF8 converter (GitHub Pages)
-mobi7PalmDocConverter.html                # Compiled – PalmDoc converter (GitHub Pages)
+mobiConverter.html                     # Compiled – unified converter (GitHub Pages)
 Tools/
-├── MobiReader-Huff-KF8.html             # Compiled – KF8 inspector tool
-├── MobiReader-PalmDoc.html              # Compiled – PalmDoc inspector tool
-├── StarDictReaderValidator.html
-└── versionTester.html
+├── MobiReader.html                    # Compiled – unified MOBI inspector
+├── StarDictReaderValidator.html       # Compiled – StarDict validator
+└── versionTester.html                 # Standalone – format/version diagnostic
 ```
 
 ### ⚙️ Build system
 
-The build script (`build.js`) is a zero-dependency Node.js script. It processes each template file and replaces `@@include` markers with the contents of the referenced source file:
+The build script (`build.js`) processes each template and replaces `@@include` markers with the contents of the referenced source file:
 
 ```js
 // @@include(src/huffcdic-core.js)
 ```
 
-This allows the shared decompression logic to live in a single file while each compiled HTML remains fully self-contained (no runtime imports or external scripts needed).
+Each compiled HTML is fully self-contained, no runtime imports or external scripts needed.
 
 To rebuild after any change:
 
@@ -133,9 +124,15 @@ npm run build
 
 ### ✏️ Making changes
 
-| What you want to change | File to edit                                      |
-| ----------------------- | ------------------------------------------------- |
-| Add a new output file   | Add an entry to the `OUTPUTS` array in `build.js` |
+| What you want to change | File to edit |
+| ----------------------- | ------------ |
+| Converter UI / logic    | `src/mobiConverter.template.html` |
+| MOBI reader UI / logic  | `src/MobiReader.template.html` |
+| KF8 decompression       | `src/huffcdic-core.js`, `src/kf8-converter.js` |
+| PalmDoc decompression   | `src/palmdoc-core.js`, `src/palmdoc-converter.js` |
+| Format detection        | `src/mobi-detect-core.js` |
+| StarDict output         | `src/stardict-output.js` |
+| Add a new output file   | Add an entry to `OUTPUTS` in `build.js` |
 
 After editing any template or shared source file, run `node build.js` and commit both the changed source files and the regenerated HTML files.
 
@@ -149,4 +146,12 @@ After cloning the repository, activate it once with:
 npm run activate-hooks
 ```
 
-This runs `git config core.hooksPath .githooks` locally (git does not share hook configuration automatically).
+### 📊 Performance benchmarks
+
+```bash
+# KF8 dictionaries
+node perf-test.mjs /path/to/dict.mobi [label]
+
+# PalmDoc dictionaries
+node perf-test-palmdoc.mjs /path/to/dict.mobi [label]
+```

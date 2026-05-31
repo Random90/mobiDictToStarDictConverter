@@ -5,38 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title data-i18n="pageTitle">MOBI → StarDict Converter</title>
     <style>
+      :root {
+        --bg:      #0d1710;
+        --surface: #152319;
+        --surface2:#1b2e20;
+        --accent:  #3ecf76;
+        --accent2: #7dd9a4;
+        --text:    #e2e8f0;
+        --muted:   #8baa98;
+        --border:  #2a4232;
+      }
       #langToggle {
         position: fixed;
         top: 12px;
         right: 14px;
         z-index: 9999;
-        background: #fff;
-        border: 1px solid #ccc;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
         border-radius: 999px;
         padding: 4px 12px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
       }
-      #langToggle:hover { border-color: #007bff; color: #007bff; }
+      #langToggle:hover { border-color: var(--accent); color: var(--accent); }
       body {
         font-family: "Segoe UI", sans-serif;
         max-width: 1000px;
         margin: 30px auto;
-        background: #f0f2f5;
-        color: #1c1e21;
+        background: var(--bg);
+        color: var(--text);
       }
       .card {
-        background: white;
+        background: var(--surface);
         padding: 35px;
         border-radius: 16px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        margin-bottom: 20px;
       }
-      h2 { color: #007bff; margin-top: 0; border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; }
+      h2 { color: var(--accent); margin-top: 0; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
       .upload-section {
-        border: 3px dashed #007bff;
-        background: #f8fbff;
+        border: 3px dashed var(--accent);
+        background: var(--surface2);
         padding: 30px;
         text-align: center;
         cursor: pointer;
@@ -51,12 +63,12 @@
         border-radius: 8px;
         margin-bottom: 14px;
       }
-      #formatBadge.kf8    { background: #e6f4ea; border: 1px solid #81c784; color: #1b5e20; }
-      #formatBadge.palmdoc { background: #e3f2fd; border: 1px solid #64b5f6; color: #0d47a1; }
-      #formatBadge.drm    { background: #ffebee; border: 1px solid #e57373; color: #b71c1c; }
-      #formatBadge.unknown { background: #fff8e1; border: 1px solid #ffca28; color: #6d4c00; }
+      #formatBadge.kf8     { background: #0f2d18; border: 1px solid #3ecf76; color: #7dd9a4; }
+      #formatBadge.palmdoc { background: #0d2030; border: 1px solid #4da6d9; color: #90caf9; }
+      #formatBadge.drm     { background: #2d0f0f; border: 1px solid #e57373; color: #ffcdd2; }
+      #formatBadge.unknown { background: #2b2000; border: 1px solid #ffca28; color: #fff59d; }
       #log {
-        background: #1c1e21;
+        background: #0a0f0b;
         color: #a5d6a7;
         padding: 15px;
         font-family: monospace;
@@ -65,12 +77,12 @@
         border-radius: 8px;
         margin-top: 20px;
         font-size: 12px;
-        border: 1px solid #30363d;
+        border: 1px solid var(--border);
         white-space: pre-wrap;
       }
       .btn-main {
-        background: #007bff;
-        color: white;
+        background: var(--accent);
+        color: #0a1510;
         border: none;
         padding: 15px 30px;
         font-size: 18px;
@@ -81,13 +93,14 @@
         transition: 0.3s;
         margin-top: 10px;
       }
-      .btn-main:disabled { background: #6c757d; cursor: not-allowed; }
+      .btn-main:hover { background: var(--accent2); }
+      .btn-main:disabled { background: #2a4232; color: var(--muted); cursor: not-allowed; }
       .btn-dl {
         display: inline-block;
         margin: 5px;
         padding: 10px 15px;
-        background: #28a745;
-        color: white;
+        background: var(--accent);
+        color: #0a1510;
         text-decoration: none;
         border-radius: 6px;
         font-weight: bold;
@@ -100,7 +113,8 @@
       }
       .preview-item {
         background: #fff;
-        border: 1px solid #ddd;
+        color: #1c1e21;
+        border: 1px solid var(--border);
         padding: 10px;
         border-radius: 8px;
         font-size: 11px;
@@ -113,30 +127,34 @@
         font-size: 16px;
         margin-top: 12px;
         border-radius: 6px;
-        border: 2px solid #007bff;
+        border: 2px solid var(--accent);
+        background: var(--surface2);
+        color: var(--text);
         box-sizing: border-box;
         display: none;
       }
-      .validator-status { font-size: 12px; color: #666; margin-top: 7px; }
+      .validator-status { font-size: 12px; color: var(--muted); margin-top: 7px; }
       .validator-card {
         display: none;
         margin-top: 10px;
         padding: 12px;
-        background: #fff;
-        border: 1px solid #ddd;
+        background: var(--surface2);
+        border: 1px solid var(--border);
         border-radius: 8px;
       }
       .validator-split { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
       .validator-pane {
-        border: 1px solid #ddd;
+        border: 1px solid var(--border);
         border-radius: 7px;
         padding: 10px;
         max-height: 560px;
         overflow: auto;
+        background: #fff;
+        color: #1c1e21;
       }
       .option-box {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
+        background: var(--surface2);
+        border: 1px solid var(--border);
         padding: 14px 18px;
         border-radius: 10px;
         margin-bottom: 14px;
@@ -152,7 +170,9 @@
       .option-row select {
         padding: 5px 10px;
         border-radius: 6px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
         font-size: 13px;
         cursor: pointer;
         width: 100%;
@@ -160,18 +180,19 @@
       }
       .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; }
       .style-preview {
-        border: 1px solid #ddd;
+        border: 1px solid var(--border);
         border-radius: 7px;
         padding: 9px 13px;
         margin-top: 6px;
         font-size: 12px;
         background: #fff;
+        color: #1c1e21;
         min-height: 32px;
       }
-      .style-note { font-size: 11px; color: #666; margin-top: 6px; }
+      .style-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
       .badge-syn {
-        background: #6f42c1;
-        color: white;
+        background: var(--accent);
+        color: #0a1510;
         border-radius: 4px;
         padding: 2px 7px;
         font-size: 11px;
@@ -179,6 +200,8 @@
         margin-left: 6px;
         vertical-align: middle;
       }
+      input[type="checkbox"] { accent-color: var(--accent); }
+      a { color: var(--accent2); }
     </style>
   </head>
   <body>
@@ -219,7 +242,7 @@
 
       <div id="log" data-i18n="logIdle"></div>
 
-      <div id="downloadArea" style="display:none;margin-top:25px;padding:20px;background:#e6ffed;border-radius:8px;border:1px solid #b7eb8f;">
+      <div id="downloadArea" style="display:none;margin-top:25px;padding:20px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);">
         <h3 data-i18n="doneTitle"></h3>
         <div id="links" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;align-items:flex-start;"></div>
       </div>
@@ -237,7 +260,7 @@
             <div style="display:flex;gap:6px;align-items:center">
               <span id="validatorByteBadge" class="badge-syn"></span>
               <button id="validatorCopyBtn" class="btn-dl"
-                      style="padding:6px 10px;background:#6c757d"
+                      style="padding:6px 10px;background:var(--surface);color:var(--text);border:1px solid var(--border)"
                       data-i18n="validatorCopyHtml"></button>
             </div>
           </div>

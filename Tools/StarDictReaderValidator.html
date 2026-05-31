@@ -10,27 +10,37 @@
     <meta charset="UTF-8" />
     <title>StarDict Binary Validator</title>
     <style>
+      :root {
+        --bg:      #0d1710;
+        --surface: #152319;
+        --surface2:#1b2e20;
+        --accent:  #3ecf76;
+        --accent2: #7dd9a4;
+        --text:    #e2e8f0;
+        --muted:   #8baa98;
+        --border:  #2a4232;
+      }
       body {
         font-family: "Segoe UI", sans-serif;
         max-width: 1100px;
         margin: 20px auto;
-        background: #f0f2f5;
-        color: #1c1e21;
+        background: var(--bg);
+        color: var(--text);
       }
       .card {
-        background: white;
+        background: var(--surface);
         padding: 25px;
         border-radius: 12px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         margin-bottom: 16px;
       }
       .file-inputs {
         display: grid;
         gap: 8px;
-        background: #f8f9fa;
+        background: var(--surface2);
         padding: 14px;
         border-radius: 8px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border);
         font-size: 13px;
       }
       .file-inputs label {
@@ -44,13 +54,15 @@
         font-size: 18px;
         margin-top: 16px;
         border-radius: 6px;
-        border: 2px solid #007bff;
+        border: 2px solid var(--accent);
+        background: var(--surface2);
+        color: var(--text);
         display: none;
         box-sizing: border-box;
       }
       .status {
         font-size: 13px;
-        color: #666;
+        color: var(--muted);
         margin-top: 8px;
       }
       #resultCard {
@@ -68,11 +80,11 @@
       .result-title {
         font-weight: 700;
         font-size: 15px;
-        color: #333;
+        color: var(--text);
       }
       .badge {
-        background: #007bff;
-        color: white;
+        background: var(--accent);
+        color: #0a1510;
         border-radius: 4px;
         padding: 2px 8px;
         font-size: 11px;
@@ -80,14 +92,15 @@
       }
       .btn-copy {
         padding: 5px 12px;
-        background: #f0f0f0;
-        border: 1px solid #ccc;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
         border-radius: 5px;
         cursor: pointer;
         font-size: 12px;
       }
       .btn-copy:hover {
-        background: #e0e0e0;
+        background: var(--border);
       }
       .split {
         display: grid;
@@ -104,12 +117,13 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #888;
+        color: var(--muted);
         margin-bottom: 5px;
       }
       .pane-rendered {
         background: #fff;
-        border: 1px solid #ddd;
+        color: #1c1e21;
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 14px;
         min-height: 160px;
@@ -117,7 +131,7 @@
         overflow-x: auto;
       }
       .pane-raw {
-        background: #1c1e21;
+        background: #0a0f0b;
         color: #e8e8e8;
         border-radius: 8px;
         padding: 14px;
@@ -130,9 +144,9 @@
       }
       .syn-info {
         font-size: 12px;
-        color: #6f42c1;
-        background: #f5f0ff;
-        border: 1px solid #d8b4fe;
+        color: var(--accent2);
+        background: var(--surface2);
+        border: 1px solid var(--border);
         border-radius: 6px;
         padding: 6px 12px;
         margin-top: 8px;
@@ -143,18 +157,19 @@
         top: 12px;
         right: 14px;
         z-index: 9999;
-        background: #fff;
-        border: 1px solid #ccc;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
         border-radius: 999px;
         padding: 4px 12px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
       }
       #langToggle:hover {
-        border-color: #007bff;
-        color: #007bff;
+        border-color: var(--accent);
+        color: var(--accent);
       }
     </style>
   </head>

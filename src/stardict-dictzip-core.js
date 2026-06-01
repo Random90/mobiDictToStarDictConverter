@@ -33,7 +33,7 @@ async function compressDictzip(data, onProgress) {
 
   // pako flush-mode constants (same numeric values as zlib)
   const Z_SYNC_FLUSH = 2; // byte-align + emit empty stored block (00 00 ff ff)
-  const Z_FINISH     = 4; // finalize stream with BFINAL=1
+  const Z_FINISH = 4; // finalize stream with BFINAL=1
 
   // ── 1. Split into chunks ─────────────────────────────────────────────────
   const rawChunks = [];
@@ -48,8 +48,8 @@ async function compressDictzip(data, onProgress) {
   // Last chunk:      Z_FINISH      → writes final block (BFINAL=1), ends stream.
   const deflator = new pako.Deflate({ level: 6, raw: true });
   const outputParts = [];
-  const chunkSizes  = [];
-  let   totalOutput = 0;
+  const chunkSizes = [];
+  let totalOutput = 0;
 
   deflator.onData = (part) => {
     outputParts.push(part);
@@ -57,8 +57,8 @@ async function compressDictzip(data, onProgress) {
   };
 
   for (let i = 0; i < rawChunks.length; i++) {
-    const isLast   = (i === rawChunks.length - 1);
-    const before   = totalOutput;
+    const isLast = i === rawChunks.length - 1;
+    const before = totalOutput;
     deflator.push(rawChunks[i], isLast ? Z_FINISH : Z_SYNC_FLUSH);
     if (deflator.err) throw new Error("Dictzip deflate error: " + deflator.msg);
     chunkSizes.push(totalOutput - before);
@@ -77,7 +77,10 @@ async function compressDictzip(data, onProgress) {
   // Assemble compressed payload
   const compressedData = new Uint8Array(totalOutput);
   let pos = 0;
-  for (const p of outputParts) { compressedData.set(p, pos); pos += p.length; }
+  for (const p of outputParts) {
+    compressedData.set(p, pos);
+    pos += p.length;
+  }
 
   // ── 3. Build gzip header with RA extra field ──────────────────────────────
   //
@@ -87,55 +90,65 @@ async function compressDictzip(data, onProgress) {
   // RA subfield layout (all values little-endian uint16):
   //   SI1='R' SI2='A'  LEN(2)  VER=1(2)  CHLEN(2)  CHCNT(2)  SIZE[i](2)×CHCNT
   //
-  const fname     = "dictionary.dict"; // null-terminated filename (like reference)
-  const fnameBytes = new TextEncoder().encode(fname);          // without null
-  const raDataLen  = 2 + 2 + 2 + 2 * rawChunks.length;       // VER+CHLEN+CHCNT+sizes
-  const extraLen   = 4 + raDataLen;                            // SI1+SI2+LEN(2)+raDataLen
+  const fname = "dictionary.dict"; // null-terminated filename (like reference)
+  const fnameBytes = new TextEncoder().encode(fname); // without null
+  const raDataLen = 2 + 2 + 2 + 2 * rawChunks.length; // VER+CHLEN+CHCNT+sizes
+  const extraLen = 4 + raDataLen; // SI1+SI2+LEN(2)+raDataLen
   // gzip fixed header(10) + XLEN(2) + extra(extraLen) + fname + NUL(1)
-  const headerLen  = 10 + 2 + extraLen + fnameBytes.length + 1;
+  const headerLen = 10 + 2 + extraLen + fnameBytes.length + 1;
 
   const header = new Uint8Array(headerLen);
-  const hv     = new DataView(header.buffer);
-  let   hp     = 0;
+  const hv = new DataView(header.buffer);
+  let hp = 0;
 
-  hv.setUint8(hp++, 0x1f);                        // ID1
-  hv.setUint8(hp++, 0x8b);                        // ID2
-  hv.setUint8(hp++, 0x08);                        // CM = deflate
-  hv.setUint8(hp++, 0x0c);                        // FLG = FEXTRA | FNAME
-  hv.setUint32(hp, 0, true); hp += 4;             // MTIME = 0
-  hv.setUint8(hp++, 0x02);                        // XFL = max compression
-  hv.setUint8(hp++, 0x03);                        // OS  = Unix
+  hv.setUint8(hp++, 0x1f); // ID1
+  hv.setUint8(hp++, 0x8b); // ID2
+  hv.setUint8(hp++, 0x08); // CM = deflate
+  hv.setUint8(hp++, 0x0c); // FLG = FEXTRA | FNAME
+  hv.setUint32(hp, 0, true);
+  hp += 4; // MTIME = 0
+  hv.setUint8(hp++, 0x02); // XFL = max compression
+  hv.setUint8(hp++, 0x03); // OS  = Unix
 
-  hv.setUint16(hp, extraLen, true); hp += 2;      // XLEN
+  hv.setUint16(hp, extraLen, true);
+  hp += 2; // XLEN
 
   // RA extra sub-field
-  hv.setUint8(hp++, 0x52);                                     // SI1 = 'R'
-  hv.setUint8(hp++, 0x41);                                     // SI2 = 'A'
-  hv.setUint16(hp, raDataLen, true);    hp += 2;               // LEN
-  hv.setUint16(hp, 1, true);            hp += 2;               // VER = 1
-  hv.setUint16(hp, CHUNK_SIZE, true);   hp += 2;               // CHLEN
-  hv.setUint16(hp, rawChunks.length, true); hp += 2;           // CHCNT
+  hv.setUint8(hp++, 0x52); // SI1 = 'R'
+  hv.setUint8(hp++, 0x41); // SI2 = 'A'
+  hv.setUint16(hp, raDataLen, true);
+  hp += 2; // LEN
+  hv.setUint16(hp, 1, true);
+  hp += 2; // VER = 1
+  hv.setUint16(hp, CHUNK_SIZE, true);
+  hp += 2; // CHLEN
+  hv.setUint16(hp, rawChunks.length, true);
+  hp += 2; // CHCNT
   for (const sz of chunkSizes) {
-    hv.setUint16(hp, sz, true); hp += 2;                       // SIZE[i]
+    hv.setUint16(hp, sz, true);
+    hp += 2; // SIZE[i]
   }
 
   // FNAME (null-terminated)
-  header.set(fnameBytes, hp); hp += fnameBytes.length;
-  hv.setUint8(hp++, 0x00);                                     // NUL terminator
+  header.set(fnameBytes, hp);
+  hp += fnameBytes.length;
+  hv.setUint8(hp++, 0x00); // NUL terminator
 
   // ── 4. gzip trailer: CRC32(4 LE) + ISIZE(4 LE) ───────────────────────────
-  const crc     = _crc32(data);
+  const crc = _crc32(data);
   const trailer = new Uint8Array(8);
-  const tv      = new DataView(trailer.buffer);
+  const tv = new DataView(trailer.buffer);
   tv.setUint32(0, crc, true);
   tv.setUint32(4, data.length >>> 0, true);
 
   // ── 5. Assemble ───────────────────────────────────────────────────────────
-  const total  = header.length + compressedData.length + trailer.length;
+  const total = header.length + compressedData.length + trailer.length;
   const result = new Uint8Array(total);
   pos = 0;
-  result.set(header, pos);         pos += header.length;
-  result.set(compressedData, pos); pos += compressedData.length;
+  result.set(header, pos);
+  pos += header.length;
+  result.set(compressedData, pos);
+  pos += compressedData.length;
   result.set(trailer, pos);
 
   return result;
@@ -167,23 +180,23 @@ async function decompressDictzip(buffer) {
   }
 
   // ── Parse gzip header ─────────────────────────────────────────────────────
-  const flg      = bytes[3];
-  const FEXTRA   = 0x04;
-  const FNAME    = 0x08;
+  const flg = bytes[3];
+  const FEXTRA = 0x04;
+  const FNAME = 0x08;
   const FCOMMENT = 0x10;
-  const FHCRC    = 0x02;
+  const FHCRC = 0x02;
 
-  let pos    = 10;
-  let hasRA  = false;
+  let pos = 10;
+  let hasRA = false;
 
   if (flg & FEXTRA) {
-    const xlen     = bytes[pos] | (bytes[pos + 1] << 8);
+    const xlen = bytes[pos] | (bytes[pos + 1] << 8);
     pos += 2;
     const extraEnd = pos + xlen;
-    let   ep       = pos;
+    let ep = pos;
     while (ep + 4 <= extraEnd) {
-      const si1    = bytes[ep];
-      const si2    = bytes[ep + 1];
+      const si1 = bytes[ep];
+      const si2 = bytes[ep + 1];
       const subLen = bytes[ep + 2] | (bytes[ep + 3] << 8);
       if (si1 === 0x52 && si2 === 0x41) hasRA = true; // 'R' 'A'
       ep += 4 + subLen;
@@ -191,9 +204,17 @@ async function decompressDictzip(buffer) {
     pos = extraEnd;
   }
 
-  if (flg & FNAME)    { while (pos < bytes.length && bytes[pos] !== 0) pos++; pos++; }
-  if (flg & FCOMMENT) { while (pos < bytes.length && bytes[pos] !== 0) pos++; pos++; }
-  if (flg & FHCRC)    { pos += 2; }
+  if (flg & FNAME) {
+    while (pos < bytes.length && bytes[pos] !== 0) pos++;
+    pos++;
+  }
+  if (flg & FCOMMENT) {
+    while (pos < bytes.length && bytes[pos] !== 0) pos++;
+    pos++;
+  }
+  if (flg & FHCRC) {
+    pos += 2;
+  }
 
   // Compressed payload sits between header end and the 8-byte gzip trailer
   const compressedPayload = bytes.subarray(pos, bytes.length - 8);
@@ -215,7 +236,7 @@ async function decompressDictzip(buffer) {
 
 /** Decompress a raw DEFLATE stream using the browser DecompressionStream API. */
 async function _inflateRaw(data) {
-  const ds     = new DecompressionStream("deflate-raw");
+  const ds = new DecompressionStream("deflate-raw");
   const writer = ds.writable.getWriter();
   const reader = ds.readable.getReader();
   writer.write(data);
@@ -229,13 +250,16 @@ async function _inflateRaw(data) {
   const totalLen = parts.reduce((s, p) => s + p.length, 0);
   const out = new Uint8Array(totalLen);
   let p = 0;
-  for (const part of parts) { out.set(part, p); p += part.length; }
+  for (const part of parts) {
+    out.set(part, p);
+    p += part.length;
+  }
   return out;
 }
 
 /** Decompress a standard gzip stream using the browser DecompressionStream API. */
 async function _decompressGzip(buffer) {
-  const ds     = new DecompressionStream("gzip");
+  const ds = new DecompressionStream("gzip");
   const writer = ds.writable.getWriter();
   const reader = ds.readable.getReader();
   writer.write(new Uint8Array(buffer));
@@ -249,7 +273,10 @@ async function _decompressGzip(buffer) {
   const totalLen = parts.reduce((s, p) => s + p.length, 0);
   const out = new Uint8Array(totalLen);
   let p = 0;
-  for (const part of parts) { out.set(part, p); p += part.length; }
+  for (const part of parts) {
+    out.set(part, p);
+    p += part.length;
+  }
   return out.buffer;
 }
 
@@ -259,7 +286,7 @@ function _crc32(data) {
     const t = new Uint32Array(256);
     for (let i = 0; i < 256; i++) {
       let c = i;
-      for (let j = 0; j < 8; j++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
       t[i] = c;
     }
     _crc32._table = t;
@@ -271,4 +298,3 @@ function _crc32(data) {
   }
   return (crc ^ 0xffffffff) >>> 0;
 }
-

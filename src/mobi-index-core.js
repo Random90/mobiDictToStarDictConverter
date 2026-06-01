@@ -41,20 +41,27 @@
 //        Label bytes starting with 0x01 are grammar/metadata entries (skipped).
 //        INFL labels are always plain UTF-8 (never ORDT-encoded).
 // ─────────────────────────────────────────────────────────────────────────────
-function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap) {
-  const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
+function parseMobiIndexes(
+  raw,
+  recsOffsets,
+  logFn,
+  externalHeadwords,
+  outputMap,
+) {
+  const log = logFn || (typeof addLog === "function" ? addLog : () => {});
   // i18n helper: uses global i18nText (defined by the host template) when available,
   // otherwise substitutes variables into the English fallback string directly.
   const t = (key, fallback, vars) => {
-    if (typeof i18nText === 'function') return i18nText(key, fallback, vars);
+    if (typeof i18nText === "function") return i18nText(key, fallback, vars);
     if (!vars) return fallback;
     return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
-      vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+      vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+    );
   };
   // outputMap: when provided, inflected forms are written directly into this
   // Map (e.g. the converter's synMap), avoiding a large intermediate collection.
   const inflMap = outputMap instanceof Map ? outputMap : new Map();
-  const utf8 = new TextDecoder('utf-8', { fatal: false });
+  const utf8 = new TextDecoder("utf-8", { fatal: false });
   const totalLen = raw.length;
 
   const getRec = (i) => {
@@ -81,8 +88,12 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
   // Lowest-set-bit position of a bitmask.
   const maskShift = (mask) => {
     if (!mask) return 0;
-    let s = 0, m = mask;
-    while (m && !(m & 1)) { s++; m >>>= 1; }
+    let s = 0,
+      m = mask;
+    while (m && !(m & 1)) {
+      s++;
+      m >>>= 1;
+    }
     return s;
   };
 
@@ -103,18 +114,29 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
   // Requires both markers to be valid, mirroring KindleUnpack / Python behaviour.
   const readOrdt = (rec) => {
     if (rec.length < 0xb4) return null;
-    const code     = ru32(rec, 0x1c);   // encoding flag
-    const ocnt     = ru32(rec, 0xa4);   // ORDT-present signal
+    const code = ru32(rec, 0x1c); // encoding flag
+    const ocnt = ru32(rec, 0xa4); // ORDT-present signal
     const oentries = ru32(rec, 0xa8);
-    const op1      = ru32(rec, 0xac);
-    const op2      = ru32(rec, 0xb0);
+    const op1 = ru32(rec, 0xac);
+    const op2 = ru32(rec, 0xb0);
     if (!(code === 0xfdea || ocnt) || oentries === 0) return null;
     // Validate both ORDT1 and ORDT2 markers (both must be 'ORDT')
-    if (op1 + 4 > rec.length || op2 + 4 + oentries * 2 > rec.length) return null;
-    if (rec[op1]   !== 0x4f || rec[op1+1] !== 0x52 ||
-        rec[op1+2] !== 0x44 || rec[op1+3] !== 0x54) return null;
-    if (rec[op2]   !== 0x4f || rec[op2+1] !== 0x52 ||
-        rec[op2+2] !== 0x44 || rec[op2+3] !== 0x54) return null;
+    if (op1 + 4 > rec.length || op2 + 4 + oentries * 2 > rec.length)
+      return null;
+    if (
+      rec[op1] !== 0x4f ||
+      rec[op1 + 1] !== 0x52 ||
+      rec[op1 + 2] !== 0x44 ||
+      rec[op1 + 3] !== 0x54
+    )
+      return null;
+    if (
+      rec[op2] !== 0x4f ||
+      rec[op2 + 1] !== 0x52 ||
+      rec[op2 + 2] !== 0x44 ||
+      rec[op2 + 3] !== 0x54
+    )
+      return null;
     const ordt = [];
     for (let i = 0; i < oentries; i++) ordt.push(ru16(rec, op2 + 4 + i * 2));
     return ordt;
@@ -125,21 +147,26 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
   //   Without:   filter bytes < 0x05 (control markers) then decode as UTF-8.
   const decodeOrthLabel = (labelBytes, ordt) => {
     if (ordt) {
-      let s = '';
+      let s = "";
       for (const b of labelBytes) {
         const cp = b < ordt.length ? ordt[b] : b;
         if (cp > 0) s += String.fromCodePoint(cp);
       }
       return s;
     }
-    return utf8.decode(labelBytes.filter(b => b >= 0x05));
+    return utf8.decode(labelBytes.filter((b) => b >= 0x05));
   };
 
   // Parse TAGX section within rec at tagxOff.
   const parseTagx = (rec, tagxOff) => {
     if (tagxOff + 12 > rec.length) return null;
-    if (rec[tagxOff] !== 0x54 || rec[tagxOff + 1] !== 0x41 ||
-        rec[tagxOff + 2] !== 0x47 || rec[tagxOff + 3] !== 0x58) return null;
+    if (
+      rec[tagxOff] !== 0x54 ||
+      rec[tagxOff + 1] !== 0x41 ||
+      rec[tagxOff + 2] !== 0x47 ||
+      rec[tagxOff + 3] !== 0x58
+    )
+      return null;
     const tagxLen = ru32(rec, tagxOff + 4);
     const ctrlByteCount = ru32(rec, tagxOff + 8);
     const nTags = Math.floor((tagxLen - 12) / 4);
@@ -147,11 +174,11 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
     for (let i = 0; i < nTags; i++) {
       const b = tagxOff + 12 + i * 4;
       tags.push({
-        tag:     rec[b],
+        tag: rec[b],
         numVals: rec[b + 1],
-        mask:    rec[b + 2],
-        end:     rec[b + 3],
-        shift:   maskShift(rec[b + 2]),
+        mask: rec[b + 2],
+        end: rec[b + 3],
+        shift: maskShift(rec[b + 2]),
       });
     }
     return { ctrlByteCount, tags };
@@ -164,11 +191,20 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
   const parseSubRec = (rec, tagx) => {
     if (rec.length < 0x20) return [];
     const nEntries = ru32(rec, 0x18);
-    const idxtOff  = ru32(rec, 0x14);
-    if (nEntries === 0 || idxtOff === 0 ||
-        idxtOff + 4 + nEntries * 2 > rec.length) return [];
-    if (rec[idxtOff]     !== 0x49 || rec[idxtOff + 1] !== 0x44 ||
-        rec[idxtOff + 2] !== 0x58 || rec[idxtOff + 3] !== 0x54) return [];
+    const idxtOff = ru32(rec, 0x14);
+    if (
+      nEntries === 0 ||
+      idxtOff === 0 ||
+      idxtOff + 4 + nEntries * 2 > rec.length
+    )
+      return [];
+    if (
+      rec[idxtOff] !== 0x49 ||
+      rec[idxtOff + 1] !== 0x44 ||
+      rec[idxtOff + 2] !== 0x58 ||
+      rec[idxtOff + 3] !== 0x54
+    )
+      return [];
 
     const entries = [];
     for (let i = 0; i < nEntries; i++) {
@@ -205,7 +241,10 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
         if (t.mask !== 0 && cbIdx < ctrlBytes.length) {
           const maskedVal = ctrlBytes[cbIdx] & t.mask;
           if (maskedVal !== 0) {
-            const maskBits = t.mask.toString(2).split('').filter(c => c === '1').length;
+            const maskBits = t.mask
+              .toString(2)
+              .split("")
+              .filter((c) => c === "1").length;
             if (maskBits > 1 && maskedVal === t.mask) {
               // Extended: consume the VWI byte-count header NOW (pass 1).
               const [byteCount, np0] = readVWI(rec, pos);
@@ -281,10 +320,10 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
 
     if (!formSuffixBytes) return null;
 
-    const formSuffix      = utf8.decode(reverseBytes(formSuffixBytes));
+    const formSuffix = utf8.decode(reverseBytes(formSuffixBytes));
     const canonicalSuffix = canonicalSuffixBytes
       ? utf8.decode(reverseBytes(canonicalSuffixBytes))
-      : '';
+      : "";
 
     return { formSuffix, canonicalSuffix };
   };
@@ -295,10 +334,15 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
   for (let i = 0; i < recsOffsets.length; i++) {
     const s = recsOffsets[i];
     if (totalLen - s < 4) continue;
-    if (raw[s]     !== 0x49 || raw[s + 1] !== 0x4E ||
-        raw[s + 2] !== 0x44 || raw[s + 3] !== 0x58) continue;
+    if (
+      raw[s] !== 0x49 ||
+      raw[s + 1] !== 0x4e ||
+      raw[s + 2] !== 0x44 ||
+      raw[s + 3] !== 0x58
+    )
+      continue;
 
-    const rec    = getRec(i);
+    const rec = getRec(i);
     if (rec.length < 8) continue;
     const hdrLen = ru32(rec, 4);
     if (hdrLen >= rec.length) continue;
@@ -312,15 +356,16 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
     }
   }
 
-
   if (groups.length < 2) return inflMap;
 
   // Identify groups by TAGX tag numbers:
   //   ORTH: contains tag 42 (infl_group_ref)
   //   INFL: contains tag 26 (form entry list in paradigm templates)
   //         also contains tag 27 in form entries, but group is identified by tag 26
-  const orthGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 42));
-  const inflGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 26 || t.tag === 27));
+  const orthGroup = groups.find((g) => g.tagx.tags.some((t) => t.tag === 42));
+  const inflGroup = groups.find((g) =>
+    g.tagx.tags.some((t) => t.tag === 26 || t.tag === 27),
+  );
 
   if (!orthGroup) return inflMap;
   if (!inflGroup) return inflMap;
@@ -449,7 +494,11 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
       if (sampled++ >= 5) break;
       sampleEntries.push(`${k}→${v}`);
     }
-    log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample: sampleEntries.join(', ') }));
+    log(
+      t("logMobiIndexSample", "Inflection examples: {sample}", {
+        sample: sampleEntries.join(", "),
+      }),
+    );
   }
 
   // When writing directly into an external map, return a lightweight proxy
@@ -461,4 +510,3 @@ function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap)
 
   return inflMap;
 }
-

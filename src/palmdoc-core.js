@@ -96,8 +96,13 @@ class PalmDocBase {
   // order, and would cause wrong headword↔group mappings.
   parseMobiIndexes(outputMap) {
     const raw = new Uint8Array(this.buffer);
-    const offsets = this.records.map(r => r.offset);
-    const logFn = typeof addLog === 'function' ? addLog : (typeof this.log === 'function' ? this.log : null);
+    const offsets = this.records.map((r) => r.offset);
+    const logFn =
+      typeof addLog === "function"
+        ? addLog
+        : typeof this.log === "function"
+          ? this.log
+          : null;
     return parseMobiIndexes(raw, offsets, logFn, null, outputMap);
   }
 }

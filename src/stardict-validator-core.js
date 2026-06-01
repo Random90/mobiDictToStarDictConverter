@@ -229,18 +229,24 @@
       if (!files.idx || !files.dict) return;
 
       const idxBuffer = await files.idx.arrayBuffer();
-      let dictBuffer  = await files.dict.arrayBuffer();
+      let dictBuffer = await files.dict.arrayBuffer();
       const synBuffer = files.syn ? await files.syn.arrayBuffer() : null;
-      const ifoText   = files.ifo
+      const ifoText = files.ifo
         ? dec.decode(await files.ifo.arrayBuffer())
         : "";
 
       // Auto-detect gzip magic bytes (1f 8b) and decompress .dict.dz if needed.
-      const magic = new Uint8Array(dictBuffer, 0, Math.min(2, dictBuffer.byteLength));
+      const magic = new Uint8Array(
+        dictBuffer,
+        0,
+        Math.min(2, dictBuffer.byteLength),
+      );
       const isGzip = magic[0] === 0x1f && magic[1] === 0x8b;
       if (isGzip) {
         if (typeof decompressDictzip !== "function") {
-          setStatus("❌ Cannot decompress .dict.dz – include stardict-dictzip-core.js.");
+          setStatus(
+            "❌ Cannot decompress .dict.dz – include stardict-dictzip-core.js.",
+          );
           return;
         }
         const sizeMB = (dictBuffer.byteLength / 1048576).toFixed(1);

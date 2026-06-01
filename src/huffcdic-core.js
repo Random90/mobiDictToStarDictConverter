@@ -13,7 +13,7 @@ class HuffCdicBase {
     // Using TypedArrays instead of an object array avoids pointer chasing in
     // the 33M-iteration decompression inner loop and fits in L1 cache.
     this.dict1Codelen = new Uint8Array(256);
-    this.dict1Term    = new Uint8Array(256); // 1 = terminal, 0 = non-terminal
+    this.dict1Term = new Uint8Array(256); // 1 = terminal, 0 = non-terminal
     this.dict1Maxcode = new Uint32Array(256);
     // min/max code arrays for non-terminal codeword lookup (indices 1..32).
     this.mincodeArr = new Uint32Array(33);
@@ -167,16 +167,25 @@ class HuffCdicBase {
     const recBase = this._getRecord0Base();
 
     // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
-    const hdrLen  = this.u32(recBase + 0x14);
+    const hdrLen = this.u32(recBase + 0x14);
     const mobiVer = this.u32(recBase + 0x68);
     const encoding = hdrLen >= 0x10 ? this.u32(recBase + 0x1c) : 0;
 
-    const verLabel = mobiVer >= 8 ? 'KF8' : mobiVer >= 6 ? 'MOBI6' : `MOBI${mobiVer}`;
-    const encLabel = encoding === 65001 || encoding === 0
-      ? 'UTF-8'
-      : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
-    addLog(this.t('logMobiFormat', 'MOBI: {label} (v{ver}), encoding: {enc}',
-      { label: verLabel, ver: mobiVer, enc: encLabel }));
+    const verLabel =
+      mobiVer >= 8 ? "KF8" : mobiVer >= 6 ? "MOBI6" : `MOBI${mobiVer}`;
+    const encLabel =
+      encoding === 65001 || encoding === 0
+        ? "UTF-8"
+        : encoding === 1252
+          ? "Windows-1252"
+          : `encoding ${encoding}`;
+    addLog(
+      this.t("logMobiFormat", "MOBI: {label} (v{ver}), encoding: {enc}", {
+        label: verLabel,
+        ver: mobiVer,
+        enc: encLabel,
+      }),
+    );
 
     let flags = 0x0001;
     if (hdrLen >= 0xe4 && mobiVer >= 5) {
@@ -276,7 +285,7 @@ class HuffCdicBase {
       const maxcode =
         Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
       this.dict1Codelen[i] = codelen;
-      this.dict1Term[i]    = term ? 1 : 0;
+      this.dict1Term[i] = term ? 1 : 0;
       this.dict1Maxcode[i] = maxcode;
     }
     this.mincodeArr = new Uint32Array(33);
@@ -399,23 +408,30 @@ class HuffCdicBase {
     // Slow path (near end of data): byte-by-byte with zero padding.
     const read32 = (p) => {
       if (p + 3 < dlen) {
-        return ((data[p] << 24) | (data[p + 1] << 16) | (data[p + 2] << 8) | data[p + 3]) >>> 0;
+        return (
+          ((data[p] << 24) |
+            (data[p + 1] << 16) |
+            (data[p + 2] << 8) |
+            data[p + 3]) >>>
+          0
+        );
       }
       return (
-        ((p     < dlen ? data[p]     : 0) << 24) |
-        ((p + 1 < dlen ? data[p + 1] : 0) << 16) |
-        ((p + 2 < dlen ? data[p + 2] : 0) << 8)  |
-         (p + 3 < dlen ? data[p + 3] : 0)
-      ) >>> 0;
+        (((p < dlen ? data[p] : 0) << 24) |
+          ((p + 1 < dlen ? data[p + 1] : 0) << 16) |
+          ((p + 2 < dlen ? data[p + 2] : 0) << 8) |
+          (p + 3 < dlen ? data[p + 3] : 0)) >>>
+        0
+      );
     };
 
     // Cache TypedArray references in locals to avoid repeated property lookups.
     const dict1Codelen = this.dict1Codelen;
-    const dict1Term    = this.dict1Term;
+    const dict1Term = this.dict1Term;
     const dict1Maxcode = this.dict1Maxcode;
-    const mincodeArr   = this.mincodeArr;
-    const maxcodeArr   = this.maxcodeArr;
-    const dict         = this.dict;
+    const mincodeArr = this.mincodeArr;
+    const maxcodeArr = this.maxcodeArr;
+    const dict = this.dict;
 
     let bitsleft = dlen * 8;
     let pos = 0;
@@ -435,8 +451,13 @@ class HuffCdicBase {
       let outLen = 0;
 
       while (true) {
-        if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
-        const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+        if (n <= 0) {
+          pos += 4;
+          hi = lo;
+          lo = read32(pos + 4);
+          n += 32;
+        }
+        const code = n === 32 ? hi : ((hi << (32 - n)) | (lo >>> n)) >>> 0;
         const idx = code >>> 24;
         let codelen = dict1Codelen[idx];
         let maxcode = dict1Maxcode[idx];
@@ -444,7 +465,8 @@ class HuffCdicBase {
           while (code < mincodeArr[codelen]) codelen++;
           maxcode = maxcodeArr[codelen];
         }
-        n -= codelen; bitsleft -= codelen;
+        n -= codelen;
+        bitsleft -= codelen;
         if (bitsleft < 0) break;
         const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
         if (r >= dict.length) break;
@@ -468,8 +490,13 @@ class HuffCdicBase {
     let outLen = 0;
 
     while (true) {
-      if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
-      const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+      if (n <= 0) {
+        pos += 4;
+        hi = lo;
+        lo = read32(pos + 4);
+        n += 32;
+      }
+      const code = n === 32 ? hi : ((hi << (32 - n)) | (lo >>> n)) >>> 0;
       const idx = code >>> 24;
       let codelen = dict1Codelen[idx];
       let maxcode = dict1Maxcode[idx];
@@ -477,7 +504,8 @@ class HuffCdicBase {
         while (code < mincodeArr[codelen]) codelen++;
         maxcode = maxcodeArr[codelen];
       }
-      n -= codelen; bitsleft -= codelen;
+      n -= codelen;
+      bitsleft -= codelen;
       if (bitsleft < 0) break;
       const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
       if (r >= dict.length) break;
@@ -497,7 +525,10 @@ class HuffCdicBase {
 
     const result = new Uint8Array(outLen);
     let off = 0;
-    for (const c of chunks) { result.set(c, off); off += c.length; }
+    for (const c of chunks) {
+      result.set(c, off);
+      off += c.length;
+    }
     return result;
   }
 

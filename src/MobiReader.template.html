@@ -6,14 +6,14 @@
     <title data-i18n="pageTitle">MOBI Reader</title>
     <style>
       :root {
-        --bg:       #1c2812;
-        --surface:  #2e4220;
+        --bg: #1c2812;
+        --surface: #2e4220;
         --surface2: #384e26;
-        --accent:   #8acc4a;
-        --accent2:  #9ab858;
-        --text:     #f7ffe1;
-        --muted:    #8a9e68;
-        --border:   #4a6830;
+        --accent: #8acc4a;
+        --accent2: #9ab858;
+        --text: #f7ffe1;
+        --muted: #8a9e68;
+        --border: #4a6830;
       }
       #langToggle {
         position: fixed;
@@ -28,9 +28,12 @@
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
       }
-      #langToggle:hover { border-color: var(--accent); color: var(--accent); }
+      #langToggle:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
       body {
         font-family: "Segoe UI", sans-serif;
         max-width: 1200px;
@@ -42,10 +45,13 @@
         background: var(--surface);
         padding: 25px;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         margin-bottom: 20px;
       }
-      h2 { color: var(--accent); margin-top: 0; }
+      h2 {
+        color: var(--accent);
+        margin-top: 0;
+      }
       .upload-section {
         border: 2px dashed var(--accent);
         background: var(--surface2);
@@ -63,13 +69,30 @@
         border-radius: 8px;
         margin-bottom: 12px;
       }
-      #formatBadge.kf8    { background:#0f2d18; border:1px solid #3ecf76; color:#7dd9a4; }
-      #formatBadge.palmdoc{ background:#1a2830; border:1px solid #4da6d9; color:#90caf9; }
-      #formatBadge.unknown{ background:#2b2000; border:1px solid #ffca28; color:#fff59d; }
+      #formatBadge.kf8 {
+        background: #0f2d18;
+        border: 1px solid #3ecf76;
+        color: #7dd9a4;
+      }
+      #formatBadge.palmdoc {
+        background: #1a2830;
+        border: 1px solid #4da6d9;
+        color: #90caf9;
+      }
+      #formatBadge.unknown {
+        background: #2b2000;
+        border: 1px solid #ffca28;
+        color: #fff59d;
+      }
       /* ── Shared buttons ── */
       .btn {
         padding: 8px 20px;
-        background: linear-gradient(180deg, #84a447 0%, #73903a 54%, #617a2d 100%);
+        background: linear-gradient(
+          180deg,
+          #84a447 0%,
+          #73903a 54%,
+          #617a2d 100%
+        );
         color: #1b2a0a;
         border: 1px solid #405f1c;
         border-top-color: #6e9038;
@@ -79,14 +102,26 @@
         font-weight: bold;
         margin: 2px;
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.22),
-          inset 0 -1px 0 rgba(0,0,0,.28),
-          0 2px 5px rgba(0,0,0,.42);
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+          0 2px 5px rgba(0, 0, 0, 0.42);
       }
-      .btn:hover { filter: brightness(1.07); }
-      .btn:active { transform: translateY(1px); border-bottom-width: 1px; }
-      .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-      .btn-sm { font-size: 12px; padding: 5px 12px; border-radius: 5px; }
+      .btn:hover {
+        filter: brightness(1.07);
+      }
+      .btn:active {
+        transform: translateY(1px);
+        border-bottom-width: 1px;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn-sm {
+        font-size: 12px;
+        padding: 5px 12px;
+        border-radius: 5px;
+      }
       #log {
         background: #1a260e;
         color: #a5d6a7;
@@ -101,7 +136,9 @@
       }
 
       /* ── KF8 reader controls ── */
-      #kf8Section { display: none; }
+      #kf8Section {
+        display: none;
+      }
       #kf8Controls {
         display: flex;
         gap: 10px;
@@ -109,7 +146,9 @@
         flex-wrap: wrap;
         margin-bottom: 10px;
       }
-      #kf8Controls label { font-size: 13px; }
+      #kf8Controls label {
+        font-size: 13px;
+      }
       #kf8Controls input[type="number"] {
         width: 70px;
         padding: 4px 6px;
@@ -137,14 +176,27 @@
         color: var(--text);
         font-size: 14px;
         box-shadow:
-          inset 0 2px 6px rgba(0,0,0,.64),
-          inset 0 1px 0 rgba(255,255,255,.04);
+          inset 0 2px 6px rgba(0, 0, 0, 0.64),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
-      #searchHits { font-size: 12px; color: var(--muted); }
-      mark { background: #ffe066; color: #1c1e21; border-radius: 2px; }
+      #searchHits {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      mark {
+        background: #ffe066;
+        color: #1c1e21;
+        border-radius: 2px;
+      }
       /* KF8 output card */
-      #kf8OutputCard { display: none; }
-      .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+      #kf8OutputCard {
+        display: none;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 8px;
+      }
       .tab {
         padding: 6px 16px;
         border-radius: 6px 6px 0 0;
@@ -155,9 +207,17 @@
         font-size: 13px;
         color: var(--muted);
       }
-      .tab.active { background: var(--surface); font-weight: bold; color: var(--accent); }
-      .pane { display: none; }
-      .pane.active { display: block; }
+      .tab.active {
+        background: var(--surface);
+        font-weight: bold;
+        color: var(--accent);
+      }
+      .pane {
+        display: none;
+      }
+      .pane.active {
+        display: block;
+      }
       #rawOutput {
         background: #1a260e;
         color: #e8e8e8;
@@ -180,10 +240,19 @@
         border: 1px solid var(--border);
         font-size: 13px;
       }
-      .badge { background: var(--accent); color: #071206; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:bold; }
+      .badge {
+        background: var(--accent);
+        color: #071206;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: bold;
+      }
 
       /* ── PalmDoc reader controls ── */
-      #palmSection { display: none; }
+      #palmSection {
+        display: none;
+      }
       .viewer-controls {
         display: flex;
         justify-content: space-between;
@@ -210,22 +279,54 @@
         overflow-y: auto;
       }
       /* Rendered HTML preview stays white (simulates e-ink screen) */
-      .box:has(#htmlContent) { background: #fff; color: #1c1e21; }
-      .rendered-html { font-size: 14px; color: #1c1e21; }
-      .box h3 { margin-top:0; color:var(--accent); font-size:14px; border-bottom:1px solid var(--border); padding-bottom:5px; }
-      .raw-text { font-family: "Consolas", monospace; font-size: 12px; white-space: pre-wrap; color: #7dd9a4; }
-      @media(max-width:700px) { .content-container { grid-template-columns: 1fr; } }
+      .box:has(#htmlContent) {
+        background: #fff;
+        color: #1c1e21;
+      }
+      .rendered-html {
+        font-size: 14px;
+        color: #1c1e21;
+      }
+      .box h3 {
+        margin-top: 0;
+        color: var(--accent);
+        font-size: 14px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 5px;
+      }
+      .raw-text {
+        font-family: "Consolas", monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        color: #7dd9a4;
+      }
+      @media (max-width: 700px) {
+        .content-container {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
-    <button id="langToggle" onclick="toggleLang()" data-i18n-title="langToggleTitle">🇵🇱 PL</button>
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      data-i18n-title="langToggleTitle"
+    >
+      🇵🇱 PL
+    </button>
 
     <!-- Upload card (shared) -->
     <div class="card">
       <h2 data-i18n="title"></h2>
       <div class="upload-section" id="dropZone">
         <span id="fileNameDisplay" data-i18n="dropzone"></span>
-        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display:none" />
+        <input
+          type="file"
+          id="fileInput"
+          accept=".mobi,.azw,.azw3"
+          style="display: none"
+        />
       </div>
       <div id="formatBadge"></div>
       <div id="log" data-i18n="logIdle"></div>
@@ -240,14 +341,38 @@
           <span data-i18n="toLabel"></span>
           <input type="number" id="recTo" value="5" min="1" />
         </label>
-        <button class="btn" id="decodeBtn" disabled data-i18n="decodeBtn"></button>
-        <button class="btn btn-sm" id="prevBtn" disabled data-i18n="prevBtn"></button>
-        <button class="btn btn-sm" id="nextBtn" disabled data-i18n="nextBtn"></button>
-        <span id="recInfo" style="font-size:12px;color:#666"></span>
+        <button
+          class="btn"
+          id="decodeBtn"
+          disabled
+          data-i18n="decodeBtn"
+        ></button>
+        <button
+          class="btn btn-sm"
+          id="prevBtn"
+          disabled
+          data-i18n="prevBtn"
+        ></button>
+        <button
+          class="btn btn-sm"
+          id="nextBtn"
+          disabled
+          data-i18n="nextBtn"
+        ></button>
+        <span id="recInfo" style="font-size: 12px; color: #666"></span>
       </div>
       <div id="searchRow">
-        <input type="text" id="wordSearch" data-i18n-ph="searchPh" placeholder="" />
-        <button class="btn btn-sm" id="searchBtn" data-i18n="searchBtn"></button>
+        <input
+          type="text"
+          id="wordSearch"
+          data-i18n-ph="searchPh"
+          placeholder=""
+        />
+        <button
+          class="btn btn-sm"
+          id="searchBtn"
+          data-i18n="searchBtn"
+        ></button>
         <button class="btn btn-sm" id="searchPrev" disabled>◀</button>
         <button class="btn btn-sm" id="searchNext" disabled>▶</button>
         <span id="searchHits"></span>
@@ -255,10 +380,25 @@
     </div>
 
     <div class="card" id="kf8OutputCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <b><span data-i18n="outputLabel"></span> <span id="bytesBadge" class="badge"></span></b>
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        "
+      >
+        <b
+          ><span data-i18n="outputLabel"></span>
+          <span id="bytesBadge" class="badge"></span
+        ></b>
         <div>
-          <button class="btn btn-sm" id="kf8DownloadHtmlBtn" data-i18n="downloadHtmlBtn" disabled></button>
+          <button
+            class="btn btn-sm"
+            id="kf8DownloadHtmlBtn"
+            data-i18n="downloadHtmlBtn"
+            disabled
+          ></button>
           <button class="btn btn-sm" id="copyBtn" data-i18n="copyBtn"></button>
         </div>
       </div>
@@ -275,17 +415,36 @@
       <div class="viewer-controls">
         <div>
           <button class="btn" id="palmPrevBtn" data-i18n="prevBtn"></button>
-          <span id="palmPageInfo" style="margin:0 12px;font-weight:bold">
+          <span id="palmPageInfo" style="margin: 0 12px; font-weight: bold">
             <span data-i18n="recordLabel"></span> 0 / 0
           </span>
           <button class="btn" id="palmNextBtn" data-i18n="nextBtn"></button>
         </div>
-        <div id="palmRecordMeta" style="font-size:12px;color:#666"></div>
+        <div id="palmRecordMeta" style="font-size: 12px; color: #666"></div>
         <div>
-          <input type="number" id="jumpTo" data-i18n-ph="jumpPh" placeholder="Record no."
-                 style="width:100px;padding:7px;border-radius:4px;border:1px solid #ddd" />
-          <button class="btn" id="jumpBtn" style="background:var(--accent2);color:#071206" data-i18n="jumpBtn"></button>
-          <button class="btn" id="palmDownloadHtmlBtn" data-i18n="downloadHtmlBtn"></button>
+          <input
+            type="number"
+            id="jumpTo"
+            data-i18n-ph="jumpPh"
+            placeholder="Record no."
+            style="
+              width: 100px;
+              padding: 7px;
+              border-radius: 4px;
+              border: 1px solid #ddd;
+            "
+          />
+          <button
+            class="btn"
+            id="jumpBtn"
+            style="background: var(--accent2); color: #071206"
+            data-i18n="jumpBtn"
+          ></button>
+          <button
+            class="btn"
+            id="palmDownloadHtmlBtn"
+            data-i18n="downloadHtmlBtn"
+          ></button>
         </div>
       </div>
       <div class="content-container">
@@ -308,7 +467,7 @@
       }
 
       function addLog(msg) {
-        const logEl = document.getElementById('log');
+        const logEl = document.getElementById("log");
         logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
         logEl.scrollTop = logEl.scrollHeight;
       }
@@ -316,9 +475,12 @@
       function downloadBlob(name, content, type) {
         const blob = new Blob([content], { type });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = name;
-        document.body.appendChild(a); a.click(); a.remove();
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
         URL.revokeObjectURL(url);
       }
 
@@ -335,7 +497,7 @@
           this.textRecordMax = 0;
           this.extraFlags = 1;
           this.decodedCache = new Map();
-          this.lowerCache   = new Map();
+          this.lowerCache = new Map();
         }
         init() {
           this.buildRecords();
@@ -343,13 +505,24 @@
           this.extraFlags = this.findExtraDataFlags();
           for (let i = 0; i < this.recs.length; i++) {
             const o = this.recs[i];
-            if (this.raw[o]===72 && this.raw[o+1]===85 && this.raw[o+2]===70 && this.raw[o+3]===70) {
-              this.huffIdx = i; break;
+            if (
+              this.raw[o] === 72 &&
+              this.raw[o + 1] === 85 &&
+              this.raw[o + 2] === 70 &&
+              this.raw[o + 3] === 70
+            ) {
+              this.huffIdx = i;
+              break;
             }
           }
-          if (this.huffIdx === -1) { addLog('ERROR: No HUFF record found.'); return false; }
+          if (this.huffIdx === -1) {
+            addLog("ERROR: No HUFF record found.");
+            return false;
+          }
           this.textRecordMax = this.getTextRecordMax(this.huffIdx);
-          addLog(`HUFF record: ${this.huffIdx}  (text records: 1–${this.textRecordMax})`);
+          addLog(
+            `HUFF record: ${this.huffIdx}  (text records: 1–${this.textRecordMax})`,
+          );
           this.loadHuff(this.recs[this.huffIdx]);
           this.loadAllCdic(this.huffIdx);
           addLog(`${this.dict.length} symbols loaded.`);
@@ -358,12 +531,15 @@
         decodeRecord(idx) {
           if (this.decodedCache.has(idx)) return this.decodedCache.get(idx);
           const start = this.recs[idx];
-          const end = idx + 1 < this.recs.length ? this.recs[idx + 1] : this.buffer.byteLength;
+          const end =
+            idx + 1 < this.recs.length
+              ? this.recs[idx + 1]
+              : this.buffer.byteLength;
           let data = this.raw.slice(start, end);
           data = this.stripTrailing(data, this.extraFlags);
           const dec = this.decompress(data);
           const out = {
-            text: new TextDecoder('utf-8', { fatal: false }).decode(dec),
+            text: new TextDecoder("utf-8", { fatal: false }).decode(dec),
             compressedBytes: data.length,
             decompressedBytes: dec.length,
           };
@@ -382,169 +558,209 @@
       // @@include(src/palmdoc-core.js)
 
       class MobiReaderPalmDoc extends PalmDocBase {
-        constructor(buffer) { super(buffer); }
-        init() { return this.buildRecords(); }
+        constructor(buffer) {
+          super(buffer);
+        }
+        init() {
+          return this.buildRecords();
+        }
       }
 
       // ── Shared state ──────────────────────────────────────────────────────────
-      let activeFormat  = null; // 'kf8' | 'palmdoc'
-      let kf8Decoder    = null;
-      let palmReader    = null;
+      let activeFormat = null; // 'kf8' | 'palmdoc'
+      let kf8Decoder = null;
+      let palmReader = null;
       let palmCurrentIdx = 1;
-      let sourceFileName = 'mobi';
-      let searchResults = [], searchCursor = 0, searchCache = new Map();
+      let sourceFileName = "mobi";
+      let searchResults = [],
+        searchCursor = 0,
+        searchCache = new Map();
 
       // ── File upload ───────────────────────────────────────────────────────────
-      const fileInput = document.getElementById('fileInput');
-      document.getElementById('dropZone').onclick = () => fileInput.click();
-      fileInput.addEventListener('change', async (e) => {
+      const fileInput = document.getElementById("fileInput");
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        document.getElementById('fileNameDisplay').textContent =
+        document.getElementById("fileNameDisplay").textContent =
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-        sourceFileName = file.name.replace(/\.[^/.]+$/, '');
+        sourceFileName = file.name.replace(/\.[^/.]+$/, "");
         const buffer = await file.arrayBuffer();
 
         const { format, drm } = detectMobiFormat(buffer);
-        const badge = document.getElementById('formatBadge');
-        badge.style.display = 'block';
+        const badge = document.getElementById("formatBadge");
+        badge.style.display = "block";
 
         if (drm) {
-          badge.className = 'unknown';
-          badge.textContent = '🔒 ' + i18nText('drmDetected', 'DRM protected – cannot read');
-          addLog('🔒 DRM protected – cannot read');
+          badge.className = "unknown";
+          badge.textContent =
+            "🔒 " + i18nText("drmDetected", "DRM protected – cannot read");
+          addLog("🔒 DRM protected – cannot read");
           return;
         }
 
         addLog(`File loaded: ${file.name}`);
 
-        if (format === 'kf8') {
-          badge.className = 'kf8';
-          badge.textContent = '⚡ ' + i18nText('formatKF8', 'KF8 / HUFF·CDIC');
+        if (format === "kf8") {
+          badge.className = "kf8";
+          badge.textContent = "⚡ " + i18nText("formatKF8", "KF8 / HUFF·CDIC");
           initKF8Reader(buffer);
         } else {
-          badge.className = format === 'palmdoc' ? 'palmdoc' : 'unknown';
-          badge.textContent = '📜 ' + i18nText('formatPalm', 'PalmDoc / Mobi7');
+          badge.className = format === "palmdoc" ? "palmdoc" : "unknown";
+          badge.textContent = "📜 " + i18nText("formatPalm", "PalmDoc / Mobi7");
           initPalmReader(buffer);
         }
       });
 
       // ── KF8 reader init ───────────────────────────────────────────────────────
       function initKF8Reader(buffer) {
-        activeFormat = 'kf8';
-        document.getElementById('kf8Section').style.display = 'block';
-        document.getElementById('palmSection').style.display = 'none';
+        activeFormat = "kf8";
+        document.getElementById("kf8Section").style.display = "block";
+        document.getElementById("palmSection").style.display = "none";
         kf8Decoder = new KF8Decoder(buffer);
         searchCache = new Map();
         const ok = kf8Decoder.init();
         if (!ok) return;
         const maxRec = kf8Decoder.textRecordMax;
-        document.getElementById('recFrom').max = maxRec;
-        document.getElementById('recTo').max   = maxRec;
-        document.getElementById('recTo').value = Math.min(5, maxRec);
-        document.getElementById('decodeBtn').disabled = false;
-        document.getElementById('prevBtn').disabled   = false;
-        document.getElementById('nextBtn').disabled   = false;
-        document.getElementById('searchRow').style.display = 'flex';
-        document.getElementById('kf8DownloadHtmlBtn').disabled = false;
+        document.getElementById("recFrom").max = maxRec;
+        document.getElementById("recTo").max = maxRec;
+        document.getElementById("recTo").value = Math.min(5, maxRec);
+        document.getElementById("decodeBtn").disabled = false;
+        document.getElementById("prevBtn").disabled = false;
+        document.getElementById("nextBtn").disabled = false;
+        document.getElementById("searchRow").style.display = "flex";
+        document.getElementById("kf8DownloadHtmlBtn").disabled = false;
         addLog(`Ready. Text records: 1–${maxRec}. Use controls to inspect.`);
       }
 
       // KF8 decode
-      document.getElementById('decodeBtn').onclick = decodeSelected;
-      document.getElementById('prevBtn').onclick   = () => shiftRange(-1);
-      document.getElementById('nextBtn').onclick   = () => shiftRange(+1);
+      document.getElementById("decodeBtn").onclick = decodeSelected;
+      document.getElementById("prevBtn").onclick = () => shiftRange(-1);
+      document.getElementById("nextBtn").onclick = () => shiftRange(+1);
 
       function shiftRange(dir) {
-        const from = parseInt(document.getElementById('recFrom').value);
-        const to   = parseInt(document.getElementById('recTo').value);
+        const from = parseInt(document.getElementById("recFrom").value);
+        const to = parseInt(document.getElementById("recTo").value);
         const span = to - from;
-        const max  = kf8Decoder ? kf8Decoder.textRecordMax : 9999;
-        const newFrom = Math.max(1, Math.min(max - span, from + dir * (span + 1)));
-        document.getElementById('recFrom').value = newFrom;
-        document.getElementById('recTo').value   = Math.min(max, newFrom + span);
+        const max = kf8Decoder ? kf8Decoder.textRecordMax : 9999;
+        const newFrom = Math.max(
+          1,
+          Math.min(max - span, from + dir * (span + 1)),
+        );
+        document.getElementById("recFrom").value = newFrom;
+        document.getElementById("recTo").value = Math.min(max, newFrom + span);
         decodeSelected();
       }
 
       function decodeSelected() {
         if (!kf8Decoder) return;
-        const from = parseInt(document.getElementById('recFrom').value);
-        const to   = Math.min(parseInt(document.getElementById('recTo').value), kf8Decoder.textRecordMax);
-        document.getElementById('recInfo').textContent = `(max: ${kf8Decoder.textRecordMax})`;
-        let markers = '', combined = '', renderedCombined = '';
-        let totalComp = 0, totalDecomp = 0;
+        const from = parseInt(document.getElementById("recFrom").value);
+        const to = Math.min(
+          parseInt(document.getElementById("recTo").value),
+          kf8Decoder.textRecordMax,
+        );
+        document.getElementById("recInfo").textContent =
+          `(max: ${kf8Decoder.textRecordMax})`;
+        let markers = "",
+          combined = "",
+          renderedCombined = "";
+        let totalComp = 0,
+          totalDecomp = 0;
         for (let i = from; i <= to; i++) {
           try {
-            const { text, compressedBytes, decompressedBytes } = kf8Decoder.decodeRecord(i);
+            const { text, compressedBytes, decompressedBytes } =
+              kf8Decoder.decodeRecord(i);
             markers += `<!-- ═══ RECORD ${i} | ${compressedBytes}b → ${decompressedBytes}b ═══ -->\n`;
-            combined += text; renderedCombined += text;
-            totalComp += compressedBytes; totalDecomp += decompressedBytes;
-          } catch (e) { markers += `<!-- RECORD ${i}: ERROR: ${e.message} -->\n`; }
+            combined += text;
+            renderedCombined += text;
+            totalComp += compressedBytes;
+            totalDecomp += decompressedBytes;
+          } catch (e) {
+            markers += `<!-- RECORD ${i}: ERROR: ${e.message} -->\n`;
+          }
         }
-        document.getElementById('bytesBadge').textContent = `${totalComp}b → ${totalDecomp}b`;
-        document.getElementById('rawOutput').textContent  = `${markers}\n${combined}`;
-        document.getElementById('renderedOutput').innerHTML = renderedCombined;
-        document.getElementById('kf8OutputCard').style.display = 'block';
-        addLog(`Decoded records ${from}–${to}: ${totalComp} → ${totalDecomp} bytes`);
+        document.getElementById("bytesBadge").textContent =
+          `${totalComp}b → ${totalDecomp}b`;
+        document.getElementById("rawOutput").textContent =
+          `${markers}\n${combined}`;
+        document.getElementById("renderedOutput").innerHTML = renderedCombined;
+        document.getElementById("kf8OutputCard").style.display = "block";
+        addLog(
+          `Decoded records ${from}–${to}: ${totalComp} → ${totalDecomp} bytes`,
+        );
       }
 
       // Tabs
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-          tab.classList.add('active');
-          document.getElementById(tab.dataset.tab + 'Pane').classList.add('active');
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".pane")
+            .forEach((p) => p.classList.remove("active"));
+          tab.classList.add("active");
+          document
+            .getElementById(tab.dataset.tab + "Pane")
+            .classList.add("active");
         });
       });
 
       // Copy raw
-      document.getElementById('copyBtn').onclick = () =>
-        navigator.clipboard.writeText(document.getElementById('rawOutput').textContent);
+      document.getElementById("copyBtn").onclick = () =>
+        navigator.clipboard.writeText(
+          document.getElementById("rawOutput").textContent,
+        );
 
       // Download full KF8 HTML
-      document.getElementById('kf8DownloadHtmlBtn').onclick = () => {
+      document.getElementById("kf8DownloadHtmlBtn").onclick = () => {
         if (!kf8Decoder) return;
-        const btn = document.getElementById('kf8DownloadHtmlBtn');
+        const btn = document.getElementById("kf8DownloadHtmlBtn");
         btn.disabled = true;
         try {
           const parts = [];
           for (let i = 1; i <= kf8Decoder.textRecordMax; i++)
             parts.push(kf8Decoder.decodeRecord(i).text);
-          const html = `<!doctype html>\n<html lang="${window.LANG}">\n<head><meta charset="UTF-8"><title>${sourceFileName}</title></head>\n<body>\n${parts.join('\n')}\n</body>\n</html>`;
+          const html = `<!doctype html>\n<html lang="${window.LANG}">\n<head><meta charset="UTF-8"><title>${sourceFileName}</title></head>\n<body>\n${parts.join("\n")}\n</body>\n</html>`;
           const outName = `${sourceFileName}-decoded-kf8.html`;
-          downloadBlob(outName, html, 'text/html;charset=utf-8');
+          downloadBlob(outName, html, "text/html;charset=utf-8");
           addLog(`Exported: ${outName}`);
-        } catch (e) { addLog(`Download failed: ${e.message}`); }
-        finally { btn.disabled = false; }
+        } catch (e) {
+          addLog(`Download failed: ${e.message}`);
+        } finally {
+          btn.disabled = false;
+        }
       };
 
       // KF8 search
-      document.getElementById('searchBtn').onclick = searchWord;
-      document.getElementById('wordSearch').addEventListener('keydown', e => {
-        if (e.key === 'Enter') searchWord();
+      document.getElementById("searchBtn").onclick = searchWord;
+      document.getElementById("wordSearch").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") searchWord();
       });
-      document.getElementById('searchPrev').onclick = () => navigateSearch(-1);
-      document.getElementById('searchNext').onclick = () => navigateSearch(+1);
+      document.getElementById("searchPrev").onclick = () => navigateSearch(-1);
+      document.getElementById("searchNext").onclick = () => navigateSearch(+1);
 
       function showSearchResult(idx) {
         const max = kf8Decoder.textRecordMax;
         const rec = searchResults[idx];
-        document.getElementById('recFrom').value = Math.max(1, rec - 1);
-        document.getElementById('recTo').value   = Math.min(max, rec + 1);
+        document.getElementById("recFrom").value = Math.max(1, rec - 1);
+        document.getElementById("recTo").value = Math.min(max, rec + 1);
         decodeSelected();
-        const q   = document.getElementById('wordSearch').value.trim();
-        const raw = document.getElementById('rawOutput');
-        const re  = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        const q = document.getElementById("wordSearch").value.trim();
+        const raw = document.getElementById("rawOutput");
+        const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
         raw.innerHTML = raw.textContent
-          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(re, m => `<mark>${m}</mark>`);
-        const first = raw.querySelector('mark');
-        if (first) first.scrollIntoView({ block: 'center' });
-        document.getElementById('searchHits').textContent =
-          `Result ${idx+1} / ${searchResults.length}  (record #${rec})`;
-        document.getElementById('searchPrev').disabled = idx === 0;
-        document.getElementById('searchNext').disabled = idx === searchResults.length - 1;
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(re, (m) => `<mark>${m}</mark>`);
+        const first = raw.querySelector("mark");
+        if (first) first.scrollIntoView({ block: "center" });
+        document.getElementById("searchHits").textContent =
+          `Result ${idx + 1} / ${searchResults.length}  (record #${rec})`;
+        document.getElementById("searchPrev").disabled = idx === 0;
+        document.getElementById("searchNext").disabled =
+          idx === searchResults.length - 1;
       }
       function navigateSearch(dir) {
         const next = searchCursor + dir;
@@ -554,25 +770,31 @@
       }
       function searchWord() {
         if (!kf8Decoder) return;
-        const q = document.getElementById('wordSearch').value.trim().toLowerCase();
+        const q = document
+          .getElementById("wordSearch")
+          .value.trim()
+          .toLowerCase();
         if (!q) return;
-        const hitsEl = document.getElementById('searchHits');
-        hitsEl.textContent = 'Scanning…';
-        document.getElementById('searchPrev').disabled = true;
-        document.getElementById('searchNext').disabled = true;
+        const hitsEl = document.getElementById("searchHits");
+        hitsEl.textContent = "Scanning…";
+        document.getElementById("searchPrev").disabled = true;
+        document.getElementById("searchNext").disabled = true;
         const max = kf8Decoder.textRecordMax;
         if (searchCache.has(q)) {
           searchResults = searchCache.get(q).slice();
         } else {
           const hits = [];
           for (let i = 1; i <= max; i++) {
-            try { if (kf8Decoder.getRecordLowerText(i).includes(q)) hits.push(i); } catch(e) {}
+            try {
+              if (kf8Decoder.getRecordLowerText(i).includes(q)) hits.push(i);
+            } catch (e) {}
           }
           searchResults = hits;
           searchCache.set(q, hits.slice());
         }
         if (searchResults.length === 0) {
-          hitsEl.textContent = `No records found for "${q}".`; return;
+          hitsEl.textContent = `No records found for "${q}".`;
+          return;
         }
         searchCursor = 0;
         addLog(`Search "${q}": ${searchResults.length} hit(s)`);
@@ -581,13 +803,15 @@
 
       // ── PalmDoc reader init ───────────────────────────────────────────────────
       function initPalmReader(buffer) {
-        activeFormat = 'palmdoc';
-        document.getElementById('palmSection').style.display = 'block';
-        document.getElementById('kf8Section').style.display  = 'none';
+        activeFormat = "palmdoc";
+        document.getElementById("palmSection").style.display = "block";
+        document.getElementById("kf8Section").style.display = "none";
         palmReader = new MobiReaderPalmDoc(buffer);
         const total = palmReader.init();
         const t = I18N[window.LANG] || I18N.en;
-        addLog(`Loaded ${total} records. Extra flags: 0x${palmReader.extraFlags.toString(16)}`);
+        addLog(
+          `Loaded ${total} records. Extra flags: 0x${palmReader.extraFlags.toString(16)}`,
+        );
         updatePalmView(1);
       }
 
@@ -596,90 +820,96 @@
         palmCurrentIdx = idx;
         const text = palmReader.getRecordText(idx);
         const t = I18N[window.LANG] || I18N.en;
-        document.getElementById('rawContent').textContent  = text;
-        document.getElementById('htmlContent').innerHTML   = text;
-        document.getElementById('palmPageInfo').innerHTML  =
-          `<span data-i18n="recordLabel">${t.recordLabel || 'Record:'}</span> ${idx} / ${palmReader.records.length - 1}`;
-        document.getElementById('palmRecordMeta').textContent =
-          `Offset: ${palmReader.records[idx].offset} | ${t.sizeLabel || 'Size'}: ${text.length}`;
-        document.getElementById('palmPrevBtn').disabled = idx <= 1;
-        document.getElementById('palmNextBtn').disabled = idx >= palmReader.records.length - 1;
+        document.getElementById("rawContent").textContent = text;
+        document.getElementById("htmlContent").innerHTML = text;
+        document.getElementById("palmPageInfo").innerHTML =
+          `<span data-i18n="recordLabel">${t.recordLabel || "Record:"}</span> ${idx} / ${palmReader.records.length - 1}`;
+        document.getElementById("palmRecordMeta").textContent =
+          `Offset: ${palmReader.records[idx].offset} | ${t.sizeLabel || "Size"}: ${text.length}`;
+        document.getElementById("palmPrevBtn").disabled = idx <= 1;
+        document.getElementById("palmNextBtn").disabled =
+          idx >= palmReader.records.length - 1;
       }
 
-      document.getElementById('palmPrevBtn').onclick = () => updatePalmView(palmCurrentIdx - 1);
-      document.getElementById('palmNextBtn').onclick = () => updatePalmView(palmCurrentIdx + 1);
-      document.getElementById('jumpBtn').onclick = () => {
-        const val = parseInt(document.getElementById('jumpTo').value);
-        if (palmReader && val > 0 && val < palmReader.records.length) updatePalmView(val);
+      document.getElementById("palmPrevBtn").onclick = () =>
+        updatePalmView(palmCurrentIdx - 1);
+      document.getElementById("palmNextBtn").onclick = () =>
+        updatePalmView(palmCurrentIdx + 1);
+      document.getElementById("jumpBtn").onclick = () => {
+        const val = parseInt(document.getElementById("jumpTo").value);
+        if (palmReader && val > 0 && val < palmReader.records.length)
+          updatePalmView(val);
       };
-      document.getElementById('palmDownloadHtmlBtn').onclick = () => {
+      document.getElementById("palmDownloadHtmlBtn").onclick = () => {
         if (!palmReader) return;
         try {
           const parts = [];
           for (let i = 1; i < palmReader.records.length; i++)
             parts.push(palmReader.getRecordText(i));
-          const html = `<!doctype html>\n<html lang="${window.LANG}">\n<head><meta charset="UTF-8"><title>${sourceFileName}</title></head>\n<body>\n${parts.join('\n')}\n</body>\n</html>`;
+          const html = `<!doctype html>\n<html lang="${window.LANG}">\n<head><meta charset="UTF-8"><title>${sourceFileName}</title></head>\n<body>\n${parts.join("\n")}\n</body>\n</html>`;
           const outName = `${sourceFileName}-decoded-palmdoc.html`;
-          downloadBlob(outName, html, 'text/html;charset=utf-8');
+          downloadBlob(outName, html, "text/html;charset=utf-8");
           addLog(`Exported: ${outName}`);
-        } catch (e) { addLog(`Export failed: ${e.message}`); }
+        } catch (e) {
+          addLog(`Export failed: ${e.message}`);
+        }
       };
 
       // ── i18n ──────────────────────────────────────────────────────────────────
       const I18N = {
         en: {
-          pageTitle:   'MOBI Reader',
-          title:       '🔬 MOBI File Inspector',
-          dropzone:    '📁 Click or drag your .mobi file here',
-          formatKF8:   'KF8 / HUFF·CDIC (modern)',
-          formatPalm:  'PalmDoc / Mobi7 (legacy)',
-          drmDetected: 'DRM protected – cannot read',
-          logIdle:     'Status: Idle. Load a .mobi file to begin.',
-          recordLabel: 'Record:',
-          toLabel:     'to',
-          decodeBtn:   'DECODE RECORDS',
-          prevBtn:     '◀ Prev',
-          nextBtn:     'Next ▶',
-          searchBtn:   'Find',
-          searchPh:    '🔍 Search word in all records…',
-          outputLabel: 'Decoded Output',
-          downloadHtmlBtn: '💾 Download full HTML',
-          copyBtn:     '📋 Copy raw text',
-          tabRaw:      'Raw HTML source',
-          tabRendered: 'Rendered HTML',
-          jumpPh:      'Record no.',
-          jumpBtn:     'Go',
-          rawTitle:    'SOURCE CODE (Raw tags)',
-          renderedTitle: 'RENDERED PREVIEW',
-          sizeLabel:   'Size (chars)',
-          langToggleTitle: 'Switch language / Zmień język',
+          pageTitle: "MOBI Reader",
+          title: "🔬 MOBI File Inspector",
+          dropzone: "📁 Click or drag your .mobi file here",
+          formatKF8: "KF8 / HUFF·CDIC (modern)",
+          formatPalm: "PalmDoc / Mobi7 (legacy)",
+          drmDetected: "DRM protected – cannot read",
+          logIdle: "Status: Idle. Load a .mobi file to begin.",
+          recordLabel: "Record:",
+          toLabel: "to",
+          decodeBtn: "DECODE RECORDS",
+          prevBtn: "◀ Prev",
+          nextBtn: "Next ▶",
+          searchBtn: "Find",
+          searchPh: "🔍 Search word in all records…",
+          outputLabel: "Decoded Output",
+          downloadHtmlBtn: "💾 Download full HTML",
+          copyBtn: "📋 Copy raw text",
+          tabRaw: "Raw HTML source",
+          tabRendered: "Rendered HTML",
+          jumpPh: "Record no.",
+          jumpBtn: "Go",
+          rawTitle: "SOURCE CODE (Raw tags)",
+          renderedTitle: "RENDERED PREVIEW",
+          sizeLabel: "Size (chars)",
+          langToggleTitle: "Switch language / Zmień język",
         },
         pl: {
-          pageTitle:   'Przeglądarka MOBI',
-          title:       '🔬 Inspektor pliku MOBI',
-          dropzone:    '📁 Kliknij lub przeciągnij plik .mobi tutaj',
-          formatKF8:   'KF8 / HUFF·CDIC (nowoczesny)',
-          formatPalm:  'PalmDoc / Mobi7 (starszy)',
-          drmDetected: 'Zabezpieczony DRM – nie można odczytać',
-          logIdle:     'Status: Bezczynny. Wczytaj plik .mobi, aby rozpocząć.',
-          recordLabel: 'Rekord:',
-          toLabel:     'do',
-          decodeBtn:   'DEKODUJ REKORDY',
-          prevBtn:     '◀ Poprz.',
-          nextBtn:     'Nast. ▶',
-          searchBtn:   'Szukaj',
-          searchPh:    '🔍 Szukaj słowa we wszystkich rekordach…',
-          outputLabel: 'Zdekodowane dane',
-          downloadHtmlBtn: '💾 Pobierz pełny HTML',
-          copyBtn:     '📋 Kopiuj tekst',
-          tabRaw:      'Źródło HTML',
-          tabRendered: 'Podgląd HTML',
-          jumpPh:      'Nr rekordu',
-          jumpBtn:     'Skocz',
-          rawTitle:    'KOD ŹRÓDŁOWY (Surowe tagi)',
-          renderedTitle: 'PODGLĄD RENDEROWANIA',
-          sizeLabel:   'Rozmiar (znaki)',
-          langToggleTitle: 'Switch language / Zmień język',
+          pageTitle: "Przeglądarka MOBI",
+          title: "🔬 Inspektor pliku MOBI",
+          dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
+          formatKF8: "KF8 / HUFF·CDIC (nowoczesny)",
+          formatPalm: "PalmDoc / Mobi7 (starszy)",
+          drmDetected: "Zabezpieczony DRM – nie można odczytać",
+          logIdle: "Status: Bezczynny. Wczytaj plik .mobi, aby rozpocząć.",
+          recordLabel: "Rekord:",
+          toLabel: "do",
+          decodeBtn: "DEKODUJ REKORDY",
+          prevBtn: "◀ Poprz.",
+          nextBtn: "Nast. ▶",
+          searchBtn: "Szukaj",
+          searchPh: "🔍 Szukaj słowa we wszystkich rekordach…",
+          outputLabel: "Zdekodowane dane",
+          downloadHtmlBtn: "💾 Pobierz pełny HTML",
+          copyBtn: "📋 Kopiuj tekst",
+          tabRaw: "Źródło HTML",
+          tabRendered: "Podgląd HTML",
+          jumpPh: "Nr rekordu",
+          jumpBtn: "Skocz",
+          rawTitle: "KOD ŹRÓDŁOWY (Surowe tagi)",
+          renderedTitle: "PODGLĄD RENDEROWANIA",
+          sizeLabel: "Rozmiar (znaki)",
+          langToggleTitle: "Switch language / Zmień język",
         },
       };
       // @@include(src/i18n-core.js)

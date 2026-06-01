@@ -11,25 +11,25 @@
 
 function detectMobiFormat(buffer) {
   if (!buffer || buffer.byteLength < 100) {
-    return { format: 'unknown', drm: false, compressionCode: 0 };
+    return { format: "unknown", drm: false, compressionCode: 0 };
   }
   try {
     const dv = new DataView(buffer);
     const firstRecOffset = dv.getUint32(78);
     if (firstRecOffset + 14 > buffer.byteLength) {
-      return { format: 'unknown', drm: false, compressionCode: 0 };
+      return { format: "unknown", drm: false, compressionCode: 0 };
     }
     const compression = dv.getUint16(firstRecOffset);
-    const encryption  = dv.getUint16(firstRecOffset + 12);
+    const encryption = dv.getUint16(firstRecOffset + 12);
     const drm = encryption !== 0;
     let format;
-    if      (compression === 17480) format = 'kf8';
-    else if (compression === 2)     format = 'palmdoc';
-    else if (compression === 1)     format = 'palmdoc'; // no compression, still PalmDoc-style
-    else                            format = 'unknown';
+    if (compression === 17480) format = "kf8";
+    else if (compression === 2) format = "palmdoc";
+    else if (compression === 1)
+      format = "palmdoc"; // no compression, still PalmDoc-style
+    else format = "unknown";
     return { format, drm, compressionCode: compression };
   } catch (e) {
-    return { format: 'unknown', drm: false, compressionCode: 0 };
+    return { format: "unknown", drm: false, compressionCode: 0 };
   }
 }
-

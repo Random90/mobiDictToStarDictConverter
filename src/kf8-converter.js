@@ -37,11 +37,11 @@ class KF8Converter extends HuffCdicBase {
     if (!html) return html;
     // Fast-path: SJP2 and most header-block dicts use literal 'width="0"'.
     // String.replaceAll with a literal is ~10x faster than a regex for common cases.
-    if (html.indexOf('width') === -1) return html;
+    if (html.indexOf("width") === -1) return html;
     // Try the literal replacement first (covers most cases).
-    html = html.replaceAll('width="0"', '').replaceAll("width='0'", '');
+    html = html.replaceAll('width="0"', "").replaceAll("width='0'", "");
     // Fallback regex for other width= values (rare; e.g. width="-20", width="100%").
-    if (html.indexOf('width') !== -1)
+    if (html.indexOf("width") !== -1)
       html = html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, "");
     return html;
   }
@@ -252,13 +252,20 @@ class KF8Converter extends HuffCdicBase {
       // Trim trailing <hr> separator (and optional trailing <div>) using lastIndexOf
       // instead of scanning the whole block with a regex from position 0.
       // This avoids O(|block|) regex scan on every entry and eliminates backtracking.
-      const hrPos = block.lastIndexOf('<hr');
+      const hrPos = block.lastIndexOf("<hr");
       if (hrPos !== -1) {
         const suffix = block.slice(hrPos);
         if (/^<hr\b[^>]*>\s*(?:<div\b[^>]*>\s*)?$/i.test(suffix)) {
           // Trim any leading whitespace before the <hr> too
           let cut = hrPos;
-          while (cut > 0 && (block[cut-1] === ' ' || block[cut-1] === '\n' || block[cut-1] === '\r' || block[cut-1] === '\t')) cut--;
+          while (
+            cut > 0 &&
+            (block[cut - 1] === " " ||
+              block[cut - 1] === "\n" ||
+              block[cut - 1] === "\r" ||
+              block[cut - 1] === "\t")
+          )
+            cut--;
           block = block.slice(0, cut);
         }
       }
@@ -533,19 +540,33 @@ class KF8Converter extends HuffCdicBase {
     // ── MOBI binary INDX: extract inflected forms from ORTH+INFL indexes ────
     if (this.options.generateSyn) {
       try {
-        addLog(this.t('logParsingMobiIndex', 'Parsing MOBI INDX inflection index...'));
+        addLog(
+          this.t(
+            "logParsingMobiIndex",
+            "Parsing MOBI INDX inflection index...",
+          ),
+        );
         // parseMobiIndexes writes directly into synMap (via outputMap parameter),
         // so no merge loop is needed; inflAdded is reported via .size on the proxy.
         const result = this.parseMobiIndexes();
         if (result.size > 0) {
-          addLog(this.t('logMobiIndexResult',
-            'MOBI INDX: {added} new syn entries added.',
-            { added: result.size }));
+          addLog(
+            this.t(
+              "logMobiIndexResult",
+              "MOBI INDX: {added} new syn entries added.",
+              { added: result.size },
+            ),
+          );
         } else {
-          addLog(this.t('logMobiIndexNone', 'MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).'));
+          addLog(
+            this.t(
+              "logMobiIndexNone",
+              "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
+            ),
+          );
         }
       } catch (e) {
-        addLog('MOBI INDX parse skipped (non-fatal): ' + e.message);
+        addLog("MOBI INDX parse skipped (non-fatal): " + e.message);
       }
     }
 

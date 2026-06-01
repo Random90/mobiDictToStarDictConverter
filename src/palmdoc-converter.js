@@ -27,9 +27,11 @@ class Converter extends PalmDocBase {
         if (result.size > 0)
           this.log(`MOBI INDX: ${result.size} new syn entries added.`);
         else
-          this.log('MOBI INDX: no ORTH/INFL index found (normal for many MOBI7 files).');
+          this.log(
+            "MOBI INDX: no ORTH/INFL index found (normal for many MOBI7 files).",
+          );
       } catch (e) {
-        this.log('MOBI INDX parse skipped (non-fatal): ' + e.message);
+        this.log("MOBI INDX parse skipped (non-fatal): " + e.message);
       }
     }
 
@@ -84,9 +86,11 @@ class Converter extends PalmDocBase {
     const hrCount = (html.match(/<hr\b/gi) || []).length;
     if (hrCount < 100) return "main";
 
-    const boldHeadCount = (html.match(
-      /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
-    ) || []).length;
+    const boldHeadCount = (
+      html.match(
+        /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
+      ) || []
+    ).length;
 
     if (boldHeadCount >= 100) return "hr-bold";
     return "main";
@@ -113,8 +117,14 @@ class Converter extends PalmDocBase {
   _collectSynonyms(word, contentHtml) {
     if (!this.options.generateSyn) return;
 
-    const stripped = word.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "").trim();
-    if (stripped !== word && stripped.length > 1 && !this.synMap.has(stripped)) {
+    const stripped = word
+      .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "")
+      .trim();
+    if (
+      stripped !== word &&
+      stripped.length > 1 &&
+      !this.synMap.has(stripped)
+    ) {
       this.synMap.set(stripped, word);
     }
 
@@ -130,7 +140,8 @@ class Converter extends PalmDocBase {
     const tezRe = /\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi;
     for (const m of contentHtml.matchAll(tezRe)) {
       const alt = m[1].trim();
-      if (alt && alt !== word && !this.synMap.has(alt)) this.synMap.set(alt, word);
+      if (alt && alt !== word && !this.synMap.has(alt))
+        this.synMap.set(alt, word);
     }
   }
 

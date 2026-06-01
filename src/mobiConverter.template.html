@@ -880,6 +880,18 @@
       fileInput.addEventListener("change", async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        
+        // Reset UI state for new file
+        document.getElementById("downloadArea").style.display = "none";
+        document.getElementById("previewArea").style.display = "none";
+        document.getElementById("validatorSearchBox").style.display = "none";
+        document.getElementById("validatorStatus").textContent = "";
+        document.getElementById("validatorResultCard").style.display = "none";
+        document.getElementById("links").innerHTML = "";
+        document.getElementById("previewGrid").innerHTML = "";
+        logEl.textContent = i18nText("logIdle", "Status: Idle. Waiting for file...");
+        logEl.scrollTop = logEl.scrollHeight;
+        
         document.getElementById("fileNameDisplay").textContent =
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         globalBuffer = await file.arrayBuffer();

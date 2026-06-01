@@ -12,15 +12,15 @@
     <title data-i18n="pageTitle">MOBI → StarDict Converter</title>
     <style>
       :root {
-        --bg:       #1c2812;   /* outer page – darkest */
-        --surface:  #2e4220;   /* main panel – clearly olive */
-        --surface2: #384e26;   /* inner sections */
-        --titlebar: #243418;   /* title bar strip */
-        --accent:   #8acc4a;   /* warm olive-green highlight */
-        --accent2:  #9ab858;   /* lighter accent – muted olive, not neon */
-        --text:     #dfe6da;   /* neutral off-white text (main-page matched) */
-        --muted:    #c1cabc;   /* softer neutral muted text */
-        --border:   #4a6830;
+        --bg: #1c2812; /* outer page – darkest */
+        --surface: #2e4220; /* main panel – clearly olive */
+        --surface2: #384e26; /* inner sections */
+        --titlebar: #243418; /* title bar strip */
+        --accent: #8acc4a; /* warm olive-green highlight */
+        --accent2: #9ab858; /* lighter accent – muted olive, not neon */
+        --text: #dfe6da; /* neutral off-white text (main-page matched) */
+        --muted: #c1cabc; /* softer neutral muted text */
+        --border: #4a6830;
       }
 
       /* ── Page ──────────────────────────────────────────────────────────────── */
@@ -33,11 +33,21 @@
         background-image:
           repeating-linear-gradient(
             0deg,
-            rgba(0,0,0,.18) 0, rgba(0,0,0,.18) 1px,
-            transparent 1px, transparent 4px
+            rgba(0, 0, 0, 0.18) 0,
+            rgba(0, 0, 0, 0.18) 1px,
+            transparent 1px,
+            transparent 4px
           ),
-          radial-gradient(ellipse 100% 45% at 50% -5%, rgba(138,204,74,.12) 0%, transparent 65%),
-          radial-gradient(ellipse 60% 30% at 0% 110%, rgba(138,204,74,.06) 0%, transparent 55%);
+          radial-gradient(
+            ellipse 100% 45% at 50% -5%,
+            rgba(138, 204, 74, 0.12) 0%,
+            transparent 65%
+          ),
+          radial-gradient(
+            ellipse 60% 30% at 0% 110%,
+            rgba(138, 204, 74, 0.06) 0%,
+            transparent 55%
+          );
       }
 
       /* ── Panels / Cards ────────────────────────────────────────────────────── */
@@ -46,13 +56,18 @@
         border-radius: 10px;
         border: 1px solid #3a5e42;
         border-top-color: #52825a;
-        background: linear-gradient(180deg, #3a5228 0%, var(--surface) 40%, #263a1c 100%);
+        background: linear-gradient(
+          180deg,
+          #3a5228 0%,
+          var(--surface) 40%,
+          #263a1c 100%
+        );
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.07),   /* top inner highlight */
-          inset 0 -1px 0 rgba(0,0,0,.5),          /* bottom inner shadow  */
-          0 6px 28px rgba(0,0,0,.65),
-          0 1px 4px rgba(0,0,0,.8);
-        overflow: hidden;                          /* clips the titlebar gradient */
+          inset 0 1px 0 rgba(255, 255, 255, 0.07),
+          /* top inner highlight */ inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+          /* bottom inner shadow  */ 0 6px 28px rgba(0, 0, 0, 0.65),
+          0 1px 4px rgba(0, 0, 0, 0.8);
+        overflow: hidden; /* clips the titlebar gradient */
       }
 
       /* Title bar stripe at top of every card */
@@ -62,15 +77,19 @@
         padding: 10px 24px;
         font-size: 12px;
         text-transform: uppercase;
-        letter-spacing: .12em;
+        letter-spacing: 0.12em;
         color: #dbe2d3;
         background: linear-gradient(180deg, #3e5630 0%, #2e4420 100%);
         border-bottom: 2px solid var(--accent);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 2px 6px rgba(0,0,0,.4);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 2px 6px rgba(0, 0, 0, 0.4);
       }
 
       /* Card inner padding (applied to the sibling of the title bar) */
-      .card-body { padding: 20px 28px 28px; }
+      .card-body {
+        padding: 20px 28px 28px;
+      }
       /* For cards whose direct children aren't card-body wrapped */
       .card > p,
       .card > .upload-section,
@@ -79,7 +98,10 @@
       .card > #log,
       .card > .btn-main,
       .card > #downloadArea,
-      .card > #previewArea { padding-left: 24px; padding-right: 24px; }
+      .card > #previewArea {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
 
       /* ── Upload dropzone ───────────────────────────────────────────────────── */
       .upload-section {
@@ -92,20 +114,26 @@
         background:
           repeating-linear-gradient(
             45deg,
-            rgba(138,204,74,.04) 0, rgba(138,204,74,.04) 1px,
-            transparent 1px, transparent 8px
+            rgba(138, 204, 74, 0.04) 0,
+            rgba(138, 204, 74, 0.04) 1px,
+            transparent 1px,
+            transparent 8px
           ),
           linear-gradient(180deg, #243318 0%, #2c3e1e 100%);
-        box-shadow: inset 0 2px 5px rgba(0,0,0,.45);
-        transition: border-color .2s, background .2s;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
+        transition:
+          border-color 0.2s,
+          background 0.2s;
       }
       .upload-section:hover {
         border-color: var(--accent);
         background:
           repeating-linear-gradient(
             45deg,
-            rgba(138,204,74,.08) 0, rgba(138,204,74,.08) 1px,
-            transparent 1px, transparent 8px
+            rgba(138, 204, 74, 0.08) 0,
+            rgba(138, 204, 74, 0.08) 1px,
+            transparent 1px,
+            transparent 8px
           ),
           linear-gradient(180deg, #2c4220 0%, #38502a 100%);
       }
@@ -119,9 +147,9 @@
         border-radius: 4px;
         margin: 6px 24px 12px;
         text-transform: uppercase;
-        letter-spacing: .06em;
+        letter-spacing: 0.06em;
       }
-      #formatBadge.kf8     {
+      #formatBadge.kf8 {
         background: #243118;
         border: 1px solid #596f3d;
         border-top-color: #2c3b1e;
@@ -129,9 +157,21 @@
         border-radius: 8px;
         box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
       }
-      #formatBadge.palmdoc { background:#0d1e2e; border:1px solid #4da6d9; color:#90caf9; }
-      #formatBadge.drm     { background:#2a0d0d; border:1px solid #e57373; color:#ffcdd2; }
-      #formatBadge.unknown { background:#281e00; border:1px solid #ffca28; color:#fff59d; }
+      #formatBadge.palmdoc {
+        background: #0d1e2e;
+        border: 1px solid #4da6d9;
+        color: #90caf9;
+      }
+      #formatBadge.drm {
+        background: #2a0d0d;
+        border: 1px solid #e57373;
+        color: #ffcdd2;
+      }
+      #formatBadge.unknown {
+        background: #281e00;
+        border: 1px solid #ffca28;
+        color: #fff59d;
+      }
 
       /* ── Console log ───────────────────────────────────────────────────────── */
       #log {
@@ -146,12 +186,14 @@
         font-size: 11.5px;
         border: 1px solid #3a5228;
         border-top-color: #243318;
-        box-shadow: inset 0 2px 8px rgba(0,0,0,.5);
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         white-space: pre-wrap;
         background-image: repeating-linear-gradient(
           0deg,
-          rgba(138,204,74,.04) 0, rgba(138,204,74,.04) 1px,
-          transparent 1px, transparent 16px
+          rgba(138, 204, 74, 0.04) 0,
+          rgba(138, 204, 74, 0.04) 1px,
+          transparent 1px,
+          transparent 16px
         );
       }
 
@@ -164,31 +206,41 @@
         font-size: 16px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .1em;
+        letter-spacing: 0.1em;
         color: #1a2a0a;
         cursor: pointer;
         border-radius: 5px;
         border: 1px solid #3a5e14;
         border-top-color: #6a9a2e;
         border-bottom: 3px solid #2e4c0e;
-        background: linear-gradient(180deg, #8aaa48 0%, #7e9a3c 30%, #6e8830 72%, #5e7822 100%);
+        background: linear-gradient(
+          180deg,
+          #8aaa48 0%,
+          #7e9a3c 30%,
+          #6e8830 72%,
+          #5e7822 100%
+        );
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.28),  /* top bevel highlight */
-          inset 1px 0 0 rgba(255,255,255,.10),  /* left bevel */
-          inset -1px 0 0 rgba(0,0,0,.15),       /* right bevel */
-          inset 0 -1px 0 rgba(0,0,0,.35),       /* bottom inner shadow */
-          0 4px 0 #2a4008,                       /* hard bottom lift */
-          0 6px 18px rgba(0,0,0,.65),            /* drop shadow */
-          0 1px 4px rgba(0,0,0,.9);              /* close shadow */
-        transition: filter .15s, transform .1s;
+          inset 0 1px 0 rgba(255, 255, 255, 0.28),
+          /* top bevel highlight */ inset 1px 0 0 rgba(255, 255, 255, 0.1),
+          /* left bevel */ inset -1px 0 0 rgba(0, 0, 0, 0.15),
+          /* right bevel */ inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+          /* bottom inner shadow */ 0 4px 0 #2a4008,
+          /* hard bottom lift */ 0 6px 18px rgba(0, 0, 0, 0.65),
+          /* drop shadow */ 0 1px 4px rgba(0, 0, 0, 0.9); /* close shadow */
+        transition:
+          filter 0.15s,
+          transform 0.1s;
       }
-      .btn-main:hover   { filter: brightness(1.1); }
-      .btn-main:active  {
+      .btn-main:hover {
+        filter: brightness(1.1);
+      }
+      .btn-main:active {
         border-bottom-width: 1px;
         transform: translateY(3px);
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.18),
-          inset 0 2px 6px rgba(0,0,0,.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18),
+          inset 0 2px 6px rgba(0, 0, 0, 0.4),
           0 1px 0 #2a4008;
       }
       .btn-main:disabled {
@@ -197,7 +249,7 @@
         border-top-color: #2a3c1e;
         color: var(--muted);
         cursor: not-allowed;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,.4);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
         filter: none;
         transform: none;
       }
@@ -207,7 +259,12 @@
         display: inline-block;
         margin: 4px;
         padding: 8px 14px;
-        background: linear-gradient(180deg, #7f9b47 0%, #70863a 52%, #5d722b 100%);
+        background: linear-gradient(
+          180deg,
+          #7f9b47 0%,
+          #70863a 52%,
+          #5d722b 100%
+        );
         color: #1b2a0b;
         text-decoration: none;
         border-radius: 4px;
@@ -217,12 +274,14 @@
         border-top-color: #6f9338;
         border-bottom: 2px solid #2d4210;
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.22),
-          inset 0 -1px 0 rgba(0,0,0,.3),
-          0 2px 6px rgba(0,0,0,.45);
-        transition: filter .15s;
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+          0 2px 6px rgba(0, 0, 0, 0.45);
+        transition: filter 0.15s;
       }
-      .btn-dl:hover { filter: brightness(1.12); }
+      .btn-dl:hover {
+        filter: brightness(1.12);
+      }
 
       /* ── Options box ───────────────────────────────────────────────────────── */
       .option-box {
@@ -231,10 +290,15 @@
         border-radius: 6px;
         border: 1px solid #596f3d;
         border-top-color: #728c50;
-        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        background: linear-gradient(
+          180deg,
+          #425935 0%,
+          #3a4f2f 48%,
+          #324528 100%
+        );
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.08),
-          0 8px 22px rgba(0,0,0,.42);
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
       }
       .option-row {
         display: flex;
@@ -243,7 +307,11 @@
         margin-bottom: 8px;
         flex-wrap: wrap;
       }
-      .option-row label { font-weight: 600; min-width: 120px; font-size: 13px; }
+      .option-row label {
+        font-weight: 600;
+        min-width: 120px;
+        font-size: 13px;
+      }
       .option-row select,
       .validator-search {
         padding: 6px 10px;
@@ -259,8 +327,16 @@
         cursor: pointer;
         width: 100%;
       }
-      .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; }
-      input[type="checkbox"] { accent-color: var(--accent); }
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        padding: 5px 0;
+      }
+      input[type="checkbox"] {
+        accent-color: var(--accent);
+      }
       .style-preview {
         border: 1px solid #1e3020;
         border-top-color: #2a4232;
@@ -271,9 +347,13 @@
         background: #fff;
         color: #1c1e21;
         min-height: 32px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,.15);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
       }
-      .style-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+      .style-note {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
 
       /* ── Badge (syn count) ─────────────────────────────────────────────────── */
       .badge-syn {
@@ -305,7 +385,7 @@
         font-size: 11px;
         max-height: 220px;
         overflow-y: auto;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,.12);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
       }
 
       /* ── Inline validator ──────────────────────────────────────────────────── */
@@ -318,20 +398,34 @@
         appearance: none;
         -webkit-appearance: none;
       }
-      .validator-status { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+      .validator-status {
+        font-size: 11.5px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
       .validator-card {
         display: none;
         margin-top: 10px;
         padding: 12px;
-        background: linear-gradient(180deg, #425935 0%, #3a4f2f 48%, #324528 100%);
+        background: linear-gradient(
+          180deg,
+          #425935 0%,
+          #3a4f2f 48%,
+          #324528 100%
+        );
         border: 1px solid #596f3d;
         border-top-color: #728c50;
         border-radius: 5px;
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.08),
-          0 8px 22px rgba(0,0,0,.42);
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.42);
       }
-      .validator-split { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 8px; }
+      .validator-split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 8px;
+      }
       .validator-pane {
         border: 1px solid #1e3020;
         border-top-color: #2a4232;
@@ -341,7 +435,7 @@
         overflow: auto;
         background: #fff;
         color: #1c1e21;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,.1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       /* ── Lang toggle ───────────────────────────────────────────────────────── */
@@ -358,14 +452,27 @@
         font-size: 11px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+        box-shadow:
+          0 2px 6px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.07);
         text-transform: uppercase;
-        letter-spacing: .05em;
+        letter-spacing: 0.05em;
       }
-      #langToggle:hover { border-color: var(--accent); color: var(--accent); }
+      #langToggle:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
 
-      a { color: #dbe2d3; }
-      h3 { color: #dbe2d3; margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .07em; }
+      a {
+        color: #dbe2d3;
+      }
+      h3 {
+        color: #dbe2d3;
+        margin: 0 0 8px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
     </style>
   </head>
   <body>
@@ -377,16 +484,33 @@
   <small style="color:#666">JavaScript jest wymagany do działania tej strony.</small>
 </div>
 </noscript>
-    <button id="langToggle" onclick="toggleLang()" data-i18n-title="langToggleTitle">
+    <button
+      id="langToggle"
+      onclick="toggleLang()"
+      data-i18n-title="langToggleTitle"
+    >
       🇵🇱 PL
     </button>
     <div class="card">
       <h2 data-i18n="title"></h2>
-      <p style="padding:0 24px;margin-bottom:12px;font-size:13px;color:var(--text)" data-i18n-html="desc"></p>
+      <p
+        style="
+          padding: 0 24px;
+          margin-bottom: 12px;
+          font-size: 13px;
+          color: var(--text);
+        "
+        data-i18n-html="desc"
+      ></p>
 
       <div class="upload-section" id="dropZone">
         <span id="fileNameDisplay" data-i18n="dropzone"></span>
-        <input type="file" id="fileInput" accept=".mobi,.azw,.azw3" style="display: none" />
+        <input
+          type="file"
+          id="fileInput"
+          accept=".mobi,.azw,.azw3"
+          style="display: none"
+        />
       </div>
       <div id="formatBadge"></div>
 
@@ -394,7 +518,7 @@
         <div class="option-row">
           <label data-i18n="styleLabel"></label>
           <select id="styleSelect">
-            <option value="none"  data-i18n="styleNone"></option>
+            <option value="none" data-i18n="styleNone"></option>
             <option value="nice" selected data-i18n="styleNice"></option>
             <option value="eink" data-i18n="styleEink"></option>
             <option value="rich" data-i18n="styleRich"></option>
@@ -403,41 +527,111 @@
         <div class="style-preview" id="stylePreview"></div>
         <div class="style-note" data-i18n-html="styleCompatibilityNote"></div>
 
-        <div class="check-item" style="margin-top:10px">
+        <div class="check-item" style="margin-top: 10px">
           <input type="checkbox" id="compressCheck" checked />
           <label for="compressCheck" data-i18n="compressLabel"></label>
         </div>
         <div class="style-note" data-i18n-html="compressNote"></div>
       </div>
 
-      <button id="startBtn" class="btn-main" disabled data-i18n="startBtn"></button>
+      <button
+        id="startBtn"
+        class="btn-main"
+        disabled
+        data-i18n="startBtn"
+      ></button>
 
       <div id="log" data-i18n="logIdle"></div>
 
-      <div id="downloadArea" style="display:none;margin:20px 24px 0;padding:18px 20px;background:linear-gradient(180deg,#344828 0%,#2f4222 46%,#28381c 100%);border-radius:6px;border:1px solid #4f6731;border-top-color:#607b3f;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 14px rgba(0,0,0,.45);">
+      <div
+        id="downloadArea"
+        style="
+          display: none;
+          margin: 20px 24px 0;
+          padding: 18px 20px;
+          background: linear-gradient(
+            180deg,
+            #344828 0%,
+            #2f4222 46%,
+            #28381c 100%
+          );
+          border-radius: 6px;
+          border: 1px solid #4f6731;
+          border-top-color: #607b3f;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 6px 14px rgba(0, 0, 0, 0.45);
+        "
+      >
         <h3 data-i18n="doneTitle"></h3>
-        <div id="links" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;align-items:flex-start;"></div>
+        <div
+          id="links"
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            align-items: flex-start;
+          "
+        ></div>
       </div>
 
-      <div id="previewArea" style="display:none;margin:20px 0 18px">
+      <div id="previewArea" style="display: none; margin: 20px 0 18px">
         <h3 data-i18n="previewTitle"></h3>
         <div class="preview-grid" id="previewGrid"></div>
-        <h4 data-i18n="validatorTitle" style="margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-size:11px"></h4>
-        <input type="text" id="validatorSearchBox" class="validator-search"
-               data-i18n-ph="validatorSearchPh" placeholder="" />
+        <h4
+          data-i18n="validatorTitle"
+          style="
+            margin: 14px 0 6px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            font-size: 11px;
+          "
+        ></h4>
+        <input
+          type="text"
+          id="validatorSearchBox"
+          class="validator-search"
+          data-i18n-ph="validatorSearchPh"
+          placeholder=""
+        />
         <div id="validatorStatus" class="validator-status"></div>
         <div id="validatorResultCard" class="validator-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            "
+          >
             <b id="validatorResultWord"></b>
-            <div style="display:flex;gap:6px;align-items:center">
+            <div style="display: flex; gap: 6px; align-items: center">
               <span id="validatorByteBadge" class="badge-syn"></span>
-              <button id="validatorCopyBtn" class="btn-dl"
-                      style="padding:6px 10px;background:var(--surface);color:var(--text);border:1px solid var(--border)"
-                      data-i18n="validatorCopyHtml"></button>
+              <button
+                id="validatorCopyBtn"
+                class="btn-dl"
+                style="
+                  padding: 6px 10px;
+                  background: var(--surface);
+                  color: var(--text);
+                  border: 1px solid var(--border);
+                "
+                data-i18n="validatorCopyHtml"
+              ></button>
             </div>
           </div>
-          <div id="validatorSynInfo"
-               style="display:none;color:var(--muted);font-size:12px;margin-top:6px"></div>
+          <div
+            id="validatorSynInfo"
+            style="
+              display: none;
+              color: var(--muted);
+              font-size: 12px;
+              margin-top: 6px;
+            "
+          ></div>
           <div class="validator-split">
             <div id="validatorPaneRendered" class="validator-pane"></div>
           </div>
@@ -450,12 +644,13 @@
       function formatI18nText(template, vars) {
         if (!vars) return template;
         return String(template).replace(/\{(\w+)}/g, (_, k) =>
-          vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+          vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+        );
       }
 
       function i18nText(key, fallback, vars) {
         const tables = window.__I18N_TABLES || {};
-        const lang = window.LANG || 'en';
+        const lang = window.LANG || "en";
         const table = tables[lang] || tables.en || {};
         const en = tables.en || {};
         const base = table[key] !== undefined ? table[key] : en[key];
@@ -467,25 +662,36 @@
       // Both KF8 (2-arg) and PalmDoc (4-arg) calling conventions are supported.
       // When rawH2Html argument is present → PalmDoc mode; otherwise → KF8 mode.
       const STYLES = {
-        _escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); },
+        _escapeRegExp(s) {
+          return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        },
 
         _ensureHeadwordSpan(word, html) {
-          if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html)) return html;
-          const w = (word || '').trim();
+          if (/<span\s*>\s*<b>[\s\S]*?<\/b>\s*<\/span>/i.test(html))
+            return html;
+          const w = (word || "").trim();
           if (!w) return html;
           const escaped = STYLES._escapeRegExp(w);
-          const hMatch = html.match(/^\s*<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>\s*/i);
+          const hMatch = html.match(
+            /^\s*<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>\s*/i,
+          );
           if (hMatch) {
-            const plain = hMatch[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, 'i');
+            const plain = hMatch[2]
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+            const reLeadWord = new RegExp(`^${escaped}(?:\\b|\\s)`, "i");
             if (reLeadWord.test(plain)) {
-              const tail = plain.replace(new RegExp(`^${escaped}\\s*`, 'i'), '').trim();
+              const tail = plain
+                .replace(new RegExp(`^${escaped}\\s*`, "i"), "")
+                .trim();
               const rest = html.slice(hMatch[0].length);
-              return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ''}${rest ? ` ${rest}` : ''}`.trim();
+              return `<span><b>${w}</b></span>${tail ? ` ${tail}` : ""}${rest ? ` ${rest}` : ""}`.trim();
             }
           }
-          const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, 'i');
-          if (leadRe.test(html)) return html.replace(leadRe, `<span><b>${w}</b></span> `);
+          const leadRe = new RegExp(`^\\s*${escaped}(?:\\b|\\s*)`, "i");
+          if (leadRe.test(html))
+            return html.replace(leadRe, `<span><b>${w}</b></span> `);
           return html;
         },
 
@@ -496,108 +702,161 @@
 
         clean(word, pHtmlOrPhonetics, rawH2Html, contentHtml) {
           if (rawH2Html !== undefined) {
-            const strip = (h) => h.replace(/ style="[^"]*"/g, '');
-            const ph = pHtmlOrPhonetics ? ` <em>${pHtmlOrPhonetics}</em>` : '';
+            const strip = (h) => h.replace(/ style="[^"]*"/g, "");
+            const ph = pHtmlOrPhonetics ? ` <em>${pHtmlOrPhonetics}</em>` : "";
             return `<b>${word}</b>${ph}<br>${strip(contentHtml)}`;
           }
           return pHtmlOrPhonetics
-            .replace(/ width="[^"]*"/gi, '')
-            .replace(/ style="[^"]*"/gi, '');
+            .replace(/ width="[^"]*"/gi, "")
+            .replace(/ style="[^"]*"/gi, "");
         },
 
         nice(word, pHtmlOrPhonetics, rawH2Html, contentHtml) {
           if (rawH2Html !== undefined) {
             const ph = pHtmlOrPhonetics
               ? ` <span style="color:#666;font-size:.88em;font-style:italic">${pHtmlOrPhonetics}</span>`
-              : '';
+              : "";
             let content = contentHtml
-              .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\b.*?<\/i>)/g,
-                '<span style="color:#c0392b;font-weight:bold">$1</span>')
-              .replace(/(<b>(?:\d+)\.?<\/b>)/g,
-                '<span style="color:#2980b9;font-weight:bold">$1</span>');
+              .replace(
+                /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\b.*?<\/i>)/g,
+                '<span style="color:#c0392b;font-weight:bold">$1</span>',
+              )
+              .replace(
+                /(<b>(?:\d+)\.?<\/b>)/g,
+                '<span style="color:#2980b9;font-weight:bold">$1</span>',
+              );
             return `<div style="margin-bottom:6px"><b style="font-size:1.15em;color:#003d82">${word}</b>${ph}</div>${content}`;
           }
           const pHtml = STYLES._ensureHeadwordSpan(word, pHtmlOrPhonetics);
           let body = pHtml
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-              '<span style="color:#c0392b;font-weight:bold">$1</span>')
-            .replace(/\b(<b>(\d+)\.<\/b>)/g,
-              '<span style="color:#2980b9;font-weight:bold">$1</span>');
-          body = body.replace(/(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
-            '<span><b style="font-size:1.15em;color:#003d82">$2</b></span>');
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<span style="color:#c0392b;font-weight:bold">$1</span>',
+            )
+            .replace(
+              /\b(<b>(\d+)\.<\/b>)/g,
+              '<span style="color:#2980b9;font-weight:bold">$1</span>',
+            );
+          body = body.replace(
+            /(<span\s*>\s*<b>)([\s\S]*?)(<\/b>\s*<\/span>)/,
+            '<span><b style="font-size:1.15em;color:#003d82">$2</b></span>',
+          );
           return body;
         },
 
         eink(word, pHtmlOrPhonetics, rawH2Html, contentHtml) {
           if (rawH2Html !== undefined) {
             const ph = pHtmlOrPhonetics
-              ? ` <span style="font-size:.9em;font-style:italic">${pHtmlOrPhonetics}</span>` : '';
+              ? ` <span style="font-size:.9em;font-style:italic">${pHtmlOrPhonetics}</span>`
+              : "";
             let content = contentHtml
-              .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>')
-              .replace(/\b(\d+)\./g, '<b>$1.</b>')
-              .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, '<small>$1</small>')
-              .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
-                '<b style="text-decoration:underline">$2</b>');
+              .replace(
+                /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+                "<b>$1</b>",
+              )
+              .replace(/\b(\d+)\./g, "<b>$1.</b>")
+              .replace(/(<i>[a-z]{2,5}\.<\/i>)/g, "<small>$1</small>")
+              .replace(
+                /(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+                '<b style="text-decoration:underline">$2</b>',
+              );
             return `<div style="margin-bottom:6px;padding:4px 0;border-left:2px solid #000;padding-left:8px"><b style="font-size:1.2em">${word}</b>${ph}</div>${content}`;
           }
           const pHtml = STYLES._ensureHeadwordSpan(word, pHtmlOrPhonetics);
           const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
-          const ipa = ipaM ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>` : '';
-          let body = ipaM ? pHtml.replace(ipaM[0], '') : pHtml;
+          const ipa = ipaM
+            ? ` <span style="font-size:.9em;font-style:italic">/${ipaM[1]}/</span>`
+            : "";
+          let body = ipaM ? pHtml.replace(ipaM[0], "") : pHtml;
           body = body
-            .replace(/<b>(\d+)\.<\/b>/g, '<b>$1.</b>')
-            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, '<small>$1</small>')
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g, '<b>$1</b>');
+            .replace(/<b>(\d+)\.<\/b>/g, "<b>$1.</b>")
+            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g, "<small>$1</small>")
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              "<b>$1</b>",
+            );
           let seenHeadword = false;
-          body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-            if (!seenHeadword) {
-              seenHeadword = true;
-              return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px"><b style="font-size:1.18em">${inner}</b>${ipa}</span>`;
-            }
-            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' '))
-              return `<span><b style="text-decoration:underline">${inner}</b></span>`;
-            return m;
-          });
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHeadword) {
+                seenHeadword = true;
+                return `<span style="display:block;border-left:2px solid #000;padding-left:7px;margin-bottom:4px"><b style="font-size:1.18em">${inner}</b>${ipa}</span>`;
+              }
+              const plain = inner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (
+                plain.length >= 3 &&
+                plain.length <= 80 &&
+                plain.includes(" ")
+              )
+                return `<span><b style="text-decoration:underline">${inner}</b></span>`;
+              return m;
+            },
+          );
           return body;
         },
 
         rich(word, pHtmlOrPhonetics, rawH2Html, contentHtml) {
           if (rawH2Html !== undefined) {
             const ph = pHtmlOrPhonetics
-              ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.85em">${pHtmlOrPhonetics}</span>` : '';
+              ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.85em">${pHtmlOrPhonetics}</span>`
+              : "";
             let content = contentHtml
-              .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-                '<b style="color:#e74c3c">$1</b>')
+              .replace(
+                /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+                '<b style="color:#e74c3c">$1</b>',
+              )
               .replace(/\b(\d+)\./g, '<b style="color:#1565c0">$1.</b>')
-              .replace(/(<i>[a-z]{2,5}\.<\/i>)/g,
-                '<span style="color:#7c3aed;font-size:.85em">$1</span>')
-              .replace(/(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
-                '<b style="color:#5c4b00">$2</b>');
+              .replace(
+                /(<i>[a-z]{2,5}\.<\/i>)/g,
+                '<span style="color:#7c3aed;font-size:.85em">$1</span>',
+              )
+              .replace(
+                /(<b>([^<]{3,60})<\/b>(?=\s*[/(<]))/g,
+                '<b style="color:#5c4b00">$2</b>',
+              );
             return `<div style="margin-bottom:6px;padding:4px 0;border-left:3px solid #2980b9;padding-left:8px"><b style="font-size:1.2em;color:#1a237e">${word}</b>${ph}</div>${content}`;
           }
           const pHtml = STYLES._ensureHeadwordSpan(word, pHtmlOrPhonetics);
           const ipaM = pHtml.match(/(?<!<)\/([^/<]{2,60})\//);
           const ipa = ipaM
-            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>` : '';
-          let body = ipaM ? pHtml.replace(ipaM[0], '') : pHtml;
+            ? ` <span style="background:#eef5ff;color:#0366d6;padding:1px 5px;border-radius:3px;font-size:.83em">/${ipaM[1]}/</span>`
+            : "";
+          let body = ipaM ? pHtml.replace(ipaM[0], "") : pHtml;
           body = body
-            .replace(/(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
-              '<b style="color:#e74c3c">$1</b>')
+            .replace(
+              /(<i>(?:n|v|adj|adv|prep|conj|pron|interj|abbr|acr)\.?<\/i>)/g,
+              '<b style="color:#e74c3c">$1</b>',
+            )
             .replace(/<b>(\d+)\.<\/b>/g, '<b style="color:#1565c0">$1.</b>')
-            .replace(/(<i>(?:[a-z]{2,5})\.<\/i>)/g,
-              '<span style="color:#7c3aed;font-size:.83em">$1</span>');
+            .replace(
+              /(<i>(?:[a-z]{2,5})\.<\/i>)/g,
+              '<span style="color:#7c3aed;font-size:.83em">$1</span>',
+            );
           let seenHeadword = false;
-          body = body.replace(/<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi, (m, inner) => {
-            if (!seenHeadword) {
-              seenHeadword = true;
-              return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px"><b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`;
-            }
-            const plain = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (plain.length >= 3 && plain.length <= 80 && plain.includes(' '))
-              return `<span><b style="color:#5c4b00">${inner}</b></span>`;
-            return m;
-          });
+          body = body.replace(
+            /<span\s*>\s*<b[^>]*>([\s\S]*?)<\/b>\s*<\/span>/gi,
+            (m, inner) => {
+              if (!seenHeadword) {
+                seenHeadword = true;
+                return `<span style="display:block;border-left:3px solid #2980b9;padding-left:7px;margin-bottom:4px"><b style="font-size:1.18em;color:#1a237e">${inner}</b>${ipa}</span>`;
+              }
+              const plain = inner
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (
+                plain.length >= 3 &&
+                plain.length <= 80 &&
+                plain.includes(" ")
+              )
+                return `<span><b style="color:#5c4b00">${inner}</b></span>`;
+              return m;
+            },
+          );
           return body;
         },
       };
@@ -605,14 +864,20 @@
       // Live preview using a sample entry
       const PREVIEW_HTML = `<p> <span ><b>download</b></span> /ˌdaʊnˈləʊd/ <i>v</i> <b>1.</b> <i>inf.</i> pobierać, ściągać <br/> <span ><b>download time</b></span> <i>n</i> czas pobierania </p>`;
       function updateStylePreview() {
-        const fn = STYLES[document.getElementById('styleSelect').value] || STYLES.nice;
-        document.getElementById('stylePreview').innerHTML = fn('download', PREVIEW_HTML);
+        const fn =
+          STYLES[document.getElementById("styleSelect").value] || STYLES.nice;
+        document.getElementById("stylePreview").innerHTML = fn(
+          "download",
+          PREVIEW_HTML,
+        );
       }
-      document.getElementById('styleSelect').addEventListener('change', updateStylePreview);
+      document
+        .getElementById("styleSelect")
+        .addEventListener("change", updateStylePreview);
       updateStylePreview();
 
       // ── Logging ───────────────────────────────────────────────────────────────
-      const logEl = document.getElementById('log');
+      const logEl = document.getElementById("log");
       function addLog(msg) {
         logEl.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
         logEl.scrollTop = logEl.scrollHeight;
@@ -632,75 +897,104 @@
 
       function detectMobiFormat(buffer) {
         if (!buffer || buffer.byteLength < 100) {
-          return { format: 'unknown', drm: false, compressionCode: 0 };
+          return { format: "unknown", drm: false, compressionCode: 0 };
         }
         try {
           const dv = new DataView(buffer);
           const firstRecOffset = dv.getUint32(78);
           if (firstRecOffset + 14 > buffer.byteLength) {
-            return { format: 'unknown', drm: false, compressionCode: 0 };
+            return { format: "unknown", drm: false, compressionCode: 0 };
           }
           const compression = dv.getUint16(firstRecOffset);
-          const encryption  = dv.getUint16(firstRecOffset + 12);
+          const encryption = dv.getUint16(firstRecOffset + 12);
           const drm = encryption !== 0;
           let format;
-          if      (compression === 17480) format = 'kf8';
-          else if (compression === 2)     format = 'palmdoc';
-          else if (compression === 1)     format = 'palmdoc'; // no compression, still PalmDoc-style
-          else                            format = 'unknown';
+          if (compression === 17480) format = "kf8";
+          else if (compression === 2) format = "palmdoc";
+          else if (compression === 1)
+            format = "palmdoc"; // no compression, still PalmDoc-style
+          else format = "unknown";
           return { format, drm, compressionCode: compression };
         } catch (e) {
-          return { format: 'unknown', drm: false, compressionCode: 0 };
+          return { format: "unknown", drm: false, compressionCode: 0 };
         }
       }
-
 
 
       let globalBuffer = null;
       let detectedFormat = null; // 'kf8' | 'palmdoc' | 'unknown'
 
-      const fileInput = document.getElementById('fileInput');
-      document.getElementById('dropZone').onclick = () => fileInput.click();
-      fileInput.addEventListener('change', async (e) => {
+      const fileInput = document.getElementById("fileInput");
+      document.getElementById("dropZone").onclick = () => fileInput.click();
+      fileInput.addEventListener("change", async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        document.getElementById('fileNameDisplay').textContent =
+        document.getElementById("fileNameDisplay").textContent =
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         globalBuffer = await file.arrayBuffer();
 
         const { format, drm, compressionCode } = detectMobiFormat(globalBuffer);
-        const badge = document.getElementById('formatBadge');
-        badge.style.display = 'block';
-        badge.className = '';
+        const badge = document.getElementById("formatBadge");
+        badge.style.display = "block";
+        badge.className = "";
 
         if (drm) {
-          badge.className = 'drm';
-          badge.textContent = i18nText('detectDRM', '🔒 DRM protected – cannot convert');
-          document.getElementById('startBtn').disabled = true;
-          addLog(i18nText('detectDRM', '🔒 DRM protected – cannot convert'));
+          badge.className = "drm";
+          badge.textContent = i18nText(
+            "detectDRM",
+            "🔒 DRM protected – cannot convert",
+          );
+          document.getElementById("startBtn").disabled = true;
+          addLog(i18nText("detectDRM", "🔒 DRM protected – cannot convert"));
           return;
         }
 
-        if (format === 'kf8') {
-          badge.className = 'kf8';
-          badge.textContent = i18nText('detectFormatKF8', '⚡ KF8 / HUFF·CDIC (modern format)');
-          addLog(i18nText('logFileLoaded', 'File loaded: {file}', { file: file.name }));
-          addLog(i18nText('detectFormatKF8', '⚡ KF8 / HUFF·CDIC (modern format)'));
-        } else if (format === 'palmdoc') {
-          badge.className = 'palmdoc';
-          badge.textContent = i18nText('detectFormatPalm', '📜 PalmDoc / Mobi7 (legacy format)');
-          addLog(i18nText('logFileLoaded', 'File loaded: {file}', { file: file.name }));
-          addLog(i18nText('detectFormatPalm', '📜 PalmDoc / Mobi7 (legacy format)'));
+        if (format === "kf8") {
+          badge.className = "kf8";
+          badge.textContent = i18nText(
+            "detectFormatKF8",
+            "⚡ KF8 / HUFF·CDIC (modern format)",
+          );
+          addLog(
+            i18nText("logFileLoaded", "File loaded: {file}", {
+              file: file.name,
+            }),
+          );
+          addLog(
+            i18nText("detectFormatKF8", "⚡ KF8 / HUFF·CDIC (modern format)"),
+          );
+        } else if (format === "palmdoc") {
+          badge.className = "palmdoc";
+          badge.textContent = i18nText(
+            "detectFormatPalm",
+            "📜 PalmDoc / Mobi7 (legacy format)",
+          );
+          addLog(
+            i18nText("logFileLoaded", "File loaded: {file}", {
+              file: file.name,
+            }),
+          );
+          addLog(
+            i18nText("detectFormatPalm", "📜 PalmDoc / Mobi7 (legacy format)"),
+          );
         } else {
-          badge.className = 'unknown';
-          badge.textContent = i18nText('detectFormatUnknown',
-            '⚠️ Unknown compression ({code}) – trying PalmDoc', { code: compressionCode });
-          addLog(i18nText('detectFormatUnknown',
-            '⚠️ Unknown compression ({code}) – trying PalmDoc', { code: compressionCode }));
+          badge.className = "unknown";
+          badge.textContent = i18nText(
+            "detectFormatUnknown",
+            "⚠️ Unknown compression ({code}) – trying PalmDoc",
+            { code: compressionCode },
+          );
+          addLog(
+            i18nText(
+              "detectFormatUnknown",
+              "⚠️ Unknown compression ({code}) – trying PalmDoc",
+              { code: compressionCode },
+            ),
+          );
         }
 
-        detectedFormat = format === 'unknown' ? 'palmdoc' : format;
-        document.getElementById('startBtn').disabled = false;
+        detectedFormat = format === "unknown" ? "palmdoc" : format;
+        document.getElementById("startBtn").disabled = false;
       });
 
       // ── MOBI core source files ────────────────────────────────────────────────
@@ -747,20 +1041,27 @@
       //        Label bytes starting with 0x01 are grammar/metadata entries (skipped).
       //        INFL labels are always plain UTF-8 (never ORDT-encoded).
       // ─────────────────────────────────────────────────────────────────────────────
-      function parseMobiIndexes(raw, recsOffsets, logFn, externalHeadwords, outputMap) {
-        const log = logFn || (typeof addLog === 'function' ? addLog : () => {});
+      function parseMobiIndexes(
+        raw,
+        recsOffsets,
+        logFn,
+        externalHeadwords,
+        outputMap,
+      ) {
+        const log = logFn || (typeof addLog === "function" ? addLog : () => {});
         // i18n helper: uses global i18nText (defined by the host template) when available,
         // otherwise substitutes variables into the English fallback string directly.
         const t = (key, fallback, vars) => {
-          if (typeof i18nText === 'function') return i18nText(key, fallback, vars);
+          if (typeof i18nText === "function") return i18nText(key, fallback, vars);
           if (!vars) return fallback;
           return String(fallback).replace(/\{(\w+)}/g, (_, k) =>
-            vars[k] !== undefined ? String(vars[k]) : `{${k}}`);
+            vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
+          );
         };
         // outputMap: when provided, inflected forms are written directly into this
         // Map (e.g. the converter's synMap), avoiding a large intermediate collection.
         const inflMap = outputMap instanceof Map ? outputMap : new Map();
-        const utf8 = new TextDecoder('utf-8', { fatal: false });
+        const utf8 = new TextDecoder("utf-8", { fatal: false });
         const totalLen = raw.length;
 
         const getRec = (i) => {
@@ -787,8 +1088,12 @@
         // Lowest-set-bit position of a bitmask.
         const maskShift = (mask) => {
           if (!mask) return 0;
-          let s = 0, m = mask;
-          while (m && !(m & 1)) { s++; m >>>= 1; }
+          let s = 0,
+            m = mask;
+          while (m && !(m & 1)) {
+            s++;
+            m >>>= 1;
+          }
           return s;
         };
 
@@ -809,18 +1114,29 @@
         // Requires both markers to be valid, mirroring KindleUnpack / Python behaviour.
         const readOrdt = (rec) => {
           if (rec.length < 0xb4) return null;
-          const code     = ru32(rec, 0x1c);   // encoding flag
-          const ocnt     = ru32(rec, 0xa4);   // ORDT-present signal
+          const code = ru32(rec, 0x1c); // encoding flag
+          const ocnt = ru32(rec, 0xa4); // ORDT-present signal
           const oentries = ru32(rec, 0xa8);
-          const op1      = ru32(rec, 0xac);
-          const op2      = ru32(rec, 0xb0);
+          const op1 = ru32(rec, 0xac);
+          const op2 = ru32(rec, 0xb0);
           if (!(code === 0xfdea || ocnt) || oentries === 0) return null;
           // Validate both ORDT1 and ORDT2 markers (both must be 'ORDT')
-          if (op1 + 4 > rec.length || op2 + 4 + oentries * 2 > rec.length) return null;
-          if (rec[op1]   !== 0x4f || rec[op1+1] !== 0x52 ||
-              rec[op1+2] !== 0x44 || rec[op1+3] !== 0x54) return null;
-          if (rec[op2]   !== 0x4f || rec[op2+1] !== 0x52 ||
-              rec[op2+2] !== 0x44 || rec[op2+3] !== 0x54) return null;
+          if (op1 + 4 > rec.length || op2 + 4 + oentries * 2 > rec.length)
+            return null;
+          if (
+            rec[op1] !== 0x4f ||
+            rec[op1 + 1] !== 0x52 ||
+            rec[op1 + 2] !== 0x44 ||
+            rec[op1 + 3] !== 0x54
+          )
+            return null;
+          if (
+            rec[op2] !== 0x4f ||
+            rec[op2 + 1] !== 0x52 ||
+            rec[op2 + 2] !== 0x44 ||
+            rec[op2 + 3] !== 0x54
+          )
+            return null;
           const ordt = [];
           for (let i = 0; i < oentries; i++) ordt.push(ru16(rec, op2 + 4 + i * 2));
           return ordt;
@@ -831,21 +1147,26 @@
         //   Without:   filter bytes < 0x05 (control markers) then decode as UTF-8.
         const decodeOrthLabel = (labelBytes, ordt) => {
           if (ordt) {
-            let s = '';
+            let s = "";
             for (const b of labelBytes) {
               const cp = b < ordt.length ? ordt[b] : b;
               if (cp > 0) s += String.fromCodePoint(cp);
             }
             return s;
           }
-          return utf8.decode(labelBytes.filter(b => b >= 0x05));
+          return utf8.decode(labelBytes.filter((b) => b >= 0x05));
         };
 
         // Parse TAGX section within rec at tagxOff.
         const parseTagx = (rec, tagxOff) => {
           if (tagxOff + 12 > rec.length) return null;
-          if (rec[tagxOff] !== 0x54 || rec[tagxOff + 1] !== 0x41 ||
-              rec[tagxOff + 2] !== 0x47 || rec[tagxOff + 3] !== 0x58) return null;
+          if (
+            rec[tagxOff] !== 0x54 ||
+            rec[tagxOff + 1] !== 0x41 ||
+            rec[tagxOff + 2] !== 0x47 ||
+            rec[tagxOff + 3] !== 0x58
+          )
+            return null;
           const tagxLen = ru32(rec, tagxOff + 4);
           const ctrlByteCount = ru32(rec, tagxOff + 8);
           const nTags = Math.floor((tagxLen - 12) / 4);
@@ -853,11 +1174,11 @@
           for (let i = 0; i < nTags; i++) {
             const b = tagxOff + 12 + i * 4;
             tags.push({
-              tag:     rec[b],
+              tag: rec[b],
               numVals: rec[b + 1],
-              mask:    rec[b + 2],
-              end:     rec[b + 3],
-              shift:   maskShift(rec[b + 2]),
+              mask: rec[b + 2],
+              end: rec[b + 3],
+              shift: maskShift(rec[b + 2]),
             });
           }
           return { ctrlByteCount, tags };
@@ -870,11 +1191,20 @@
         const parseSubRec = (rec, tagx) => {
           if (rec.length < 0x20) return [];
           const nEntries = ru32(rec, 0x18);
-          const idxtOff  = ru32(rec, 0x14);
-          if (nEntries === 0 || idxtOff === 0 ||
-              idxtOff + 4 + nEntries * 2 > rec.length) return [];
-          if (rec[idxtOff]     !== 0x49 || rec[idxtOff + 1] !== 0x44 ||
-              rec[idxtOff + 2] !== 0x58 || rec[idxtOff + 3] !== 0x54) return [];
+          const idxtOff = ru32(rec, 0x14);
+          if (
+            nEntries === 0 ||
+            idxtOff === 0 ||
+            idxtOff + 4 + nEntries * 2 > rec.length
+          )
+            return [];
+          if (
+            rec[idxtOff] !== 0x49 ||
+            rec[idxtOff + 1] !== 0x44 ||
+            rec[idxtOff + 2] !== 0x58 ||
+            rec[idxtOff + 3] !== 0x54
+          )
+            return [];
 
           const entries = [];
           for (let i = 0; i < nEntries; i++) {
@@ -911,7 +1241,10 @@
               if (t.mask !== 0 && cbIdx < ctrlBytes.length) {
                 const maskedVal = ctrlBytes[cbIdx] & t.mask;
                 if (maskedVal !== 0) {
-                  const maskBits = t.mask.toString(2).split('').filter(c => c === '1').length;
+                  const maskBits = t.mask
+                    .toString(2)
+                    .split("")
+                    .filter((c) => c === "1").length;
                   if (maskBits > 1 && maskedVal === t.mask) {
                     // Extended: consume the VWI byte-count header NOW (pass 1).
                     const [byteCount, np0] = readVWI(rec, pos);
@@ -987,10 +1320,10 @@
 
           if (!formSuffixBytes) return null;
 
-          const formSuffix      = utf8.decode(reverseBytes(formSuffixBytes));
+          const formSuffix = utf8.decode(reverseBytes(formSuffixBytes));
           const canonicalSuffix = canonicalSuffixBytes
             ? utf8.decode(reverseBytes(canonicalSuffixBytes))
-            : '';
+            : "";
 
           return { formSuffix, canonicalSuffix };
         };
@@ -1001,10 +1334,15 @@
         for (let i = 0; i < recsOffsets.length; i++) {
           const s = recsOffsets[i];
           if (totalLen - s < 4) continue;
-          if (raw[s]     !== 0x49 || raw[s + 1] !== 0x4E ||
-              raw[s + 2] !== 0x44 || raw[s + 3] !== 0x58) continue;
+          if (
+            raw[s] !== 0x49 ||
+            raw[s + 1] !== 0x4e ||
+            raw[s + 2] !== 0x44 ||
+            raw[s + 3] !== 0x58
+          )
+            continue;
 
-          const rec    = getRec(i);
+          const rec = getRec(i);
           if (rec.length < 8) continue;
           const hdrLen = ru32(rec, 4);
           if (hdrLen >= rec.length) continue;
@@ -1018,15 +1356,16 @@
           }
         }
 
-
         if (groups.length < 2) return inflMap;
 
         // Identify groups by TAGX tag numbers:
         //   ORTH: contains tag 42 (infl_group_ref)
         //   INFL: contains tag 26 (form entry list in paradigm templates)
         //         also contains tag 27 in form entries, but group is identified by tag 26
-        const orthGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 42));
-        const inflGroup = groups.find(g => g.tagx.tags.some(t => t.tag === 26 || t.tag === 27));
+        const orthGroup = groups.find((g) => g.tagx.tags.some((t) => t.tag === 42));
+        const inflGroup = groups.find((g) =>
+          g.tagx.tags.some((t) => t.tag === 26 || t.tag === 27),
+        );
 
         if (!orthGroup) return inflMap;
         if (!inflGroup) return inflMap;
@@ -1155,7 +1494,11 @@
             if (sampled++ >= 5) break;
             sampleEntries.push(`${k}→${v}`);
           }
-          log(t('logMobiIndexSample', 'Inflection examples: {sample}', { sample: sampleEntries.join(', ') }));
+          log(
+            t("logMobiIndexSample", "Inflection examples: {sample}", {
+              sample: sampleEntries.join(", "),
+            }),
+          );
         }
 
         // When writing directly into an external map, return a lightweight proxy
@@ -1167,7 +1510,6 @@
 
         return inflMap;
       }
-
 
       // ─────────────────────────────────────────────────────────────────────────────
       // HuffCdicBase – shared HUFF/CDIC decompression logic
@@ -1184,7 +1526,7 @@
           // Using TypedArrays instead of an object array avoids pointer chasing in
           // the 33M-iteration decompression inner loop and fits in L1 cache.
           this.dict1Codelen = new Uint8Array(256);
-          this.dict1Term    = new Uint8Array(256); // 1 = terminal, 0 = non-terminal
+          this.dict1Term = new Uint8Array(256); // 1 = terminal, 0 = non-terminal
           this.dict1Maxcode = new Uint32Array(256);
           // min/max code arrays for non-terminal codeword lookup (indices 1..32).
           this.mincodeArr = new Uint32Array(33);
@@ -1338,16 +1680,25 @@
           const recBase = this._getRecord0Base();
 
           // KindleUnpack header offsets are relative to the record start (PalmDOC + MOBI block).
-          const hdrLen  = this.u32(recBase + 0x14);
+          const hdrLen = this.u32(recBase + 0x14);
           const mobiVer = this.u32(recBase + 0x68);
           const encoding = hdrLen >= 0x10 ? this.u32(recBase + 0x1c) : 0;
 
-          const verLabel = mobiVer >= 8 ? 'KF8' : mobiVer >= 6 ? 'MOBI6' : `MOBI${mobiVer}`;
-          const encLabel = encoding === 65001 || encoding === 0
-            ? 'UTF-8'
-            : encoding === 1252 ? 'Windows-1252' : `encoding ${encoding}`;
-          addLog(this.t('logMobiFormat', 'MOBI: {label} (v{ver}), encoding: {enc}',
-            { label: verLabel, ver: mobiVer, enc: encLabel }));
+          const verLabel =
+            mobiVer >= 8 ? "KF8" : mobiVer >= 6 ? "MOBI6" : `MOBI${mobiVer}`;
+          const encLabel =
+            encoding === 65001 || encoding === 0
+              ? "UTF-8"
+              : encoding === 1252
+                ? "Windows-1252"
+                : `encoding ${encoding}`;
+          addLog(
+            this.t("logMobiFormat", "MOBI: {label} (v{ver}), encoding: {enc}", {
+              label: verLabel,
+              ver: mobiVer,
+              enc: encLabel,
+            }),
+          );
 
           let flags = 0x0001;
           if (hdrLen >= 0xe4 && mobiVer >= 5) {
@@ -1447,7 +1798,7 @@
             const maxcode =
               Number((BigInt(mxraw + 1) << BigInt(32 - codelen)) - 1n) >>> 0;
             this.dict1Codelen[i] = codelen;
-            this.dict1Term[i]    = term ? 1 : 0;
+            this.dict1Term[i] = term ? 1 : 0;
             this.dict1Maxcode[i] = maxcode;
           }
           this.mincodeArr = new Uint32Array(33);
@@ -1570,23 +1921,30 @@
           // Slow path (near end of data): byte-by-byte with zero padding.
           const read32 = (p) => {
             if (p + 3 < dlen) {
-              return ((data[p] << 24) | (data[p + 1] << 16) | (data[p + 2] << 8) | data[p + 3]) >>> 0;
+              return (
+                ((data[p] << 24) |
+                  (data[p + 1] << 16) |
+                  (data[p + 2] << 8) |
+                  data[p + 3]) >>>
+                0
+              );
             }
             return (
-              ((p     < dlen ? data[p]     : 0) << 24) |
-              ((p + 1 < dlen ? data[p + 1] : 0) << 16) |
-              ((p + 2 < dlen ? data[p + 2] : 0) << 8)  |
-               (p + 3 < dlen ? data[p + 3] : 0)
-            ) >>> 0;
+              (((p < dlen ? data[p] : 0) << 24) |
+                ((p + 1 < dlen ? data[p + 1] : 0) << 16) |
+                ((p + 2 < dlen ? data[p + 2] : 0) << 8) |
+                (p + 3 < dlen ? data[p + 3] : 0)) >>>
+              0
+            );
           };
 
           // Cache TypedArray references in locals to avoid repeated property lookups.
           const dict1Codelen = this.dict1Codelen;
-          const dict1Term    = this.dict1Term;
+          const dict1Term = this.dict1Term;
           const dict1Maxcode = this.dict1Maxcode;
-          const mincodeArr   = this.mincodeArr;
-          const maxcodeArr   = this.maxcodeArr;
-          const dict         = this.dict;
+          const mincodeArr = this.mincodeArr;
+          const maxcodeArr = this.maxcodeArr;
+          const dict = this.dict;
 
           let bitsleft = dlen * 8;
           let pos = 0;
@@ -1606,8 +1964,13 @@
             let outLen = 0;
 
             while (true) {
-              if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
-              const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+              if (n <= 0) {
+                pos += 4;
+                hi = lo;
+                lo = read32(pos + 4);
+                n += 32;
+              }
+              const code = n === 32 ? hi : ((hi << (32 - n)) | (lo >>> n)) >>> 0;
               const idx = code >>> 24;
               let codelen = dict1Codelen[idx];
               let maxcode = dict1Maxcode[idx];
@@ -1615,7 +1978,8 @@
                 while (code < mincodeArr[codelen]) codelen++;
                 maxcode = maxcodeArr[codelen];
               }
-              n -= codelen; bitsleft -= codelen;
+              n -= codelen;
+              bitsleft -= codelen;
               if (bitsleft < 0) break;
               const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
               if (r >= dict.length) break;
@@ -1639,8 +2003,13 @@
           let outLen = 0;
 
           while (true) {
-            if (n <= 0) { pos += 4; hi = lo; lo = read32(pos + 4); n += 32; }
-            const code = (n === 32) ? hi : (((hi << (32 - n)) | (lo >>> n)) >>> 0);
+            if (n <= 0) {
+              pos += 4;
+              hi = lo;
+              lo = read32(pos + 4);
+              n += 32;
+            }
+            const code = n === 32 ? hi : ((hi << (32 - n)) | (lo >>> n)) >>> 0;
             const idx = code >>> 24;
             let codelen = dict1Codelen[idx];
             let maxcode = dict1Maxcode[idx];
@@ -1648,7 +2017,8 @@
               while (code < mincodeArr[codelen]) codelen++;
               maxcode = maxcodeArr[codelen];
             }
-            n -= codelen; bitsleft -= codelen;
+            n -= codelen;
+            bitsleft -= codelen;
             if (bitsleft < 0) break;
             const r = ((maxcode - code) >>> (32 - codelen)) >>> 0;
             if (r >= dict.length) break;
@@ -1668,7 +2038,10 @@
 
           const result = new Uint8Array(outLen);
           let off = 0;
-          for (const c of chunks) { result.set(c, off); off += c.length; }
+          for (const c of chunks) {
+            result.set(c, off);
+            off += c.length;
+          }
           return result;
         }
 
@@ -1725,11 +2098,11 @@
           if (!html) return html;
           // Fast-path: SJP2 and most header-block dicts use literal 'width="0"'.
           // String.replaceAll with a literal is ~10x faster than a regex for common cases.
-          if (html.indexOf('width') === -1) return html;
+          if (html.indexOf("width") === -1) return html;
           // Try the literal replacement first (covers most cases).
-          html = html.replaceAll('width="0"', '').replaceAll("width='0'", '');
+          html = html.replaceAll('width="0"', "").replaceAll("width='0'", "");
           // Fallback regex for other width= values (rare; e.g. width="-20", width="100%").
-          if (html.indexOf('width') !== -1)
+          if (html.indexOf("width") !== -1)
             html = html.replace(/\swidth\s*=\s*["'][^"']*["']/gi, "");
           return html;
         }
@@ -1940,13 +2313,20 @@
             // Trim trailing <hr> separator (and optional trailing <div>) using lastIndexOf
             // instead of scanning the whole block with a regex from position 0.
             // This avoids O(|block|) regex scan on every entry and eliminates backtracking.
-            const hrPos = block.lastIndexOf('<hr');
+            const hrPos = block.lastIndexOf("<hr");
             if (hrPos !== -1) {
               const suffix = block.slice(hrPos);
               if (/^<hr\b[^>]*>\s*(?:<div\b[^>]*>\s*)?$/i.test(suffix)) {
                 // Trim any leading whitespace before the <hr> too
                 let cut = hrPos;
-                while (cut > 0 && (block[cut-1] === ' ' || block[cut-1] === '\n' || block[cut-1] === '\r' || block[cut-1] === '\t')) cut--;
+                while (
+                  cut > 0 &&
+                  (block[cut - 1] === " " ||
+                    block[cut - 1] === "\n" ||
+                    block[cut - 1] === "\r" ||
+                    block[cut - 1] === "\t")
+                )
+                  cut--;
                 block = block.slice(0, cut);
               }
             }
@@ -2221,19 +2601,33 @@
           // ── MOBI binary INDX: extract inflected forms from ORTH+INFL indexes ────
           if (this.options.generateSyn) {
             try {
-              addLog(this.t('logParsingMobiIndex', 'Parsing MOBI INDX inflection index...'));
+              addLog(
+                this.t(
+                  "logParsingMobiIndex",
+                  "Parsing MOBI INDX inflection index...",
+                ),
+              );
               // parseMobiIndexes writes directly into synMap (via outputMap parameter),
               // so no merge loop is needed; inflAdded is reported via .size on the proxy.
               const result = this.parseMobiIndexes();
               if (result.size > 0) {
-                addLog(this.t('logMobiIndexResult',
-                  'MOBI INDX: {added} new syn entries added.',
-                  { added: result.size }));
+                addLog(
+                  this.t(
+                    "logMobiIndexResult",
+                    "MOBI INDX: {added} new syn entries added.",
+                    { added: result.size },
+                  ),
+                );
               } else {
-                addLog(this.t('logMobiIndexNone', 'MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).'));
+                addLog(
+                  this.t(
+                    "logMobiIndexNone",
+                    "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
+                  ),
+                );
               }
             } catch (e) {
-              addLog('MOBI INDX parse skipped (non-fatal): ' + e.message);
+              addLog("MOBI INDX parse skipped (non-fatal): " + e.message);
             }
           }
 
@@ -2358,8 +2752,13 @@
         // order, and would cause wrong headword↔group mappings.
         parseMobiIndexes(outputMap) {
           const raw = new Uint8Array(this.buffer);
-          const offsets = this.records.map(r => r.offset);
-          const logFn = typeof addLog === 'function' ? addLog : (typeof this.log === 'function' ? this.log : null);
+          const offsets = this.records.map((r) => r.offset);
+          const logFn =
+            typeof addLog === "function"
+              ? addLog
+              : typeof this.log === "function"
+                ? this.log
+                : null;
           return parseMobiIndexes(raw, offsets, logFn, null, outputMap);
         }
       }
@@ -2393,9 +2792,11 @@
               if (result.size > 0)
                 this.log(`MOBI INDX: ${result.size} new syn entries added.`);
               else
-                this.log('MOBI INDX: no ORTH/INFL index found (normal for many MOBI7 files).');
+                this.log(
+                  "MOBI INDX: no ORTH/INFL index found (normal for many MOBI7 files).",
+                );
             } catch (e) {
-              this.log('MOBI INDX parse skipped (non-fatal): ' + e.message);
+              this.log("MOBI INDX parse skipped (non-fatal): " + e.message);
             }
           }
 
@@ -2450,9 +2851,11 @@
           const hrCount = (html.match(/<hr\b/gi) || []).length;
           if (hrCount < 100) return "main";
 
-          const boldHeadCount = (html.match(
-            /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
-          ) || []).length;
+          const boldHeadCount = (
+            html.match(
+              /(?:^|<hr\b[^>]*>)\s*<b[^>]*>[^<]{1,120}<\/b>\s*<br\s*\/?>/gi,
+            ) || []
+          ).length;
 
           if (boldHeadCount >= 100) return "hr-bold";
           return "main";
@@ -2479,8 +2882,14 @@
         _collectSynonyms(word, contentHtml) {
           if (!this.options.generateSyn) return;
 
-          const stripped = word.replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "").trim();
-          if (stripped !== word && stripped.length > 1 && !this.synMap.has(stripped)) {
+          const stripped = word
+            .replace(/[\u2080-\u2089\u00B9\u00B2\u00B3]$/, "")
+            .trim();
+          if (
+            stripped !== word &&
+            stripped.length > 1 &&
+            !this.synMap.has(stripped)
+          ) {
             this.synMap.set(stripped, word);
           }
 
@@ -2496,7 +2905,8 @@
           const tezRe = /\((?:też|also)\s+<b>([^<]{2,60})<\/b>/gi;
           for (const m of contentHtml.matchAll(tezRe)) {
             const alt = m[1].trim();
-            if (alt && alt !== word && !this.synMap.has(alt)) this.synMap.set(alt, word);
+            if (alt && alt !== word && !this.synMap.has(alt))
+              this.synMap.set(alt, word);
           }
         }
 
@@ -2600,7 +3010,7 @@
 
         // pako flush-mode constants (same numeric values as zlib)
         const Z_SYNC_FLUSH = 2; // byte-align + emit empty stored block (00 00 ff ff)
-        const Z_FINISH     = 4; // finalize stream with BFINAL=1
+        const Z_FINISH = 4; // finalize stream with BFINAL=1
 
         // ── 1. Split into chunks ─────────────────────────────────────────────────
         const rawChunks = [];
@@ -2615,8 +3025,8 @@
         // Last chunk:      Z_FINISH      → writes final block (BFINAL=1), ends stream.
         const deflator = new pako.Deflate({ level: 6, raw: true });
         const outputParts = [];
-        const chunkSizes  = [];
-        let   totalOutput = 0;
+        const chunkSizes = [];
+        let totalOutput = 0;
 
         deflator.onData = (part) => {
           outputParts.push(part);
@@ -2624,8 +3034,8 @@
         };
 
         for (let i = 0; i < rawChunks.length; i++) {
-          const isLast   = (i === rawChunks.length - 1);
-          const before   = totalOutput;
+          const isLast = i === rawChunks.length - 1;
+          const before = totalOutput;
           deflator.push(rawChunks[i], isLast ? Z_FINISH : Z_SYNC_FLUSH);
           if (deflator.err) throw new Error("Dictzip deflate error: " + deflator.msg);
           chunkSizes.push(totalOutput - before);
@@ -2644,7 +3054,10 @@
         // Assemble compressed payload
         const compressedData = new Uint8Array(totalOutput);
         let pos = 0;
-        for (const p of outputParts) { compressedData.set(p, pos); pos += p.length; }
+        for (const p of outputParts) {
+          compressedData.set(p, pos);
+          pos += p.length;
+        }
 
         // ── 3. Build gzip header with RA extra field ──────────────────────────────
         //
@@ -2654,55 +3067,65 @@
         // RA subfield layout (all values little-endian uint16):
         //   SI1='R' SI2='A'  LEN(2)  VER=1(2)  CHLEN(2)  CHCNT(2)  SIZE[i](2)×CHCNT
         //
-        const fname     = "dictionary.dict"; // null-terminated filename (like reference)
-        const fnameBytes = new TextEncoder().encode(fname);          // without null
-        const raDataLen  = 2 + 2 + 2 + 2 * rawChunks.length;       // VER+CHLEN+CHCNT+sizes
-        const extraLen   = 4 + raDataLen;                            // SI1+SI2+LEN(2)+raDataLen
+        const fname = "dictionary.dict"; // null-terminated filename (like reference)
+        const fnameBytes = new TextEncoder().encode(fname); // without null
+        const raDataLen = 2 + 2 + 2 + 2 * rawChunks.length; // VER+CHLEN+CHCNT+sizes
+        const extraLen = 4 + raDataLen; // SI1+SI2+LEN(2)+raDataLen
         // gzip fixed header(10) + XLEN(2) + extra(extraLen) + fname + NUL(1)
-        const headerLen  = 10 + 2 + extraLen + fnameBytes.length + 1;
+        const headerLen = 10 + 2 + extraLen + fnameBytes.length + 1;
 
         const header = new Uint8Array(headerLen);
-        const hv     = new DataView(header.buffer);
-        let   hp     = 0;
+        const hv = new DataView(header.buffer);
+        let hp = 0;
 
-        hv.setUint8(hp++, 0x1f);                        // ID1
-        hv.setUint8(hp++, 0x8b);                        // ID2
-        hv.setUint8(hp++, 0x08);                        // CM = deflate
-        hv.setUint8(hp++, 0x0c);                        // FLG = FEXTRA | FNAME
-        hv.setUint32(hp, 0, true); hp += 4;             // MTIME = 0
-        hv.setUint8(hp++, 0x02);                        // XFL = max compression
-        hv.setUint8(hp++, 0x03);                        // OS  = Unix
+        hv.setUint8(hp++, 0x1f); // ID1
+        hv.setUint8(hp++, 0x8b); // ID2
+        hv.setUint8(hp++, 0x08); // CM = deflate
+        hv.setUint8(hp++, 0x0c); // FLG = FEXTRA | FNAME
+        hv.setUint32(hp, 0, true);
+        hp += 4; // MTIME = 0
+        hv.setUint8(hp++, 0x02); // XFL = max compression
+        hv.setUint8(hp++, 0x03); // OS  = Unix
 
-        hv.setUint16(hp, extraLen, true); hp += 2;      // XLEN
+        hv.setUint16(hp, extraLen, true);
+        hp += 2; // XLEN
 
         // RA extra sub-field
-        hv.setUint8(hp++, 0x52);                                     // SI1 = 'R'
-        hv.setUint8(hp++, 0x41);                                     // SI2 = 'A'
-        hv.setUint16(hp, raDataLen, true);    hp += 2;               // LEN
-        hv.setUint16(hp, 1, true);            hp += 2;               // VER = 1
-        hv.setUint16(hp, CHUNK_SIZE, true);   hp += 2;               // CHLEN
-        hv.setUint16(hp, rawChunks.length, true); hp += 2;           // CHCNT
+        hv.setUint8(hp++, 0x52); // SI1 = 'R'
+        hv.setUint8(hp++, 0x41); // SI2 = 'A'
+        hv.setUint16(hp, raDataLen, true);
+        hp += 2; // LEN
+        hv.setUint16(hp, 1, true);
+        hp += 2; // VER = 1
+        hv.setUint16(hp, CHUNK_SIZE, true);
+        hp += 2; // CHLEN
+        hv.setUint16(hp, rawChunks.length, true);
+        hp += 2; // CHCNT
         for (const sz of chunkSizes) {
-          hv.setUint16(hp, sz, true); hp += 2;                       // SIZE[i]
+          hv.setUint16(hp, sz, true);
+          hp += 2; // SIZE[i]
         }
 
         // FNAME (null-terminated)
-        header.set(fnameBytes, hp); hp += fnameBytes.length;
-        hv.setUint8(hp++, 0x00);                                     // NUL terminator
+        header.set(fnameBytes, hp);
+        hp += fnameBytes.length;
+        hv.setUint8(hp++, 0x00); // NUL terminator
 
         // ── 4. gzip trailer: CRC32(4 LE) + ISIZE(4 LE) ───────────────────────────
-        const crc     = _crc32(data);
+        const crc = _crc32(data);
         const trailer = new Uint8Array(8);
-        const tv      = new DataView(trailer.buffer);
+        const tv = new DataView(trailer.buffer);
         tv.setUint32(0, crc, true);
         tv.setUint32(4, data.length >>> 0, true);
 
         // ── 5. Assemble ───────────────────────────────────────────────────────────
-        const total  = header.length + compressedData.length + trailer.length;
+        const total = header.length + compressedData.length + trailer.length;
         const result = new Uint8Array(total);
         pos = 0;
-        result.set(header, pos);         pos += header.length;
-        result.set(compressedData, pos); pos += compressedData.length;
+        result.set(header, pos);
+        pos += header.length;
+        result.set(compressedData, pos);
+        pos += compressedData.length;
         result.set(trailer, pos);
 
         return result;
@@ -2734,23 +3157,23 @@
         }
 
         // ── Parse gzip header ─────────────────────────────────────────────────────
-        const flg      = bytes[3];
-        const FEXTRA   = 0x04;
-        const FNAME    = 0x08;
+        const flg = bytes[3];
+        const FEXTRA = 0x04;
+        const FNAME = 0x08;
         const FCOMMENT = 0x10;
-        const FHCRC    = 0x02;
+        const FHCRC = 0x02;
 
-        let pos    = 10;
-        let hasRA  = false;
+        let pos = 10;
+        let hasRA = false;
 
         if (flg & FEXTRA) {
-          const xlen     = bytes[pos] | (bytes[pos + 1] << 8);
+          const xlen = bytes[pos] | (bytes[pos + 1] << 8);
           pos += 2;
           const extraEnd = pos + xlen;
-          let   ep       = pos;
+          let ep = pos;
           while (ep + 4 <= extraEnd) {
-            const si1    = bytes[ep];
-            const si2    = bytes[ep + 1];
+            const si1 = bytes[ep];
+            const si2 = bytes[ep + 1];
             const subLen = bytes[ep + 2] | (bytes[ep + 3] << 8);
             if (si1 === 0x52 && si2 === 0x41) hasRA = true; // 'R' 'A'
             ep += 4 + subLen;
@@ -2758,9 +3181,17 @@
           pos = extraEnd;
         }
 
-        if (flg & FNAME)    { while (pos < bytes.length && bytes[pos] !== 0) pos++; pos++; }
-        if (flg & FCOMMENT) { while (pos < bytes.length && bytes[pos] !== 0) pos++; pos++; }
-        if (flg & FHCRC)    { pos += 2; }
+        if (flg & FNAME) {
+          while (pos < bytes.length && bytes[pos] !== 0) pos++;
+          pos++;
+        }
+        if (flg & FCOMMENT) {
+          while (pos < bytes.length && bytes[pos] !== 0) pos++;
+          pos++;
+        }
+        if (flg & FHCRC) {
+          pos += 2;
+        }
 
         // Compressed payload sits between header end and the 8-byte gzip trailer
         const compressedPayload = bytes.subarray(pos, bytes.length - 8);
@@ -2782,7 +3213,7 @@
 
       /** Decompress a raw DEFLATE stream using the browser DecompressionStream API. */
       async function _inflateRaw(data) {
-        const ds     = new DecompressionStream("deflate-raw");
+        const ds = new DecompressionStream("deflate-raw");
         const writer = ds.writable.getWriter();
         const reader = ds.readable.getReader();
         writer.write(data);
@@ -2796,13 +3227,16 @@
         const totalLen = parts.reduce((s, p) => s + p.length, 0);
         const out = new Uint8Array(totalLen);
         let p = 0;
-        for (const part of parts) { out.set(part, p); p += part.length; }
+        for (const part of parts) {
+          out.set(part, p);
+          p += part.length;
+        }
         return out;
       }
 
       /** Decompress a standard gzip stream using the browser DecompressionStream API. */
       async function _decompressGzip(buffer) {
-        const ds     = new DecompressionStream("gzip");
+        const ds = new DecompressionStream("gzip");
         const writer = ds.writable.getWriter();
         const reader = ds.readable.getReader();
         writer.write(new Uint8Array(buffer));
@@ -2816,7 +3250,10 @@
         const totalLen = parts.reduce((s, p) => s + p.length, 0);
         const out = new Uint8Array(totalLen);
         let p = 0;
-        for (const part of parts) { out.set(part, p); p += part.length; }
+        for (const part of parts) {
+          out.set(part, p);
+          p += part.length;
+        }
         return out.buffer;
       }
 
@@ -2826,7 +3263,7 @@
           const t = new Uint32Array(256);
           for (let i = 0; i < 256; i++) {
             let c = i;
-            for (let j = 0; j < 8; j++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+            for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
             t[i] = c;
           }
           _crc32._table = t;
@@ -2838,7 +3275,6 @@
         }
         return (crc ^ 0xffffffff) >>> 0;
       }
-
 
       // Shared StarDict validator logic used by converter and standalone validator tool.
       (function () {
@@ -3071,18 +3507,24 @@
             if (!files.idx || !files.dict) return;
 
             const idxBuffer = await files.idx.arrayBuffer();
-            let dictBuffer  = await files.dict.arrayBuffer();
+            let dictBuffer = await files.dict.arrayBuffer();
             const synBuffer = files.syn ? await files.syn.arrayBuffer() : null;
-            const ifoText   = files.ifo
+            const ifoText = files.ifo
               ? dec.decode(await files.ifo.arrayBuffer())
               : "";
 
             // Auto-detect gzip magic bytes (1f 8b) and decompress .dict.dz if needed.
-            const magic = new Uint8Array(dictBuffer, 0, Math.min(2, dictBuffer.byteLength));
+            const magic = new Uint8Array(
+              dictBuffer,
+              0,
+              Math.min(2, dictBuffer.byteLength),
+            );
             const isGzip = magic[0] === 0x1f && magic[1] === 0x8b;
             if (isGzip) {
               if (typeof decompressDictzip !== "function") {
-                setStatus("❌ Cannot decompress .dict.dz – include stardict-dictzip-core.js.");
+                setStatus(
+                  "❌ Cannot decompress .dict.dz – include stardict-dictzip-core.js.",
+                );
                 return;
               }
               const sizeMB = (dictBuffer.byteLength / 1048576).toFixed(1);
@@ -3463,22 +3905,22 @@
 
 
       // ── Start button ──────────────────────────────────────────────────────────
-      document.getElementById('startBtn').onclick = () => {
-        const btn = document.getElementById('startBtn');
+      document.getElementById("startBtn").onclick = () => {
+        const btn = document.getElementById("startBtn");
         btn.disabled = true;
-        btn.textContent = i18nText('startBtnWorking', 'WORKING...');
+        btn.textContent = i18nText("startBtnWorking", "WORKING...");
 
         const options = {
-          style:       document.getElementById('styleSelect').value,
+          style: document.getElementById("styleSelect").value,
           generateSyn: true,
-          merge:       true,
+          merge: true,
         };
-        const compress = document.getElementById('compressCheck').checked;
+        const compress = document.getElementById("compressCheck").checked;
 
         setTimeout(async () => {
           try {
             let finalMap, synMap;
-            if (detectedFormat === 'kf8') {
+            if (detectedFormat === "kf8") {
               const conv = new KF8Converter(globalBuffer, options);
               ({ finalMap, synMap } = await conv.run());
             } else {
@@ -3488,17 +3930,26 @@
 
             if (finalMap.size > 0) {
               await renderOutput(finalMap, synMap, true, compress);
-              btn.textContent = i18nText('startBtnDone', '✅ DONE');
+              btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
-              addLog(i18nText('logNoEntries', '⚠️ No entries extracted. Check log for details.'));
+              addLog(
+                i18nText(
+                  "logNoEntries",
+                  "⚠️ No entries extracted. Check log for details.",
+                ),
+              );
               btn.disabled = false;
-              btn.textContent = i18nText('startBtnRetry', 'RETRY');
+              btn.textContent = i18nText("startBtnRetry", "RETRY");
             }
           } catch (err) {
-            addLog(i18nText('logFatalError', 'FATAL ERROR: {message}\n{stack}',
-              { message: err.message, stack: err.stack }));
+            addLog(
+              i18nText("logFatalError", "FATAL ERROR: {message}\n{stack}", {
+                message: err.message,
+                stack: err.stack,
+              }),
+            );
             btn.disabled = false;
-            btn.textContent = i18nText('startBtnErrorRetry', 'ERROR - Retry');
+            btn.textContent = i18nText("startBtnErrorRetry", "ERROR - Retry");
           }
         }, 150);
       };
@@ -3506,189 +3957,199 @@
       // ── i18n tables ───────────────────────────────────────────────────────────
       const I18N = {
         en: {
-          pageTitle:    'MOBI → StarDict Converter',
-          langToggleTitle: 'Switch language',
-          title:        'MOBI → StarDict Converter',
-          desc:         'Converts <b>KF8/HUFF</b> (modern) and <b>PalmDoc/Mobi7</b> (legacy) <code>.mobi</code> dictionaries to StarDict format. The format is detected automatically after selecting a file. Tested with <b>Wielki Słownik Ang-Pol</b> (2014 &amp; 2023+), <b>SJP2</b> from <a href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>, and free PalmDoc dictionaries from <a href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>.',
-          dropzone:     '📁 Click or drag your .mobi file here',
-          detectFormatKF8:     '⚡ KF8 / HUFF·CDIC (modern format)',
-          detectFormatPalm:    '📜 PalmDoc / Mobi7 (legacy format)',
-          detectFormatUnknown: '⚠️ Unknown compression ({code}) – trying PalmDoc',
-          detectDRM:           '🔒 DRM protected – cannot convert',
-          styleLabel:   '🎨 Entry Style:',
-          styleNone:    'None - original HTML pass-through',
-          styleNice:    'Nice - headword + phonetics styled',
-          styleEink:    'E-ink mono - high contrast, no color styling',
-          styleRich:    'Rich Color - full color-coded sections',
+          pageTitle: "MOBI → StarDict Converter",
+          langToggleTitle: "Switch language",
+          title: "MOBI → StarDict Converter",
+          desc: 'Converts <b>KF8/HUFF</b> (modern) and <b>PalmDoc/Mobi7</b> (legacy) <code>.mobi</code> dictionaries to StarDict format. The format is detected automatically after selecting a file. Tested with <b>Wielki Słownik Ang-Pol</b> (2014 &amp; 2023+), <b>SJP2</b> from <a href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a>, and free PalmDoc dictionaries from <a href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>.',
+          dropzone: "📁 Click or drag your .mobi file here",
+          detectFormatKF8: "⚡ KF8 / HUFF·CDIC (modern format)",
+          detectFormatPalm: "📜 PalmDoc / Mobi7 (legacy format)",
+          detectFormatUnknown:
+            "⚠️ Unknown compression ({code}) – trying PalmDoc",
+          detectDRM: "🔒 DRM protected – cannot convert",
+          styleLabel: "🎨 Entry Style:",
+          styleNone: "None - original HTML pass-through",
+          styleNice: "Nice - headword + phonetics styled",
+          styleEink: "E-ink mono - high contrast, no color styling",
+          styleRich: "Rich Color - full color-coded sections",
           styleCompatibilityNote:
-            'Note: selected theme may not fully apply to every dictionary structure. If formatting looks broken, switch to <b>None</b>.',
-          compressLabel: 'Compress dictionary → .dict.dz (smaller file, recommended)',
-          compressNote:  'If your reader cannot open the dictionary, uncheck this and re-run to get an uncompressed <b>.dict</b> file.',
-          startBtn:     'START CONVERSION',
-          logIdle:      'Status: Idle. Waiting for file...',
-          doneTitle:    '✅ Done! Download StarDict Files:',
-          previewTitle: '🧩 Sample Entries',
-          validatorTitle: '🔎 Search Generated Dictionary',
-          validatorSearchPh: '🔍 Search generated dictionary...',
-          validatorCopyHtml: 'Copy HTML',
-          startBtnWorking: 'WORKING...',
-          startBtnDone:    '✅ DONE',
-          startBtnRetry:   'RETRY',
-          startBtnErrorRetry: 'ERROR - Retry',
-          logFileLoaded:   'File loaded: {file}',
-          logNoEntries:    '⚠️ No entries extracted. Check log for details.',
-          logFatalError:   'FATAL ERROR: {message}\n{stack}',
+            "Note: selected theme may not fully apply to every dictionary structure. If formatting looks broken, switch to <b>None</b>.",
+          compressLabel:
+            "Compress dictionary → .dict.dz (smaller file, recommended)",
+          compressNote:
+            "If your reader cannot open the dictionary, uncheck this and re-run to get an uncompressed <b>.dict</b> file.",
+          startBtn: "START CONVERSION",
+          logIdle: "Status: Idle. Waiting for file...",
+          doneTitle: "✅ Done! Download StarDict Files:",
+          previewTitle: "🧩 Sample Entries",
+          validatorTitle: "🔎 Search Generated Dictionary",
+          validatorSearchPh: "🔍 Search generated dictionary...",
+          validatorCopyHtml: "Copy HTML",
+          startBtnWorking: "WORKING...",
+          startBtnDone: "✅ DONE",
+          startBtnRetry: "RETRY",
+          startBtnErrorRetry: "ERROR - Retry",
+          logFileLoaded: "File loaded: {file}",
+          logNoEntries: "⚠️ No entries extracted. Check log for details.",
+          logFatalError: "FATAL ERROR: {message}\n{stack}",
           logExtraDataSentinel:
-            '⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.',
+            "⚠️ {source}: ExtraDataFlags is 0xFFFF (sentinel/noisy), forcing conservative strip mode 0x1.",
           logExtraDataMask:
-            '⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}',
+            "⚠️ {source}: masking ExtraDataFlags 0x{from} -> 0x{to}",
           logTextRecordsClamp:
-            '⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.',
-          logMobiFormat: 'MOBI: {label} (v{ver}), encoding: {enc}',
-          logHuffLoaded: 'HUFF loaded. off1=0x{off1} off2=0x{off2}',
-          logCdicLoaded: 'Loaded {count} CDIC records -> {symbols} symbols in dictionary.',
+            "⚠️ text_records ({headerCount}) exceeds HUFF bound ({huffBound}); clamping.",
+          logMobiFormat: "MOBI: {label} (v{ver}), encoding: {enc}",
+          logHuffLoaded: "HUFF loaded. off1=0x{off1} off2=0x{off2}",
+          logCdicLoaded:
+            "Loaded {count} CDIC records -> {symbols} symbols in dictionary.",
           logFirstRecordDecoded:
-            'First record decoded ({bytes} bytes). Preview:\n  {preview}',
-          logDecompressing: 'Decompressing: {current}/{max}... entries so far: {entries}',
-          logExtractionComplete: 'Extraction complete: {entries} unique entries.',
-          logDetectedEntryFormat: 'Detected entry format: {format}',
-          logPdbRecords:    'PDB records: {count}',
-          logErrorNoHuff:   'ERROR: No HUFF record found.',
-          logHuffRecord:    'HUFF record: {huffIdx}  (text records: 1-{textRecordMax})',
-          logErrorEmptySymbolDict: 'ERROR: Symbol dictionary is empty. Cannot decompress.',
+            "First record decoded ({bytes} bytes). Preview:\n  {preview}",
+          logDecompressing:
+            "Decompressing: {current}/{max}... entries so far: {entries}",
+          logExtractionComplete:
+            "Extraction complete: {entries} unique entries.",
+          logDetectedEntryFormat: "Detected entry format: {format}",
+          logPdbRecords: "PDB records: {count}",
+          logErrorNoHuff: "ERROR: No HUFF record found.",
+          logHuffRecord:
+            "HUFF record: {huffIdx}  (text records: 1-{textRecordMax})",
+          logErrorEmptySymbolDict:
+            "ERROR: Symbol dictionary is empty. Cannot decompress.",
           logSynStats:
-            'idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}',
-          logParsingMobiIndex: 'Parsing MOBI INDX inflection index...',
+            "idx:entry blocks seen: {idxBlocks}, idx:iform seen: {idxIformsSeen}, idx:iform added: {idxIformsAdded}, phrase-tail inflections: {phraseTailAdded}",
+          logParsingMobiIndex: "Parsing MOBI INDX inflection index...",
           logMobiIndexResult:
-            'MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.',
+            "MOBI INDX: {total} inflected forms decoded, {added} new syn entries added.",
           logMobiIndexNone:
-            'MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).',
-          logMobiIndexSample: 'Inflection examples: {sample}',
-          logSynonymsCollected: 'Synonyms collected: {count}',
-          logSynonymFile:   'Synonym file: {count} entries.',
-          validatorSynonymBadge: '{count} synonyms',
-          validatorCopyDone: 'Copied',
-          validatorStatusReadyBase: 'Ready: {entries} entries',
-          validatorStatusReadySynonyms: ' · {count} synonyms',
-          validatorStatusReadyIfo:
-            ' (ifo: wordcount={wordcount}{synPart})',
-          validatorStatusReadyIfoSynPart: ', synwordcount={syncount}',
-          validatorByteBadgeMulti:  '{entries} idx entries · {bytes} bytes',
-          validatorByteBadgeSingle: '{bytes} bytes',
+            "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
+          logMobiIndexSample: "Inflection examples: {sample}",
+          logSynonymsCollected: "Synonyms collected: {count}",
+          logSynonymFile: "Synonym file: {count} entries.",
+          validatorSynonymBadge: "{count} synonyms",
+          validatorCopyDone: "Copied",
+          validatorStatusReadyBase: "Ready: {entries} entries",
+          validatorStatusReadySynonyms: " · {count} synonyms",
+          validatorStatusReadyIfo: " (ifo: wordcount={wordcount}{synPart})",
+          validatorStatusReadyIfoSynPart: ", synwordcount={syncount}",
+          validatorByteBadgeMulti: "{entries} idx entries · {bytes} bytes",
+          validatorByteBadgeSingle: "{bytes} bytes",
           validatorSynRedirect:
-            'Synonym redirect: <b>{query}</b> -> <b>{word}</b>',
+            "Synonym redirect: <b>{query}</b> -> <b>{word}</b>",
           validatorFallbackWord:
-            'Inflection fallback: <b>{query}</b> -> <b>{word}</b>',
+            "Inflection fallback: <b>{query}</b> -> <b>{word}</b>",
           validatorFallbackSynonym:
-            'Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>',
+            "Inflection -> synonym fallback: <b>{query}</b> -> <b>{word}</b>",
           logOutputReady:
-            '✅ Output ready. {count} entries, idx={idxBytes} B, {dictSizePart}{synPart}.',
-          logOutputReadySynPart: ', syn={synCount}',
-          logOutputReadyDictDz:
-            'dict={dictBytes} B → dict.dz={dictDzBytes} B',
-          logOutputReadyDict: 'dict={dictBytes} B',
-          logCompressingDict:
-            'Compressing dictionary data ({dictBytes} B)…',
-          logCompressingProgress: '  Compression: {done}/{total} chunks…',
-          logCompressingDone:
-            '✅ Compressed: {dictDzBytes} B (saved {ratio}%)',
-          errInvalidHuffHeader: 'invalid huff header',
-          errInvalidHuffTableZeroCodeLen: 'invalid huff table: zero codelen',
+            "✅ Output ready. {count} entries, idx={idxBytes} B, {dictSizePart}{synPart}.",
+          logOutputReadySynPart: ", syn={synCount}",
+          logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
+          logOutputReadyDict: "dict={dictBytes} B",
+          logCompressingDict: "Compressing dictionary data ({dictBytes} B)…",
+          logCompressingProgress: "  Compression: {done}/{total} chunks…",
+          logCompressingDone: "✅ Compressed: {dictDzBytes} B (saved {ratio}%)",
+          errInvalidHuffHeader: "invalid huff header",
+          errInvalidHuffTableZeroCodeLen: "invalid huff table: zero codelen",
           errInvalidHuffTableShortNonTerminal:
-            'invalid huff table: short non-terminal code',
-          errInvalidCdicHeader: 'invalid cdic header',
+            "invalid huff table: short non-terminal code",
+          errInvalidCdicHeader: "invalid cdic header",
         },
         pl: {
-          pageTitle:    'Konwerter MOBI → StarDict',
-          langToggleTitle: 'Przełącz język',
-          title:        'Konwerter MOBI → StarDict',
-          desc:         'Konwertuje słowniki <code>.mobi</code> w formacie <b>KF8/HUFF</b> (nowoczesnym) i <b>PalmDoc/Mobi7</b> (starszym) do formatu StarDict. Format jest wykrywany automatycznie po wybraniu pliku. Przetestowany z <b>Wielkim Słownikiem Ang-Pol</b> (2014 i 2023+), <b>SJP2</b> ze strony <a href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a> oraz darmowymi słownikami PalmDoc ze strony <a href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>.',
-          dropzone:     '📁 Kliknij lub przeciągnij plik .mobi tutaj',
-          detectFormatKF8:     '⚡ KF8 / HUFF·CDIC (nowoczesny format)',
-          detectFormatPalm:    '📜 PalmDoc / Mobi7 (starszy format)',
-          detectFormatUnknown: '⚠️ Nieznana kompresja ({code}) – próbuję PalmDoc',
-          detectDRM:           '🔒 Zabezpieczony DRM – konwersja niemożliwa',
-          styleLabel:   '🎨 Styl wpisów:',
-          styleNone:    'Brak - oryginalny HTML bez stylowania',
-          styleNice:    'Ładny - nagłówek + fonetyka ze stylem',
-          styleEink:    'E-ink mono - wysoki kontrast, bez kolorowania',
-          styleRich:    'Kolorowy - pełne kolorowanie sekcji',
+          pageTitle: "Konwerter MOBI → StarDict",
+          langToggleTitle: "Przełącz język",
+          title: "Konwerter MOBI → StarDict",
+          desc: 'Konwertuje słowniki <code>.mobi</code> w formacie <b>KF8/HUFF</b> (nowoczesnym) i <b>PalmDoc/Mobi7</b> (starszym) do formatu StarDict. Format jest wykrywany automatycznie po wybraniu pliku. Przetestowany z <b>Wielkim Słownikiem Ang-Pol</b> (2014 i 2023+), <b>SJP2</b> ze strony <a href="https://cc-sjp.zabałaganionemiejsce.pl/" target="_blank" rel="noopener">cc-sjp.zabalaganionemiejsce.pl</a> oraz darmowymi słownikami PalmDoc ze strony <a href="https://sowaczyta.pl/slowniki-zbiorcze/" target="_blank" rel="noopener">sowaczyta.pl/slowniki-zbiorcze</a>.',
+          dropzone: "📁 Kliknij lub przeciągnij plik .mobi tutaj",
+          detectFormatKF8: "⚡ KF8 / HUFF·CDIC (nowoczesny format)",
+          detectFormatPalm: "📜 PalmDoc / Mobi7 (starszy format)",
+          detectFormatUnknown:
+            "⚠️ Nieznana kompresja ({code}) – próbuję PalmDoc",
+          detectDRM: "🔒 Zabezpieczony DRM – konwersja niemożliwa",
+          styleLabel: "🎨 Styl wpisów:",
+          styleNone: "Brak - oryginalny HTML bez stylowania",
+          styleNice: "Ładny - nagłówek + fonetyka ze stylem",
+          styleEink: "E-ink mono - wysoki kontrast, bez kolorowania",
+          styleRich: "Kolorowy - pełne kolorowanie sekcji",
           styleCompatibilityNote:
-            'Uwaga: wybrany motyw może nie zadziałać w pełni dla każdego słownika. Jeśli formatowanie wygląda źle, wybierz styl: <b>Brak</b>.',
-          compressLabel: 'Kompresuj słownik → .dict.dz (mniejszy plik, zalecane)',
-          compressNote:  'Jeśli czytnik nie może otworzyć słownika, odznacz tę opcję i uruchom ponownie, aby uzyskać nieskompresowany plik <b>.dict</b>.',
-          startBtn:     'ROZPOCZNIJ KONWERSJĘ',
-          logIdle:      'Status: Bezczynny. Oczekiwanie na plik...',
-          doneTitle:    '✅ Gotowe! Pobierz pliki StarDict:',
-          previewTitle: '🧩 Przykładowe wpisy',
-          validatorTitle: '🔎 Wyszukaj w wygenerowanym słowniku',
-          validatorSearchPh: '🔍 Szukaj w wygenerowanym słowniku...',
-          validatorCopyHtml: 'Kopiuj HTML',
-          startBtnWorking: 'PRACUJE...',
-          startBtnDone:    '✅ GOTOWE',
-          startBtnRetry:   'PONÓW',
-          startBtnErrorRetry: 'BŁĄD - Ponów',
-          logFileLoaded:   'Wczytano plik: {file}',
-          logNoEntries:    '⚠️ Nie wyodrębniono wpisów. Sprawdź log po szczegóły.',
-          logFatalError:   'BŁĄD KRYTYCZNY: {message}\n{stack}',
+            "Uwaga: wybrany motyw może nie zadziałać w pełni dla każdego słownika. Jeśli formatowanie wygląda źle, wybierz styl: <b>Brak</b>.",
+          compressLabel:
+            "Kompresuj słownik → .dict.dz (mniejszy plik, zalecane)",
+          compressNote:
+            "Jeśli czytnik nie może otworzyć słownika, odznacz tę opcję i uruchom ponownie, aby uzyskać nieskompresowany plik <b>.dict</b>.",
+          startBtn: "ROZPOCZNIJ KONWERSJĘ",
+          logIdle: "Status: Bezczynny. Oczekiwanie na plik...",
+          doneTitle: "✅ Gotowe! Pobierz pliki StarDict:",
+          previewTitle: "🧩 Przykładowe wpisy",
+          validatorTitle: "🔎 Wyszukaj w wygenerowanym słowniku",
+          validatorSearchPh: "🔍 Szukaj w wygenerowanym słowniku...",
+          validatorCopyHtml: "Kopiuj HTML",
+          startBtnWorking: "PRACUJE...",
+          startBtnDone: "✅ GOTOWE",
+          startBtnRetry: "PONÓW",
+          startBtnErrorRetry: "BŁĄD - Ponów",
+          logFileLoaded: "Wczytano plik: {file}",
+          logNoEntries: "⚠️ Nie wyodrębniono wpisów. Sprawdź log po szczegóły.",
+          logFatalError: "BŁĄD KRYTYCZNY: {message}\n{stack}",
           logExtraDataSentinel:
-            '⚠️ {source}: ExtraDataFlags ma wartość 0xFFFF (wartość sentinel/szum), wymuszam konserwatywny tryb obcinania 0x1.',
+            "⚠️ {source}: ExtraDataFlags ma wartość 0xFFFF (wartość sentinel/szum), wymuszam konserwatywny tryb obcinania 0x1.",
           logExtraDataMask:
-            '⚠️ {source}: maskowanie ExtraDataFlags 0x{from} -> 0x{to}',
+            "⚠️ {source}: maskowanie ExtraDataFlags 0x{from} -> 0x{to}",
           logTextRecordsClamp:
-            '⚠️ text_records ({headerCount}) przekracza granicę HUFF ({huffBound}); ograniczam.',
-          logMobiFormat: 'MOBI: {label} (wersja {ver}), kodowanie: {enc}',
-          logHuffLoaded: 'Wczytano HUFF. off1=0x{off1} off2=0x{off2}',
-          logCdicLoaded: 'Wczytano {count} rekordów CDIC -> {symbols} symboli w słowniku.',
+            "⚠️ text_records ({headerCount}) przekracza granicę HUFF ({huffBound}); ograniczam.",
+          logMobiFormat: "MOBI: {label} (wersja {ver}), kodowanie: {enc}",
+          logHuffLoaded: "Wczytano HUFF. off1=0x{off1} off2=0x{off2}",
+          logCdicLoaded:
+            "Wczytano {count} rekordów CDIC -> {symbols} symboli w słowniku.",
           logFirstRecordDecoded:
-            'Zdekodowano pierwszy rekord ({bytes} bajtów). Podgląd:\n  {preview}',
-          logDecompressing: 'Dekompresja: {current}/{max}... wpisów: {entries}',
-          logExtractionComplete: 'Ekstrakcja zakończona: {entries} unikalnych wpisów.',
-          logDetectedEntryFormat: 'Wykryty format wpisów: {format}',
-          logPdbRecords:    'Rekordy PDB: {count}',
-          logErrorNoHuff:   'BŁĄD: Nie znaleziono rekordu HUFF.',
-          logHuffRecord:    'Rekord HUFF: {huffIdx}  (rekordy tekstowe: 1-{textRecordMax})',
-          logErrorEmptySymbolDict: 'BŁĄD: Słownik symboli jest pusty. Nie można dekompresować.',
+            "Zdekodowano pierwszy rekord ({bytes} bajtów). Podgląd:\n  {preview}",
+          logDecompressing: "Dekompresja: {current}/{max}... wpisów: {entries}",
+          logExtractionComplete:
+            "Ekstrakcja zakończona: {entries} unikalnych wpisów.",
+          logDetectedEntryFormat: "Wykryty format wpisów: {format}",
+          logPdbRecords: "Rekordy PDB: {count}",
+          logErrorNoHuff: "BŁĄD: Nie znaleziono rekordu HUFF.",
+          logHuffRecord:
+            "Rekord HUFF: {huffIdx}  (rekordy tekstowe: 1-{textRecordMax})",
+          logErrorEmptySymbolDict:
+            "BŁĄD: Słownik symboli jest pusty. Nie można dekompresować.",
           logSynStats:
-            'Widziane bloki idx:entry: {idxBlocks}, widziane idx:iform: {idxIformsSeen}, dodane idx:iform: {idxIformsAdded}, odmiany z końców fraz: {phraseTailAdded}',
-          logParsingMobiIndex: 'Parsowanie indeksu odmiany MOBI INDX...',
+            "Widziane bloki idx:entry: {idxBlocks}, widziane idx:iform: {idxIformsSeen}, dodane idx:iform: {idxIformsAdded}, odmiany z końców fraz: {phraseTailAdded}",
+          logParsingMobiIndex: "Parsowanie indeksu odmiany MOBI INDX...",
           logMobiIndexResult:
-            'MOBI INDX: zdekodowano {total} form odmiany, dodano {added} nowych wpisów syn.',
+            "MOBI INDX: zdekodowano {total} form odmiany, dodano {added} nowych wpisów syn.",
           logMobiIndexNone:
-            'MOBI INDX: brak indeksu ORTH/INFL (normalne dla plików innych niż SJP2).',
-          logMobiIndexSample: 'Przykłady odmian: {sample}',
-          logSynonymsCollected: 'Zebrane odmiany: {count}',
-          logSynonymFile:   'Plik odmian: {count} wpisów.',
-          validatorSynonymBadge: '{count} odmian',
-          validatorCopyDone: 'Skopiowano',
-          validatorStatusReadyBase: 'Gotowe: {entries} wpisów',
-          validatorStatusReadySynonyms: ' · {count} odmian',
-          validatorStatusReadyIfo:
-            ' (ifo: wordcount={wordcount}{synPart})',
-          validatorStatusReadyIfoSynPart: ', synwordcount={syncount}',
-          validatorByteBadgeMulti:  '{entries} wpisów idx · {bytes} bajtów',
-          validatorByteBadgeSingle: '{bytes} bajtów',
+            "MOBI INDX: brak indeksu ORTH/INFL (normalne dla plików innych niż SJP2).",
+          logMobiIndexSample: "Przykłady odmian: {sample}",
+          logSynonymsCollected: "Zebrane odmiany: {count}",
+          logSynonymFile: "Plik odmian: {count} wpisów.",
+          validatorSynonymBadge: "{count} odmian",
+          validatorCopyDone: "Skopiowano",
+          validatorStatusReadyBase: "Gotowe: {entries} wpisów",
+          validatorStatusReadySynonyms: " · {count} odmian",
+          validatorStatusReadyIfo: " (ifo: wordcount={wordcount}{synPart})",
+          validatorStatusReadyIfoSynPart: ", synwordcount={syncount}",
+          validatorByteBadgeMulti: "{entries} wpisów idx · {bytes} bajtów",
+          validatorByteBadgeSingle: "{bytes} bajtów",
           validatorSynRedirect:
-            'Przekierowanie odmiany: <b>{query}</b> -> <b>{word}</b>',
+            "Przekierowanie odmiany: <b>{query}</b> -> <b>{word}</b>",
           validatorFallbackWord:
-            'Odmiana - fallback: <b>{query}</b> -> <b>{word}</b>',
+            "Odmiana - fallback: <b>{query}</b> -> <b>{word}</b>",
           validatorFallbackSynonym:
-            'Odmiana -> fallback odmiany: <b>{query}</b> -> <b>{word}</b>',
+            "Odmiana -> fallback odmiany: <b>{query}</b> -> <b>{word}</b>",
           logOutputReady:
-            '✅ Dane wyjściowe gotowe. {count} wpisów, idx={idxBytes} B, {dictSizePart}{synPart}.',
-          logOutputReadySynPart: ', syn={synCount}',
-          logOutputReadyDictDz:
-            'dict={dictBytes} B → dict.dz={dictDzBytes} B',
-          logOutputReadyDict: 'dict={dictBytes} B',
-          logCompressingDict: 'Kompresja danych słownika ({dictBytes} B)…',
-          logCompressingProgress: '  Kompresja: {done}/{total} chunków…',
+            "✅ Dane wyjściowe gotowe. {count} wpisów, idx={idxBytes} B, {dictSizePart}{synPart}.",
+          logOutputReadySynPart: ", syn={synCount}",
+          logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
+          logOutputReadyDict: "dict={dictBytes} B",
+          logCompressingDict: "Kompresja danych słownika ({dictBytes} B)…",
+          logCompressingProgress: "  Kompresja: {done}/{total} chunków…",
           logCompressingDone:
-            '✅ Skompresowano: {dictDzBytes} B (zaoszczędzono {ratio}%)',
-          errInvalidHuffHeader: 'nieprawidłowy nagłówek HUFF',
-          errInvalidHuffTableZeroCodeLen: 'nieprawidłowa tabela HUFF: zerowa długość kodu',
+            "✅ Skompresowano: {dictDzBytes} B (zaoszczędzono {ratio}%)",
+          errInvalidHuffHeader: "nieprawidłowy nagłówek HUFF",
+          errInvalidHuffTableZeroCodeLen:
+            "nieprawidłowa tabela HUFF: zerowa długość kodu",
           errInvalidHuffTableShortNonTerminal:
-            'nieprawidłowa tabela HUFF: zbyt krótki kod nieterminalny',
-          errInvalidCdicHeader: 'nieprawidłowy nagłówek CDIC',
+            "nieprawidłowa tabela HUFF: zbyt krótki kod nieterminalny",
+          errInvalidCdicHeader: "nieprawidłowy nagłówek CDIC",
         },
       };
       window.__I18N_TABLES = I18N;
@@ -3739,4 +4200,3 @@
     </script>
   </body>
 </html>
-

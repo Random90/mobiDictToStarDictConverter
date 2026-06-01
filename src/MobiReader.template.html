@@ -130,7 +130,8 @@
         font-size: 12px;
         border-radius: 6px;
         margin-top: 10px;
-        min-height: 60px;
+        height: 200px;
+        overflow-y: auto;
         white-space: pre-wrap;
         border: 1px solid var(--border);
       }
@@ -567,16 +568,54 @@
       }
 
       // ── Shared state ──────────────────────────────────────────────────────────
-      let activeFormat = null; // 'kf8' | 'palmdoc'
-      let kf8Decoder = null;
-      let palmReader = null;
-      let palmCurrentIdx = 1;
-      let sourceFileName = "mobi";
-      let searchResults = [],
-        searchCursor = 0,
-        searchCache = new Map();
+let activeFormat = null; // 'kf8' | 'palmdoc'
+let kf8Decoder = null;
+let palmReader = null;
+let palmCurrentIdx = 1;
+let sourceFileName = "mobi";
+let searchResults = [],
+  searchCursor = 0,
+  searchCache = new Map();
 
-      // ── File upload ───────────────────────────────────────────────────────────
+// Function to reset internal state when a new file is loaded
+function resetState() {
+  activeFormat = null;
+  kf8Decoder = null;
+  palmReader = null;
+  palmCurrentIdx = 1;
+  searchResults = [];
+  searchCursor = 0;
+  searchCache = new Map();
+  // Clear UI elements related to previous content
+  const rawOutput = document.getElementById("rawOutput");
+  if (rawOutput) rawOutput.textContent = "";
+  const renderedOutput = document.getElementById("renderedOutput");
+  if (renderedOutput) renderedOutput.innerHTML = "";
+  const rawContent = document.getElementById("rawContent");
+  if (rawContent) rawContent.textContent = "";
+  const htmlContent = document.getElementById("htmlContent");
+  if (htmlContent) htmlContent.innerHTML = "";
+  const kf8OutputCard = document.getElementById("kf8OutputCard");
+  if (kf8OutputCard) kf8OutputCard.style.display = "none";
+  const searchRow = document.getElementById("searchRow");
+  if (searchRow) searchRow.style.display = "none";
+  // Reset record selection controls
+  const recFrom = document.getElementById("recFrom");
+  if (recFrom) recFrom.value = 1;
+  const recTo = document.getElementById("recTo");
+  if (recTo) recTo.value = 1;
+  const recInfo = document.getElementById("recInfo");
+  if (recInfo) recInfo.textContent = "";
+  // Reset search navigation
+  const searchPrev = document.getElementById("searchPrev");
+  if (searchPrev) searchPrev.disabled = true;
+  const searchNext = document.getElementById("searchNext");
+  if (searchNext) searchNext.disabled = true;
+  const searchHits = document.getElementById("searchHits");
+  if (searchHits) searchHits.textContent = "";
+}
+
+// ── File upload ───────────────────────────────────────────────────────────
       const fileInput = document.getElementById("fileInput");
       document.getElementById("dropZone").onclick = () => fileInput.click();
       fileInput.addEventListener("change", async (e) => {
@@ -586,6 +625,9 @@
           `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         sourceFileName = file.name.replace(/\.[^/.]+$/, "");
         const buffer = await file.arrayBuffer();
+
+        // Reset previous state before loading new file
+        resetState();
 
         const { format, drm } = detectMobiFormat(buffer);
         const badge = document.getElementById("formatBadge");

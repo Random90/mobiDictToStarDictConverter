@@ -2079,6 +2079,7 @@
           this.finalMap = new Map(); // word -> styled definition HTML
           this.synMap = new Map(); // alternate_form -> canonical_word
           this.entrySeen = new Map(); // word -> Set(fingerprint) for overlap dedupe
+          this.maxDedupeLen = new Map(); // variantKey -> longest dedupeStr length seen (fragment detection)
           this.synStats = {
             idxBlocks: 0,
             idxIformsSeen: 0,
@@ -2089,12 +2090,12 @@
         }
 
         // FNV-1a 32-bit hash used for deduplication fingerprints.
-        // Samples the full string up to 300 chars then includes the total length,
-        // giving a practical collision probability < 0.1% for typical dictionaries.
-        _defHash(s) {
+        // For speed, large strings can be sampled (default first 300 chars).
+        // Pass sampleLimit <= 0 to hash the full string.
+        _defHash(s, sampleLimit = 300) {
           if (!s) return 0;
           const len = s.length;
-          const cap = Math.min(len, 300);
+          const cap = sampleLimit > 0 ? Math.min(len, sampleLimit) : len;
           let h = 0x811c9dc5;
           for (let i = 0; i < cap; i++) {
             h ^= s.charCodeAt(i);
@@ -2119,17 +2120,25 @@
           return html;
         }
 
-        _ingestEntry(word, def, synHtml = "") {
+        _ingestEntry(word, def, synHtml = "", dedupeStr = "") {
           if (!word || !def) return;
+          // Normalize curly apostrophes/quotes to straight forms for consistent lookup
+          word = word
+            .replace(/\u2019/g, "'")  // ' → '
+            .replace(/\u2018/g, "'")  // ' → '
+            .replace(/\u201c/g, '"')  // " → "
+            .replace(/\u201d/g, '"')  // " → "
+            .replace(/\u2013/g, '-')  // – → -
+            .replace(/\u2014/g, '-'); // — → -
           const key = word.trim();
           if (!key) return;
 
           def = this._sanitizeEntryHtml(def);
 
-          // Use a fast numeric hash instead of storing the full string in entrySeen.
-          // This cuts ~400 MB of heap on large dictionaries (entrySeen previously
-          // held a whitespace-normalised copy of every definition string).
-          const fp = this._defHash(def);
+          // Use dedupeStr (if provided) for fingerprinting.
+          // For entry-tag dedupe (method 3), hash the full tag to avoid
+          // collisions between distinct POS/sense variants of the same headword.
+          const fp = this._defHash(dedupeStr || def, dedupeStr ? 0 : 300);
           if (!fp) return;
 
           let seen = this.entrySeen.get(key);
@@ -2137,7 +2146,39 @@
             seen = new Set();
             this.entrySeen.set(key, seen);
           }
-          if (seen.has(fp)) return;
+
+          // Track max dedupeStr length for fragment detection.
+          // Scope by word + stable prefix hash so shorter valid senses (e.g. sub2)
+          // are not compared against longer, different senses (e.g. sub1).
+          const variantKey = dedupeStr
+            ? `${key}\u0001${this._defHash(dedupeStr.slice(0, 256), 0)}`
+            : key;
+          let maxDedupeLen = this.maxDedupeLen.get(variantKey) || 0;
+          if (dedupeStr && dedupeStr.length > maxDedupeLen) {
+            maxDedupeLen = dedupeStr.length;
+            this.maxDedupeLen.set(variantKey, maxDedupeLen);
+          }
+
+          // Same entry tag already seen from another chunk:
+          // replace existing only if this chunk captured more content (more blockquotes).
+          if (seen.has(fp)) {
+            const existing = this.finalMap.get(key);
+            if (!existing || def.length > existing.length) {
+              this.finalMap.set(key, def);
+            }
+            this._collectSyns(key, synHtml || def);
+            return;
+          }
+
+          // New fingerprint — skip if this is a fragment (entry tag much shorter
+          // than the longest seen for this word, e.g. chunk-boundary split).
+          // Still collect synonyms from the fragment — they may contain unique
+          // compound phrases not captured by the fuller version.
+          if (maxDedupeLen > 0 && dedupeStr && dedupeStr.length < maxDedupeLen * 0.5) {
+            this._collectSyns(key, synHtml || def);
+            return;
+          }
+
           seen.add(fp);
 
           if (!this.finalMap.has(key)) {
@@ -2154,7 +2195,18 @@
           if (this.detectedEntryFormat) return this.detectedEntryFormat;
 
           if (/<idx:entry\b/i.test(html)) return "main";
-          if (/<p\b[^>]*width\s*=\s*["']?-20/i.test(html)) return "main";
+          if (
+            /<(p|div)\b[^>]*width\s*=\s*["']?-(?:20|2em)["']?[^>]*>/i.test(html)
+          )
+            return "main";
+          // New EbookPoint format: blockquotes with <b>headword</b> alongside <div width="-2em">
+          if (/<blockquote\s*>[\s]*<b\s*>[\s]*[\w]/i.test(html)) {
+            // Only treat as "main" if there are also <div width> entries
+            // (blockquote alone could be header-block format)
+            if (/<div[^>]*width[^>]*>/i.test(html) || /<p[^>]*width[^>]*>/i.test(html)) {
+              return "main";
+            }
+          }
 
           const headerHeadCount = (
             html.match(/<h[1-3]\b[^>]*>\s*<b[^>]*>[\s\S]*?<\/b>\s*<\/h[1-3]>/gi) || []
@@ -2166,8 +2218,28 @@
           )
             return "header-block";
 
-          if (/<h2\b/i.test(html)) return "main";
           return null;
+        }
+
+        /**
+         * Extract entries from a HTML chunk using ALL known format extractors.
+         * Used during the initial discovery phase when the format is unknown.
+         * Format is locked in once at least one entry is found.
+         */
+        _extractAllFormats(html, isFinal = false) {
+          // Try main format first (idx:entry + h2 + width=-20)
+          this._extractEntriesMain(html, isFinal);
+
+          // If no entries extracted AND no format locked in, also try header-block.
+          // This handles dictionaries where <h2> in front matter triggers "main"
+          // detection but the actual entries use <hN><b>word</b></hN> headers.
+          if (this.finalMap.size === 0 && !this.detectedEntryFormat) {
+            // Quick heuristic: only try header-block if hN<b> patterns exist
+            if (/<h[1-6]\b[^>]*>\s*<b[^>]*>/i.test(html)) {
+              this.detectedEntryFormat = "header-block";
+              this._extractEntriesHeaderBlocks(html, isFinal);
+            }
+          }
         }
 
         // Extract entries from a HTML chunk (format-routed, legacy-safe)
@@ -2186,6 +2258,15 @@
             this._extractEntriesHeaderBlocks(html, isFinal);
             return;
           }
+
+          // If format is still undecided, use all-extraction approach that tries
+          // multiple formats simultaneously and locks in once entries are found.
+          if (!this.detectedEntryFormat) {
+            this._extractAllFormats(html, isFinal);
+            return;
+          }
+
+          // "main" format (or explicitly detected "main")
           this._extractEntriesMain(html, isFinal);
         }
 
@@ -2240,29 +2321,38 @@
           }
 
           // Method 3: <p width="-20"><span><b>headword</b></span>...</p>
-          const hrParts = html.split(/<hr\s*\/?>/i);
-          for (let k = 0; k < hrParts.length; k++) {
-            const seg = hrParts[k];
-            if (!/<p\b[^>]*width\s*=\s*["']?-20/i.test(seg)) continue;
+          // or <div width="-2em"><span><b>headword</b></span>...</div>
+          // (newer EbookPoint dictionaries use <div width="-2em">)
+          // Blockquotes after the entry tag contain subordinate headwords.
+          // We append them to the definition so they're readable + searchable
+          // as synonyms, but use only the entry tag for dedupe (consistent
+          // across chunks — different chunks may include different blockquote
+          // subsets, so deduping on the full content would miss overlaps).
+          const widthTagRe = /<(p|div)\b[^>]*width\s*=\s*["']?-(?:20|2em)["']?[^>]*>/gi;
+          let divMatch;
+          while ((divMatch = widthTagRe.exec(html)) !== null) {
+            const openPos = divMatch.index;
+            const openTag = divMatch[0];
+            const tagType = divMatch[1].toLowerCase();
 
-            const pClose = seg.indexOf("</p>");
-            if (!isFinal && pClose === -1) continue;
+            // Find the closing tag
+            const closeTag = tagType === 'p' ? '</p>' : '</div>';
+            const closePos = html.indexOf(closeTag, openPos + openTag.length);
+            if (!isFinal && closePos === -1) continue;
+            const tagEndPos = closePos >= 0 ? closePos + closeTag.length : html.length;
 
-            const pOpen = seg.search(/<p\b[^>]*width\s*=\s*["']?-20/i);
-            const pEnd = pClose >= 0 ? pClose + 4 : seg.length;
-            if (pOpen < 0) continue;
-            let pContent = seg.substring(pOpen, pEnd);
+            const fullTag = html.substring(openPos, tagEndPos);
 
-            // Defensive guard: reject overlap/boundary fragments unless headword starts the paragraph.
-            const headAtStart = pContent.match(
-              /^\s*<p\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i,
+            // Defensive guard: headword must start the tag
+            const headAtStart = fullTag.match(
+              /^\s*<(p|div)\b[^>]*>\s*<span\s*>\s*<b>([\s\S]*?)<\/b>\s*<\/span>/i,
             );
             if (!headAtStart) continue;
 
-            const headInner = headAtStart[1].trim();
+            const headInner = headAtStart[2].trim();
             let word = "";
             if (headInner.includes("<")) {
-              // Boundary-fragment paragraphs sometimes leak POS markup into the headword field.
+              // Boundary-fragment entries sometimes leak POS markup into the headword field.
               const plain = headInner
                 .replace(/<[^>]+>/g, " ")
                 .replace(/\s+/g, " ")
@@ -2276,10 +2366,6 @@
               )
                 continue;
               word = candidate;
-              pContent = pContent.replace(
-                /(^\s*<p\b[^>]*>\s*<span\s*>\s*<b>)[\s\S]*?(<\/b>\s*<\/span>)/i,
-                `$1${word}$2`,
-              );
             } else {
               word = headInner.replace(/\s+/g, " ").trim();
               if (
@@ -2292,8 +2378,32 @@
 
             if (!word || word.length >= 120) continue;
 
-            const def = styleFn(word, pContent);
-            this._ingestEntry(word, def, pContent);
+            // Build def and synHtml: entry tag + following blockquotes
+            let entryBody = fullTag;
+            const isEbookPointDiv = /<div\b[^>]*width\s*=\s*["']?-2em["']?[^>]*>/i.test(fullTag);
+            if (isEbookPointDiv) {
+              const afterTag = html.substring(tagEndPos);
+              const nextWidthRe = /<(p|div)\b[^>]*width\s*=\s*["']?-(?:20|2em)["']?[^>]*>/i;
+              const nextWidthMatch = afterTag.match(nextWidthRe);
+              const limit = nextWidthMatch ? nextWidthMatch.index : afterTag.length;
+              const remaining = afterTag.substring(0, limit);
+
+              const bqRe = /<blockquote\s*>[\s\S]*?<\/blockquote>/gi;
+              let bqM; let bqCount = 0;
+              while ((bqM = bqRe.exec(remaining)) !== null) {
+                // Blockquotes with a <b> tag at the start of their content
+                // are subordinate headwords worth including in the definition.
+                if (/^<blockquote\s*>[\s]*<b[\s>]/i.test(bqM[0])) {
+                  entryBody += bqM[0];
+                  bqCount++;
+                }
+                // Skip unrelated blockquotes but continue scanning; some dictionaries
+                // interleave non-headword and headword blockquotes.
+              }
+            }
+
+            const def = styleFn(word, entryBody);
+            this._ingestEntry(word, def, entryBody, fullTag);
           }
         }
 
@@ -2494,6 +2604,11 @@
             let firstDecodedLogged = false;
             const endExclusive = textRecordMax + 1;
 
+            // Safety net: if no entries found after processing first N records
+            // and a format was detected, retry with header-block as fallback.
+            const FALLBACK_THRESHOLD = 2000;
+            let fallbackAttempted = false;
+
             const processChunk = () => {
               const lim = Math.min(i + BATCH, endExclusive);
               for (; i < lim; i++) {
@@ -2523,22 +2638,56 @@
                 this.extractEntriesFrom(chunk, false);
                 overlap = chunk.length > OVERLAP ? chunk.slice(-OVERLAP) : chunk;
               }
-
+              if (i % 2000 < BATCH) {
+                addLog(
+                  this.t(
+                    "logDecompressing",
+                    "Decompressing: {current}/{max}... entries so far: {entries}",
+                    {
+                      current: i,
+                      max: textRecordMax,
+                      entries: this.finalMap.size,
+                    },
+                  ),
+                );
+              }
+              // Safety net: if we've passed the threshold and still have 0 entries,
+              // the detected format may be wrong (e.g., front matter <h2> triggered
+              // "main" but entries actually use header-block format).
+              if (
+                !fallbackAttempted &&
+                i > FALLBACK_THRESHOLD &&
+                this.finalMap.size === 0 &&
+                this.detectedEntryFormat !== "header-block"
+              ) {
+                addLog(
+                  this.t(
+                    "logFallbackFormat",
+                    "⚠️ No entries after {threshold} records – retrying with header-block format.",
+                    { threshold: FALLBACK_THRESHOLD },
+                  ),
+                );
+                fallbackAttempted = true;
+                this.detectedEntryFormat = "header-block";
+              }
               if (i < endExclusive) {
-                if (i % 500 < BATCH)
-                  addLog(
-                    this.t(
-                      "logDecompressing",
-                      "Decompressing: {current}/{max}... entries so far: {entries}",
-                      {
-                        current: i,
-                        max: textRecordMax,
-                        entries: this.finalMap.size,
-                      },
-                    ),
-                  );
                 setTimeout(processChunk, 0);
               } else {
+                // Final pass: ensure overlap is processed with the best format
+                if (
+                  this.finalMap.size === 0 &&
+                  !fallbackAttempted &&
+                  this.detectedEntryFormat !== "header-block"
+                ) {
+                  addLog(
+                    this.t(
+                      "logFallbackFormatFinal",
+                      "⚠️ No entries after processing all records – retrying with header-block format.",
+                    ),
+                  );
+                  fallbackAttempted = true;
+                  this.detectedEntryFormat = "header-block";
+                }
                 this.extractEntriesFrom(overlap, true);
                 addLog(
                   this.t(
@@ -4035,6 +4184,10 @@
           logMobiIndexNone:
             "MOBI INDX: no ORTH/INFL index found (normal for non-SJP2 files).",
           logMobiIndexSample: "Inflection examples: {sample}",
+          logFallbackFormat:
+            "⚠️ No entries after {threshold} records – retrying with header-block format.",
+          logFallbackFormatFinal:
+            "⚠️ No entries after processing all records – retrying with header-block format.",
           logSynonymsCollected: "Synonyms collected: {count}",
           logSynonymFile: "Synonym file: {count} entries.",
           validatorSynonymBadge: "{count} synonyms",
@@ -4131,6 +4284,10 @@
           logMobiIndexNone:
             "MOBI INDX: brak indeksu ORTH/INFL (normalne dla plików innych niż SJP2).",
           logMobiIndexSample: "Przykłady odmian: {sample}",
+          logFallbackFormat:
+            "⚠️ Brak wpisów po {threshold} rekordach – ponawiam z formatem header-block.",
+          logFallbackFormatFinal:
+            "⚠️ Brak wpisów po przetworzeniu wszystkich rekordów – ponawiam z formatem header-block.",
           logSynonymsCollected: "Zebrane odmiany: {count}",
           logSynonymFile: "Plik odmian: {count} wpisów.",
           validatorSynonymBadge: "{count} odmian",

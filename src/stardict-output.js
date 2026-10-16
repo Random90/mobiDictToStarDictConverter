@@ -1,16 +1,17 @@
 // stardict-output.js – unified StarDict output renderer.
 // Replaces stardict-output-kf8.js and stardict-output-palmdoc.js.
 //
-// Signature: renderOutput(finalMap, synMap, generateSyn, compress = true)
+// Signature: renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {})
 //   finalMap    – Map<string, string>  word → HTML definition
 //   synMap      – Map<string, string>  alternate form → canonical word
 //   generateSyn – boolean
 //   compress    – boolean (dictzip / .dict.dz)
+//   meta        – { bookname, fileSlug, author } from MOBI EXTH (optional)
 //
 // Requires globals: addLog, i18nText, pako, StarDictValidator,
 //                   compressDictzip (from stardict-dictzip-core.js)
 
-async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
+async function renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {}) {
   const links = document.getElementById("links");
   links.innerHTML = "";
 
@@ -57,6 +58,11 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
   }
   const idxTotalSize = idxPos;
   const dictTotalSize = dictOff;
+
+  // Trim pre-allocated buffers to actual used size so on-disk file size
+  // matches idxfilesize in the .ifo — KOReader validates this strictly.
+  const finalIdxBytes = idxBytes.subarray(0, idxTotalSize);
+  const finalDictBytes = dictBytes.subarray(0, dictTotalSize);
 
   // ── Build .syn ────────────────────────────────────────────────────────────────
   let synBytesArr = null,
@@ -107,21 +113,24 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
   }
 
   // ── .ifo ────────────────────────────────────────────────────────────────────
+  const bookname = (meta && meta.bookname) || "dictionary";
   const ifoLines = [
     "StarDict's dict ifo file",
     "version=2.4.2",
     `wordcount=${count}`,
     `idxfilesize=${idxTotalSize}`,
-    "bookname=dictionary",
+    `bookname=${bookname}`,
     "sametypesequence=h",
   ];
   if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
   const ifo = ifoLines.join("\n") + "\n";
   const ifoBytes = enc.encode(ifo);
 
+  const fileSlug = (meta && meta.fileSlug) || "dictionary";
+
   // ── Optionally compress dict → .dict.dz ──────────────────────────────────────
-  let dictFileBytes = dictBytes;
-  let dictFileName = "dictionary.dict";
+  let dictFileBytes = finalDictBytes;
+  let dictFileName = `${fileSlug}.dict`;
   let dictDzLength = null;
 
   if (compress) {
@@ -134,7 +143,7 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
     );
     // Yield so the log message renders before the synchronous pako loop starts.
     await new Promise((r) => setTimeout(r, 0));
-    const dictDzBytes = await compressDictzip(dictBytes, (done, total) => {
+    const dictDzBytes = await compressDictzip(finalDictBytes, (done, total) => {
       if (done % 200 === 0 || done === total) {
         addLog(
           i18nText(
@@ -157,7 +166,7 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
       ),
     );
     dictFileBytes = dictDzBytes;
-    dictFileName = "dictionary.dict.dz";
+    dictFileName = `${fileSlug}.dict.dz`;
     dictDzLength = dictDzBytes.length;
   }
 
@@ -171,8 +180,8 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
     a.textContent = `⬇ ${name}`;
     links.appendChild(a);
   };
-  dl("dictionary.ifo", ifoBytes);
-  dl("dictionary.idx", idxBytes);
+  dl(`${fileSlug}.ifo`, ifoBytes);
+  dl(`${fileSlug}.idx`, finalIdxBytes);
   dl(dictFileName, dictFileBytes);
   if (synCount > 0) {
     // Wrap syn button + count badge in an inline-flex column so the badge
@@ -182,10 +191,10 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
       "display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;margin-top: 5px;";
     const synLink = document.createElement("a");
     synLink.href = URL.createObjectURL(new Blob([synBytesArr]));
-    synLink.download = "dictionary.syn";
+    synLink.download = `${fileSlug}.syn`;
     synLink.className = "btn-dl";
     synLink.style.margin = "0";
-    synLink.textContent = "⬇ dictionary.syn";
+    synLink.textContent = `⬇ ${fileSlug}.syn`;
     const badge = document.createElement("span");
     badge.className = "badge-syn";
     badge.style.cssText = "margin:4px 0 0;white-space:nowrap;";
@@ -242,8 +251,8 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
     }
     window.__dictValidator.loadFromBuffers({
       ifoText: new TextDecoder("utf-8").decode(ifoBytes),
-      idxBuffer: idxBytes.buffer,
-      dictBuffer: dictBytes.buffer,
+      idxBuffer: finalIdxBytes.buffer,
+      dictBuffer: finalDictBytes.buffer,
       synBuffer: synBytesArr ? synBytesArr.buffer : null,
     });
 

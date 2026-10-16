@@ -875,6 +875,50 @@
       let globalBuffer = null;
       let detectedFormat = null; // 'kf8' | 'palmdoc' | 'unknown'
 
+      // ── MOBI metadata extraction (EXTH book title, author, etc.) ──────────────
+      function extractMobiMetadata(buffer) {
+        const view = new DataView(buffer);
+        const raw = new Uint8Array(buffer);
+        const dec = new TextDecoder("utf-8");
+        const meta = {
+          bookname: "dictionary", fileSlug: "dictionary",
+          author: "", publisher: "", rights: "", date: "", description: "",
+        };
+        try {
+          const rec0Offset = view.getUint32(78);
+          const mobiHdrLen = view.getUint32(rec0Offset + 20);
+          const fullNameOffset = view.getUint32(rec0Offset + 84);
+          const fullNameLen = view.getUint32(rec0Offset + 88);
+
+          // EXTH title (tag 99) takes priority; fall back to record 0 full name
+          let bookname = null;
+          const exthFlags = view.getUint32(rec0Offset + 128);
+          if (exthFlags & 0x40) {
+            const exthPos = rec0Offset + 16 + mobiHdrLen;
+            const count = view.getUint32(exthPos + 8);
+            let curr = exthPos + 12;
+            for (let i = 0; i < count && curr + 8 <= buffer.byteLength; i++) {
+              const type = view.getUint32(curr), len = view.getUint32(curr + 4);
+              const val = dec.decode(raw.subarray(curr + 8, curr + len)).trim();
+              if (type === 99) bookname = val;       // EXTH_TITLE
+              else if (type === 100) meta.author = val;         // EXTH_CREATOR
+              else if (type === 101) meta.publisher = val;      // EXTH_PUBLISHER
+              else if (type === 103) meta.description = val.replace(/[\r\n\t]+/g, " "); // EXTH_DESCRIPTION
+              else if (type === 106) meta.date = val;           // EXTH_PUBLISHED
+              else if (type === 109) meta.rights = val;         // EXTH_RIGHTS
+              curr += len;
+            }
+          }
+          if (bookname) {
+            meta.bookname = bookname;
+          } else if (fullNameLen > 0 && fullNameLen < 2000) {
+            meta.bookname = dec.decode(raw.subarray(rec0Offset + fullNameOffset, rec0Offset + fullNameOffset + fullNameLen)).trim();
+          }
+          meta.fileSlug = meta.bookname.replace(/[\\/:*?"<>|()]/g, "").trim().replace(/\s+/g, "_").replace(/_+/g, "_");
+        } catch (e) {}
+        return meta;
+      }
+
       const fileInput = document.getElementById("fileInput");
       document.getElementById("dropZone").onclick = () => fileInput.click();
       fileInput.addEventListener("change", async (e) => {
@@ -988,7 +1032,7 @@
 
         setTimeout(async () => {
           try {
-            let finalMap, synMap;
+            let finalMap, synMap, mobiMeta;
             if (detectedFormat === "kf8") {
               const conv = new KF8Converter(globalBuffer, options);
               ({ finalMap, synMap } = await conv.run());
@@ -998,7 +1042,19 @@
             }
 
             if (finalMap.size > 0) {
-              await renderOutput(finalMap, synMap, true, compress);
+              // Extract MOBI metadata for .ifo bookname + file naming
+              mobiMeta = extractMobiMetadata(globalBuffer);
+              addLog(
+                i18nText(
+                  "logMobiMetadata",
+                  "Dictionary title: {bookname}{authorPart}",
+                  {
+                    bookname: mobiMeta.bookname,
+                    authorPart: mobiMeta.author ? ` (${mobiMeta.author})` : "",
+                  },
+                ),
+              );
+              await renderOutput(finalMap, synMap, true, compress, mobiMeta);
               btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
               addLog(
@@ -1117,6 +1173,7 @@
           logOutputReadySynPart: ", syn={synCount}",
           logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
           logOutputReadyDict: "dict={dictBytes} B",
+          logMobiMetadata: "Dictionary title: {bookname}{authorPart}",
           logCompressingDict: "Compressing dictionary data ({dictBytes} B)…",
           logCompressingProgress: "  Compression: {done}/{total} chunks…",
           logCompressingDone: "✅ Compressed: {dictDzBytes} B (saved {ratio}%)",
@@ -1217,6 +1274,7 @@
           logOutputReadySynPart: ", syn={synCount}",
           logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
           logOutputReadyDict: "dict={dictBytes} B",
+          logMobiMetadata: "Tytuł słownika: {bookname}{authorPart}",
           logCompressingDict: "Kompresja danych słownika ({dictBytes} B)…",
           logCompressingProgress: "  Kompresja: {done}/{total} chunków…",
           logCompressingDone:

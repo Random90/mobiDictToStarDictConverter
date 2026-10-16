@@ -3,8 +3,11 @@
 //
 // Dictzip is a gzip-compatible format that stores a random-access index
 // (the "RA" extra field) in the gzip header.  The compressed payload is a
-// single raw DEFLATE stream where each chunk boundary is byte-aligned via
-// Z_SYNC_FLUSH, exactly as the reference `dictzip` C tool produces.
+// single raw DEFLATE stream where each chunk boundary uses Z_FULL_FLUSH,
+// producing full sync points so KOReader can read individual chunks
+// independently.  (Z_SYNC_FLUSH alone leaves residual state that KOReader
+// cannot decode per-chunk; Z_FULL_FLUSH forces a complete flush at every
+// chunk boundary, matching the behavior expected by KOReader's dictzip reader.)
 //
 // Compression relies on pako (embedded at build time via @@include).
 // Decompression uses the browser's native DecompressionStream API.
@@ -19,9 +22,9 @@
 /**
  * Compress `data` (Uint8Array) into a proper dictzip stream.
  *
- * Uses pako.Deflate with Z_SYNC_FLUSH between chunks so the output is a
- * single valid raw DEFLATE stream with byte-aligned chunk boundaries,
- * matching the format produced by the reference dictzip C tool.
+ * Uses pako.Deflate with Z_FULL_FLUSH between chunks so KOReader can
+ * read individual compressed chunks independently.  Z_SYNC_FLUSH alone
+ * leaves residual deflate-state that KOReader cannot decode per-chunk.
  *
  * @param {Uint8Array} data        – raw uncompressed bytes
  * @param {function}  [onProgress] – optional (done, total) progress callback
@@ -32,7 +35,7 @@ async function compressDictzip(data, onProgress) {
   const CHUNK_SIZE = 58315;
 
   // pako flush-mode constants (same numeric values as zlib)
-  const Z_SYNC_FLUSH = 2; // byte-align + emit empty stored block (00 00 ff ff)
+  const Z_FULL_FLUSH = 3; // full flush → byte-aligned + independent chunk decode
   const Z_FINISH = 4; // finalize stream with BFINAL=1
 
   // ── 1. Split into chunks ─────────────────────────────────────────────────
@@ -43,8 +46,8 @@ async function compressDictzip(data, onProgress) {
   if (rawChunks.length === 0) rawChunks.push(new Uint8Array(0));
 
   // ── 2. Compress with pako into ONE continuous raw DEFLATE stream ──────────
-  // Non-last chunks: Z_SYNC_FLUSH  → appends "00 00 ff ff" sync marker,
-  //                                  keeps deflate context alive for next chunk.
+  // Non-last chunks: Z_FULL_FLUSH  → full flush at chunk boundary,
+  //                                  enables KOReader per-chunk random access.
   // Last chunk:      Z_FINISH      → writes final block (BFINAL=1), ends stream.
   const deflator = new pako.Deflate({ level: 6, raw: true });
   const outputParts = [];
@@ -59,7 +62,7 @@ async function compressDictzip(data, onProgress) {
   for (let i = 0; i < rawChunks.length; i++) {
     const isLast = i === rawChunks.length - 1;
     const before = totalOutput;
-    deflator.push(rawChunks[i], isLast ? Z_FINISH : Z_SYNC_FLUSH);
+    deflator.push(rawChunks[i], isLast ? Z_FINISH : Z_FULL_FLUSH);
     if (deflator.err) throw new Error("Dictzip deflate error: " + deflator.msg);
     chunkSizes.push(totalOutput - before);
     if (onProgress) onProgress(i + 1, rawChunks.length);

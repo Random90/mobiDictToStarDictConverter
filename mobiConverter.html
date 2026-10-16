@@ -924,6 +924,50 @@
       let globalBuffer = null;
       let detectedFormat = null; // 'kf8' | 'palmdoc' | 'unknown'
 
+      // ── MOBI metadata extraction (EXTH book title, author, etc.) ──────────────
+      function extractMobiMetadata(buffer) {
+        const view = new DataView(buffer);
+        const raw = new Uint8Array(buffer);
+        const dec = new TextDecoder("utf-8");
+        const meta = {
+          bookname: "dictionary", fileSlug: "dictionary",
+          author: "", publisher: "", rights: "", date: "", description: "",
+        };
+        try {
+          const rec0Offset = view.getUint32(78);
+          const mobiHdrLen = view.getUint32(rec0Offset + 20);
+          const fullNameOffset = view.getUint32(rec0Offset + 84);
+          const fullNameLen = view.getUint32(rec0Offset + 88);
+
+          // EXTH title (tag 99) takes priority; fall back to record 0 full name
+          let bookname = null;
+          const exthFlags = view.getUint32(rec0Offset + 128);
+          if (exthFlags & 0x40) {
+            const exthPos = rec0Offset + 16 + mobiHdrLen;
+            const count = view.getUint32(exthPos + 8);
+            let curr = exthPos + 12;
+            for (let i = 0; i < count && curr + 8 <= buffer.byteLength; i++) {
+              const type = view.getUint32(curr), len = view.getUint32(curr + 4);
+              const val = dec.decode(raw.subarray(curr + 8, curr + len)).trim();
+              if (type === 99) bookname = val;       // EXTH_TITLE
+              else if (type === 100) meta.author = val;         // EXTH_CREATOR
+              else if (type === 101) meta.publisher = val;      // EXTH_PUBLISHER
+              else if (type === 103) meta.description = val.replace(/[\r\n\t]+/g, " "); // EXTH_DESCRIPTION
+              else if (type === 106) meta.date = val;           // EXTH_PUBLISHED
+              else if (type === 109) meta.rights = val;         // EXTH_RIGHTS
+              curr += len;
+            }
+          }
+          if (bookname) {
+            meta.bookname = bookname;
+          } else if (fullNameLen > 0 && fullNameLen < 2000) {
+            meta.bookname = dec.decode(raw.subarray(rec0Offset + fullNameOffset, rec0Offset + fullNameOffset + fullNameLen)).trim();
+          }
+          meta.fileSlug = meta.bookname.replace(/[\\/:*?"<>|()]/g, "").trim().replace(/\s+/g, "_").replace(/_+/g, "_");
+        } catch (e) {}
+        return meta;
+      }
+
       const fileInput = document.getElementById("fileInput");
       document.getElementById("dropZone").onclick = () => fileInput.click();
       fileInput.addEventListener("change", async (e) => {
@@ -3141,8 +3185,11 @@
       //
       // Dictzip is a gzip-compatible format that stores a random-access index
       // (the "RA" extra field) in the gzip header.  The compressed payload is a
-      // single raw DEFLATE stream where each chunk boundary is byte-aligned via
-      // Z_SYNC_FLUSH, exactly as the reference `dictzip` C tool produces.
+      // single raw DEFLATE stream where each chunk boundary uses Z_FULL_FLUSH,
+      // producing full sync points so KOReader can read individual chunks
+      // independently.  (Z_SYNC_FLUSH alone leaves residual state that KOReader
+      // cannot decode per-chunk; Z_FULL_FLUSH forces a complete flush at every
+      // chunk boundary, matching the behavior expected by KOReader's dictzip reader.)
       //
       // Compression relies on pako (embedded at build time via @@include).
       // Decompression uses the browser's native DecompressionStream API.
@@ -3157,9 +3204,9 @@
       /**
        * Compress `data` (Uint8Array) into a proper dictzip stream.
        *
-       * Uses pako.Deflate with Z_SYNC_FLUSH between chunks so the output is a
-       * single valid raw DEFLATE stream with byte-aligned chunk boundaries,
-       * matching the format produced by the reference dictzip C tool.
+       * Uses pako.Deflate with Z_FULL_FLUSH between chunks so KOReader can
+       * read individual compressed chunks independently.  Z_SYNC_FLUSH alone
+       * leaves residual deflate-state that KOReader cannot decode per-chunk.
        *
        * @param {Uint8Array} data        – raw uncompressed bytes
        * @param {function}  [onProgress] – optional (done, total) progress callback
@@ -3170,7 +3217,7 @@
         const CHUNK_SIZE = 58315;
 
         // pako flush-mode constants (same numeric values as zlib)
-        const Z_SYNC_FLUSH = 2; // byte-align + emit empty stored block (00 00 ff ff)
+        const Z_FULL_FLUSH = 3; // full flush → byte-aligned + independent chunk decode
         const Z_FINISH = 4; // finalize stream with BFINAL=1
 
         // ── 1. Split into chunks ─────────────────────────────────────────────────
@@ -3181,8 +3228,8 @@
         if (rawChunks.length === 0) rawChunks.push(new Uint8Array(0));
 
         // ── 2. Compress with pako into ONE continuous raw DEFLATE stream ──────────
-        // Non-last chunks: Z_SYNC_FLUSH  → appends "00 00 ff ff" sync marker,
-        //                                  keeps deflate context alive for next chunk.
+        // Non-last chunks: Z_FULL_FLUSH  → full flush at chunk boundary,
+        //                                  enables KOReader per-chunk random access.
         // Last chunk:      Z_FINISH      → writes final block (BFINAL=1), ends stream.
         const deflator = new pako.Deflate({ level: 6, raw: true });
         const outputParts = [];
@@ -3197,7 +3244,7 @@
         for (let i = 0; i < rawChunks.length; i++) {
           const isLast = i === rawChunks.length - 1;
           const before = totalOutput;
-          deflator.push(rawChunks[i], isLast ? Z_FINISH : Z_SYNC_FLUSH);
+          deflator.push(rawChunks[i], isLast ? Z_FINISH : Z_FULL_FLUSH);
           if (deflator.err) throw new Error("Dictzip deflate error: " + deflator.msg);
           chunkSizes.push(totalOutput - before);
           if (onProgress) onProgress(i + 1, rawChunks.length);
@@ -3788,16 +3835,17 @@
       // stardict-output.js – unified StarDict output renderer.
       // Replaces stardict-output-kf8.js and stardict-output-palmdoc.js.
       //
-      // Signature: renderOutput(finalMap, synMap, generateSyn, compress = true)
+      // Signature: renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {})
       //   finalMap    – Map<string, string>  word → HTML definition
       //   synMap      – Map<string, string>  alternate form → canonical word
       //   generateSyn – boolean
       //   compress    – boolean (dictzip / .dict.dz)
+      //   meta        – { bookname, fileSlug, author } from MOBI EXTH (optional)
       //
       // Requires globals: addLog, i18nText, pako, StarDictValidator,
       //                   compressDictzip (from stardict-dictzip-core.js)
 
-      async function renderOutput(finalMap, synMap, generateSyn, compress = true) {
+      async function renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {}) {
         const links = document.getElementById("links");
         links.innerHTML = "";
 
@@ -3844,6 +3892,11 @@
         }
         const idxTotalSize = idxPos;
         const dictTotalSize = dictOff;
+
+        // Trim pre-allocated buffers to actual used size so on-disk file size
+        // matches idxfilesize in the .ifo — KOReader validates this strictly.
+        const finalIdxBytes = idxBytes.subarray(0, idxTotalSize);
+        const finalDictBytes = dictBytes.subarray(0, dictTotalSize);
 
         // ── Build .syn ────────────────────────────────────────────────────────────────
         let synBytesArr = null,
@@ -3894,21 +3947,24 @@
         }
 
         // ── .ifo ────────────────────────────────────────────────────────────────────
+        const bookname = (meta && meta.bookname) || "dictionary";
         const ifoLines = [
           "StarDict's dict ifo file",
           "version=2.4.2",
           `wordcount=${count}`,
           `idxfilesize=${idxTotalSize}`,
-          "bookname=dictionary",
+          `bookname=${bookname}`,
           "sametypesequence=h",
         ];
         if (synCount > 0) ifoLines.push(`synwordcount=${synCount}`);
         const ifo = ifoLines.join("\n") + "\n";
         const ifoBytes = enc.encode(ifo);
 
+        const fileSlug = (meta && meta.fileSlug) || "dictionary";
+
         // ── Optionally compress dict → .dict.dz ──────────────────────────────────────
-        let dictFileBytes = dictBytes;
-        let dictFileName = "dictionary.dict";
+        let dictFileBytes = finalDictBytes;
+        let dictFileName = `${fileSlug}.dict`;
         let dictDzLength = null;
 
         if (compress) {
@@ -3921,7 +3977,7 @@
           );
           // Yield so the log message renders before the synchronous pako loop starts.
           await new Promise((r) => setTimeout(r, 0));
-          const dictDzBytes = await compressDictzip(dictBytes, (done, total) => {
+          const dictDzBytes = await compressDictzip(finalDictBytes, (done, total) => {
             if (done % 200 === 0 || done === total) {
               addLog(
                 i18nText(
@@ -3944,7 +4000,7 @@
             ),
           );
           dictFileBytes = dictDzBytes;
-          dictFileName = "dictionary.dict.dz";
+          dictFileName = `${fileSlug}.dict.dz`;
           dictDzLength = dictDzBytes.length;
         }
 
@@ -3958,8 +4014,8 @@
           a.textContent = `⬇ ${name}`;
           links.appendChild(a);
         };
-        dl("dictionary.ifo", ifoBytes);
-        dl("dictionary.idx", idxBytes);
+        dl(`${fileSlug}.ifo`, ifoBytes);
+        dl(`${fileSlug}.idx`, finalIdxBytes);
         dl(dictFileName, dictFileBytes);
         if (synCount > 0) {
           // Wrap syn button + count badge in an inline-flex column so the badge
@@ -3969,10 +4025,10 @@
             "display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;margin-top: 5px;";
           const synLink = document.createElement("a");
           synLink.href = URL.createObjectURL(new Blob([synBytesArr]));
-          synLink.download = "dictionary.syn";
+          synLink.download = `${fileSlug}.syn`;
           synLink.className = "btn-dl";
           synLink.style.margin = "0";
-          synLink.textContent = "⬇ dictionary.syn";
+          synLink.textContent = `⬇ ${fileSlug}.syn`;
           const badge = document.createElement("span");
           badge.className = "badge-syn";
           badge.style.cssText = "margin:4px 0 0;white-space:nowrap;";
@@ -4029,8 +4085,8 @@
           }
           window.__dictValidator.loadFromBuffers({
             ifoText: new TextDecoder("utf-8").decode(ifoBytes),
-            idxBuffer: idxBytes.buffer,
-            dictBuffer: dictBytes.buffer,
+            idxBuffer: finalIdxBytes.buffer,
+            dictBuffer: finalDictBytes.buffer,
             synBuffer: synBytesArr ? synBytesArr.buffer : null,
           });
 
@@ -4080,7 +4136,7 @@
 
         setTimeout(async () => {
           try {
-            let finalMap, synMap;
+            let finalMap, synMap, mobiMeta;
             if (detectedFormat === "kf8") {
               const conv = new KF8Converter(globalBuffer, options);
               ({ finalMap, synMap } = await conv.run());
@@ -4090,7 +4146,19 @@
             }
 
             if (finalMap.size > 0) {
-              await renderOutput(finalMap, synMap, true, compress);
+              // Extract MOBI metadata for .ifo bookname + file naming
+              mobiMeta = extractMobiMetadata(globalBuffer);
+              addLog(
+                i18nText(
+                  "logMobiMetadata",
+                  "Dictionary title: {bookname}{authorPart}",
+                  {
+                    bookname: mobiMeta.bookname,
+                    authorPart: mobiMeta.author ? ` (${mobiMeta.author})` : "",
+                  },
+                ),
+              );
+              await renderOutput(finalMap, synMap, true, compress, mobiMeta);
               btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
               addLog(
@@ -4209,6 +4277,7 @@
           logOutputReadySynPart: ", syn={synCount}",
           logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
           logOutputReadyDict: "dict={dictBytes} B",
+          logMobiMetadata: "Dictionary title: {bookname}{authorPart}",
           logCompressingDict: "Compressing dictionary data ({dictBytes} B)…",
           logCompressingProgress: "  Compression: {done}/{total} chunks…",
           logCompressingDone: "✅ Compressed: {dictDzBytes} B (saved {ratio}%)",
@@ -4309,6 +4378,7 @@
           logOutputReadySynPart: ", syn={synCount}",
           logOutputReadyDictDz: "dict={dictBytes} B → dict.dz={dictDzBytes} B",
           logOutputReadyDict: "dict={dictBytes} B",
+          logMobiMetadata: "Tytuł słownika: {bookname}{authorPart}",
           logCompressingDict: "Kompresja danych słownika ({dictBytes} B)…",
           logCompressingProgress: "  Kompresja: {done}/{total} chunków…",
           logCompressingDone:

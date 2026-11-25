@@ -518,6 +518,11 @@
           <label for="compressCheck" data-i18n="compressLabel"></label>
         </div>
         <div class="style-note" data-i18n-html="compressNote"></div>
+
+        <div class="check-item" id="sortModeRow" style="display: none">
+          <input type="checkbox" id="compatSortCheck" checked />
+          <label for="compatSortCheck">Use KOReader-compatible sort order</label>
+        </div>
       </div>
 
       <button
@@ -1018,6 +1023,11 @@
       // @@include(src/stardict-output.js)
 
       // ── Start button ──────────────────────────────────────────────────────────
+      function resolveSortMode() {
+        const compat = document.getElementById("compatSortCheck");
+        return compat && !compat.checked ? "raw" : "folded";
+      }
+
       document.getElementById("startBtn").onclick = () => {
         const btn = document.getElementById("startBtn");
         btn.disabled = true;
@@ -1029,6 +1039,7 @@
           merge: true,
         };
         const compress = document.getElementById("compressCheck").checked;
+        const sortMode = resolveSortMode();
 
         setTimeout(async () => {
           try {
@@ -1054,7 +1065,14 @@
                   },
                 ),
               );
-              await renderOutput(finalMap, synMap, true, compress, mobiMeta);
+              await renderOutput(
+                finalMap,
+                synMap,
+                true,
+                compress,
+                mobiMeta,
+                sortMode,
+              );
               btn.textContent = i18nText("startBtnDone", "✅ DONE");
             } else {
               addLog(

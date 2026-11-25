@@ -1,36 +1,64 @@
 // stardict-output.js – unified StarDict output renderer.
 // Replaces stardict-output-kf8.js and stardict-output-palmdoc.js.
 //
-// Signature: renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {})
+// Signature: renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {}, sortMode = "folded")
 //   finalMap    – Map<string, string>  word → HTML definition
 //   synMap      – Map<string, string>  alternate form → canonical word
 //   generateSyn – boolean
 //   compress    – boolean (dictzip / .dict.dz)
 //   meta        – { bookname, fileSlug, author } from MOBI EXTH (optional)
+//   sortMode    – "folded" (default, KOReader-safe) | "raw" (legacy)
 //
 // Requires globals: addLog, i18nText, pako, StarDictValidator,
 //                   compressDictzip (from stardict-dictzip-core.js)
 
-async function renderOutput(finalMap, synMap, generateSyn, compress = true, meta = {}) {
+async function renderOutput(
+  finalMap,
+  synMap,
+  generateSyn,
+  compress = true,
+  meta = {},
+  sortMode = "folded",
+) {
   const links = document.getElementById("links");
   links.innerHTML = "";
 
   const enc = new TextEncoder();
 
-  // StarDict requires .idx/.syn to be sorted in strcmp() order (UTF-8 byte
-  // order), not Unicode locale order.  Simple JS string comparison is ~100x
-  // faster than localeCompare and matches the required strcmp semantics.
-  const sorted = Array.from(finalMap.entries()).sort(([a], [b]) =>
-    a < b ? -1 : a > b ? 1 : 0,
-  );
+  const useFoldedSort = sortMode !== "raw";
+  if (useFoldedSort) {
+    addLog(
+      i18nText(
+        "logSortModeFolded",
+        "Sorting mode: folded (KOReader-compatible case-insensitive order).",
+      ),
+    );
+  } else {
+    addLog(
+      i18nText(
+        "logSortModeRaw",
+        "Sorting mode: raw legacy order (case-sensitive).",
+      ),
+    );
+  }
+
+  const sorted = Array.from(finalMap.entries(), ([word, def]) => ({
+    word,
+    def,
+    folded: useFoldedSort ? word.toLocaleLowerCase() : word,
+  })).sort((a, b) => {
+    if (a.folded < b.folded) return -1;
+    if (a.folded > b.folded) return 1;
+    return a.word < b.word ? -1 : a.word > b.word ? 1 : 0;
+  });
   const count = sorted.length;
 
   // ── Encode words + defs into pre-sized buffers (no per-entry allocs) ────────
   let idxEstimate = 0,
     dictEstimate = 0;
   for (let i = 0; i < count; i++) {
-    idxEstimate += sorted[i][0].length * 3 + 9;
-    dictEstimate += sorted[i][1].length + 16;
+    idxEstimate += sorted[i].word.length * 3 + 9;
+    dictEstimate += sorted[i].def.length + 16;
   }
   const idxBytes = new Uint8Array(idxEstimate);
   const dictBytes = new Uint8Array(dictEstimate);
@@ -38,13 +66,13 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true, meta
   let idxPos = 0,
     dictOff = 0;
   for (let i = 0; i < count; i++) {
-    wordToOrdinal.set(sorted[i][0], i);
-    const wr = enc.encodeInto(sorted[i][0], idxBytes.subarray(idxPos));
+    wordToOrdinal.set(sorted[i].word, i);
+    const wr = enc.encodeInto(sorted[i].word, idxBytes.subarray(idxPos));
     idxPos += wr.written;
     idxBytes[idxPos++] = 0; // NUL terminator
     const hdr = idxPos;
     idxPos += 8; // reserve 8-byte header slot
-    const dr = enc.encodeInto(sorted[i][1], dictBytes.subarray(dictOff));
+    const dr = enc.encodeInto(sorted[i].def, dictBytes.subarray(dictOff));
     const dLen = dr.written;
     idxBytes[hdr] = (dictOff >>> 24) & 0xff;
     idxBytes[hdr + 1] = (dictOff >>> 16) & 0xff;
@@ -79,10 +107,20 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true, meta
     }
     synCount = synWords.length;
 
-    // Sort index array by word — avoids moving large string objects.
+    const synFolded = new Array(synCount);
+    for (let i = 0; i < synCount; i++) {
+      synFolded[i] = useFoldedSort ? synWords[i].toLocaleLowerCase() : synWords[i];
+    }
+
+    // Sort index array by folded synonym key + raw key tiebreaker.
+    // Keep parallel arrays unchanged to avoid moving large string objects.
     const synIdx = new Uint32Array(synCount);
     for (let i = 0; i < synCount; i++) synIdx[i] = i;
     synIdx.sort((a, b) => {
+      const fa = synFolded[a],
+        fb = synFolded[b];
+      if (fa < fb) return -1;
+      if (fa > fb) return 1;
       const wa = synWords[a],
         wb = synWords[b];
       return wa < wb ? -1 : wa > wb ? 1 : 0;
@@ -212,7 +250,7 @@ async function renderOutput(finalMap, synMap, generateSyn, compress = true, meta
   pGrid.innerHTML = "";
   pArea.style.display = "block";
 
-  const keys = sorted.map(([k]) => k);
+  const keys = sorted.map((entry) => entry.word);
   const shown = new Set();
   const sampleKeys = [];
   for (let i = 0; i < Math.min(3, keys.length); i++) {
